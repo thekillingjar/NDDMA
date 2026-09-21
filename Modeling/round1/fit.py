@@ -174,27 +174,23 @@ def fit_branch(
         float(row["T_bytes_per_cycle"]) for row in block_fits
     ) / len(block_fits)
     branch = {
-        "name": branch_name,
-        "block_dims": [int(row["block_dim"]) for row in block_fits],
         "alpha": alpha,
         "T_bytes_per_cycle": t_bytes_per_cycle,
         "cycles_per_byte": 1.0 / t_bytes_per_cycle,
-        "per_block_fits": block_fits,
     }
-    branch["metrics"] = calculate_metrics(points, branch)
     return branch
 
 
 def write_predictions(
     path: Path,
     rows: list[dict[str, object]],
-    dtype_models: dict[str, dict[str, object]],
+    parameters: dict[str, dict[str, object]],
 ) -> None:
     output_rows = []
     for point in rows:
         dtype = str(point["dtype"])
         branch_name = branch_for_block_dim(int(point["block_dim"]))
-        branch = dtype_models[dtype]["branches"][branch_name]
+        branch = parameters[dtype][branch_name]
         predicted = predict(branch, float(point["bytes_per_core"]))
         output_rows.append({
             "token": point["token"],
@@ -217,7 +213,7 @@ def write_predictions(
 
 
 def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
-    dtype_models: dict[str, dict[str, object]] = {}
+    parameters: dict[str, dict[str, object]] = {}
     for dtype in DTYPES:
         dtype_rows = [row for row in rows if row["dtype"] == dtype]
         if not dtype_rows:
@@ -233,31 +229,7 @@ def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
             branch_name: fit_branch(points, branch_name)
             for branch_name, points in branch_points.items()
         }
-        all_errors = []
-        for point in dtype_rows:
-            branch = branches[branch_for_block_dim(int(point["block_dim"]))]
-            all_errors.append(
-                predict(branch, float(point["bytes_per_core"]))
-                - float(point["actual"])
-            )
-        absolute = [abs(value) for value in all_errors]
-        all_metrics = {
-            "count": len(dtype_rows),
-            "rmse_cycles": math.sqrt(
-                sum(value * value for value in all_errors) / len(all_errors)
-            ),
-            "mae_cycles": sum(absolute) / len(absolute),
-            "max_absolute_error_cycles": max(absolute),
-        }
-        dtype_models[dtype] = {
-            "sample_count": len(dtype_rows),
-            "block_dim_min": min(int(row["block_dim"]) for row in dtype_rows),
-            "block_dim_max": max(int(row["block_dim"]) for row in dtype_rows),
-            "bytes_per_core_min": min(float(row["bytes_per_core"]) for row in dtype_rows),
-            "bytes_per_core_max": max(float(row["bytes_per_core"]) for row in dtype_rows),
-            "branches": branches,
-            "metrics": all_metrics,
-        }
+        parameters[dtype] = branches
 
     return {
         "model": "NDDMA_ROUND1_1D_PIECEWISE_SINGLE_MULTI_CORE",
@@ -272,20 +244,7 @@ def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
                 "then average alpha and T within each block_dim branch"
             ),
         },
-        "fit_scope": {
-            "dim": 1,
-            "block_dim_values": list(BLOCK_DIMS),
-            "input_stride": 1,
-            "output_stride": 1,
-            "layout": "contiguous",
-            "dtype_order": list(DTYPES),
-            "sample_count": len(rows),
-            "sample_count_by_dtype": {
-                dtype: sum(row["dtype"] == dtype for row in rows)
-                for dtype in DTYPES
-            },
-        },
-        "dtype_models": dtype_models,
+        "parameters": parameters,
     }
 
 
@@ -316,9 +275,9 @@ def main() -> int:
     write_predictions(
         output_dir / PREDICTIONS_FILENAME,
         rows,
-        model["dtype_models"],
+        model["parameters"],
     )
-    print(f"[INFO] fitted {model['fit_scope']['sample_count']} points")
+    print(f"[INFO] fitted {len(rows)} points")
     print(f"[INFO] wrote model: {model_path}")
     return 0
 

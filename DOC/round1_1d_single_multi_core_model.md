@@ -327,7 +327,7 @@ python3 Modeling/round1/e2e.py all \
 NDDMA2/Modeling/Ana/round1/round1_1d_single_multi_core_model.json
 ```
 
-文件名沿用历史名称，但 JSON 模型标识已经反映当前同时覆盖单核和多核：
+JSON 只保留建模公式和最终参数，不再输出每个核数的局部拟合过程。
 
 ```json
 "model": "NDDMA_ROUND1_1D_PIECEWISE_SINGLE_MULTI_CORE"
@@ -339,8 +339,7 @@ NDDMA2/Modeling/Ana/round1/round1_1d_single_multi_core_model.json
 {
   "model": "...",
   "formula": {},
-  "fit_scope": {},
-  "dtype_models": {}
+  "parameters": {}
 }
 ```
 
@@ -370,70 +369,24 @@ NDDMA2/Modeling/Ana/round1/round1_1d_single_multi_core_model.json
 | `bytes_definition` | 自变量定义 |
 | `fitting_method` | 局部拟合和分支平均方法 |
 
-### 8.3 `fit_scope`
+### 8.3 `parameters`
 
-示例：
-
-```json
-"fit_scope": {
-  "dim": 1,
-  "block_dim_values": [1, 2, 3, "...", 56],
-  "input_stride": 1,
-  "output_stride": 1,
-  "layout": "contiguous",
-  "dtype_order": ["int8_t", "int16_t", "int32_t", "int64_t"],
-  "sample_count": 1904,
-  "sample_count_by_dtype": {
-    "int8_t": 336,
-    "int16_t": 448,
-    "int32_t": 560,
-    "int64_t": 560
-  }
-}
-```
-
-`sample_count` 是重复聚合后的样本数。完整 C 组数据应为：
-
-```text
-int8_t  = 6  × 56 = 336
-int16_t = 8  × 56 = 448
-int32_t = 10 × 56 = 560
-int64_t = 10 × 56 = 560
-total   = 1904
-```
-
-### 8.4 `dtype_models`
-
-每种 dtype 都包含：
-
-```json
-"int32_t": {
-  "sample_count": 560,
-  "block_dim_min": 1,
-  "block_dim_max": 56,
-  "bytes_per_core_min": 4096,
-  "bytes_per_core_max": 256000,
-  "branches": {
-    "le2": {},
-    "gt2": {}
-  },
-  "metrics": {}
-}
-```
-
-### 8.5 分支参数
-
-`branches.le2` 和 `branches.gt2` 的结构为：
+每种 dtype 只包含 `le2` 和 `gt2` 两段最终参数：
 
 ```json
 {
-  "name": "gt2",
-  "block_dims": [3, 4, 5],
-  "alpha": 0.0,
-  "T_bytes_per_cycle": 0.0,
-  "cycles_per_byte": 0.0,
-  "per_block_fits": [],
-  "metrics": {}
+  "int32_t": {
+    "le2": {
+      "alpha": 0.0,
+      "T_bytes_per_cycle": 0.0,
+      "cycles_per_byte": 0.0
+    },
+    "gt2": {
+      "alpha": 0.0,
+      "T_bytes_per_cycle": 0.0,
+      "cycles_per_byte": 0.0
+    }
+  }
 }
 ```
 
@@ -441,50 +394,9 @@ total   = 1904
 
 | 字段 | 含义 |
 | --- | --- |
-| `name` | 分支名：`le2` 或 `gt2` |
-| `block_dims` | 参与该分支平均的核数 |
 | `alpha` | 分支平均固定开销，单位 cycles |
 | `T_bytes_per_cycle` | 分支平均搬运速率，单位 bytes/cycle |
 | `cycles_per_byte` | `1 / T_bytes_per_cycle` |
-| `per_block_fits` | 每个核数的局部线性拟合参数 |
-| `metrics` | 用分支平均参数回代全部分支样本后的误差 |
-
-`per_block_fits` 中每项对应一个 `(dtype, block_dim)`：
-
-```json
-{
-  "block_dim": 8,
-  "alpha": 0.0,
-  "T_bytes_per_cycle": 0.0,
-  "cycles_per_byte": 0.0,
-  "sample_count": 10
-}
-```
-
-它用于诊断不同核数的局部参数变化；最终预测使用分支平均参数，
-而不是直接使用某个核数的局部参数。
-
-### 8.6 误差指标
-
-每个 dtype 和每个分支都记录：
-
-```json
-"metrics": {
-  "count": 0,
-  "rmse_cycles": 0.0,
-  "mae_cycles": 0.0,
-  "max_absolute_error_cycles": 0.0
-}
-```
-
-定义：
-
-```text
-error = predicted - actual
-RMSE  = sqrt(mean(error^2))
-MAE   = mean(abs(error))
-MaxAE = max(abs(error))
-```
 
 ## 9. Predictions CSV
 
@@ -568,12 +480,10 @@ cycles
 | 某些核数单独异常 | 该核数存在额外调度或硬件行为 |
 | 两个分支都呈明显弯曲 | 需要进一步引入连续的 `T(block_dim)` 或 `alpha(block_dim)` 模型 |
 
-图像只提供直观诊断，正式误差应查看 JSON 的：
+图像只提供直观诊断，逐点误差应查看 predictions CSV 的：
 
 ```text
-dtype_models.<dtype>.branches.le2.metrics
-dtype_models.<dtype>.branches.gt2.metrics
-dtype_models.<dtype>.metrics
+error_cycles
 ```
 
 ## 11. 模型边界
@@ -592,7 +502,7 @@ GM/UB contiguous
 
 ```python
 branch = "le2" if block_dim <= 2 else "gt2"
-params = model["dtype_models"][dtype]["branches"][branch]
+params = model["parameters"][dtype][branch]
 cycles = params["alpha"] + bytes_per_core / params["T_bytes_per_cycle"]
 ```
 
