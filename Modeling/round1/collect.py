@@ -171,6 +171,9 @@ def collect_measurements(args: argparse.Namespace, factor_csv: Path,
     experiment_dir = output_dir / "experiment"
     raw_dir = output_dir / "profiling_raw"
     analysis_dir = output_dir / "analysis"
+    # The ASC harness opens experiment.log directly and does not create its
+    # output directory.
+    experiment_dir.mkdir(parents=True, exist_ok=True)
     app_command = [
         str(executable),
         f"--factor-csv={factor_csv}",
