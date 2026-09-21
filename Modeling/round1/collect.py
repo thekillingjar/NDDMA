@@ -24,7 +24,13 @@ ROUND_ID = "r1_1d_single_core"
 GROUP_ID = "R1_1D"
 DTYPE_SIZES = {"int8_t": 1, "int16_t": 2, "int32_t": 4, "int64_t": 8}
 DTYPES = ("int8_t", "int16_t", "int32_t", "int64_t")
-BYTE_VALUES = (4096, 6144, 8192, 12288, 16384, 24576, 32768, 40960, 49152, 57344, 61440)
+C_X_BY_DTYPE = {
+    "int64_t": (4096, 8192, 16384, 32768, 49152, 61440, 90112, 130048, 180224, 256000),
+    "int32_t": (4096, 8192, 16384, 32768, 49152, 61440, 90112, 130048, 180224, 256000),
+    "int16_t": (4096, 8192, 16384, 32768, 49152, 61440, 90112, 130048),
+    "int8_t": (4096, 8192, 16384, 32768, 49152, 61440),
+}
+BLOCK_DIMS = tuple(range(1, 57))
 
 
 def parse_args() -> argparse.Namespace:
@@ -54,11 +60,12 @@ def generate_factor(path: Path, kernel_repeat: int, execution_repeat_count: int)
     index = 1
     for dtype in DTYPES:
         dtype_size = DTYPE_SIZES[dtype]
-        for requested_bytes in BYTE_VALUES:
-            total_bytes = requested_bytes - requested_bytes % dtype_size
-            output_dims = total_bytes // dtype_size
-            token = f"{ROUND_ID}_{dtype}_b{total_bytes}_c1"
-            rows.append({
+        for bytes_per_core in C_X_BY_DTYPE[dtype]:
+            output_dims = bytes_per_core // dtype_size
+            for block_dim in BLOCK_DIMS:
+                logical_total_bytes = bytes_per_core * block_dim
+                token = f"{ROUND_ID}_{dtype}_b{bytes_per_core}_c{block_dim}"
+                rows.append({
                 "experiment_idx": str(index),
                 "token": token,
                 "round_id": ROUND_ID,
@@ -75,13 +82,13 @@ def generate_factor(path: Path, kernel_repeat: int, execution_repeat_count: int)
                 "metric_target": "nddma_mte2_cycles_per_block",
                 "scan_variable": "dtype,logical_total_bytes",
                 "controlled_variables": (
-                    "dim=1,block_dim=1,input_stride=1,output_stride=1,"
+                    "dim=1,block_dim=1..56,input_stride=1,output_stride=1,"
                     "GM/UB contiguous,src/dst aligned"
                 ),
                 "dtype": dtype,
                 "dtype_size": str(dtype_size),
                 "dim": "1",
-                "block_dim": "1",
+                "block_dim": str(block_dim),
                 "repeat": str(kernel_repeat),
                 "enable_store": "0",
                 "output_dims": str(output_dims),
@@ -96,23 +103,23 @@ def generate_factor(path: Path, kernel_repeat: int, execution_repeat_count: int)
                 "src_align_mod32": "0",
                 "dst_align_mod32": "0",
                 "inner_elems": str(output_dims),
-                "inner_bytes": str(total_bytes),
+                "inner_bytes": str(bytes_per_core),
                 "total_elems": str(output_dims),
-                "total_bytes": str(total_bytes),
-                "bytes_per_core": str(total_bytes),
-                "logical_total_bytes": str(total_bytes),
+                "total_bytes": str(logical_total_bytes),
+                "bytes_per_core": str(bytes_per_core),
+                "logical_total_bytes": str(logical_total_bytes),
                 "gm_span_elems": str(output_dims),
                 "ub_span_elems": str(output_dims),
                 "input_stride_pattern": "contiguous",
                 "output_stride_pattern": "contiguous",
                 "layout_pattern": "contiguous",
-                "notes": "NDDMA2 Round1 single-core single-dimensional contiguous baseline.",
+                "notes": "NDDMA2 Round1 C-group 1D contiguous T/alpha fit sample.",
                 "fit_role": "fit",
                 "bytes_region": "single_core_1d",
                 "shape_policy": "dim1",
                 "model_family": "contiguous_baseline",
-            })
-            index += 1
+                })
+                index += 1
 
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as file_obj:

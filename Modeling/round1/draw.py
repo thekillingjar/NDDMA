@@ -26,7 +26,7 @@ def svg_for_dtype(dtype: str, rows: list[dict[str, str]], output: Path) -> None:
     width, height = 900, 560
     left, top, right, bottom = 85, 35, 30, 70
     plot_w, plot_h = width - left - right, height - top - bottom
-    xs = [float(row["bytes"]) for row in rows]
+    xs = [float(row["logical_total_bytes"]) for row in rows]
     actual = [float(row["actual_cycles"]) for row in rows]
     predicted = [float(row["predicted_cycles"]) for row in rows]
     x_min, x_max = min(xs), max(xs)
@@ -43,10 +43,10 @@ def svg_for_dtype(dtype: str, rows: list[dict[str, str]], output: Path) -> None:
 
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
-        "<style>text{font-family:Arial,sans-serif;font-size:13px;fill:#1f2937}.grid{stroke:#e5e7eb}.axis{stroke:#374151}.actual{fill:#111827}.predicted{fill:none;stroke:#2563eb;stroke-width:2}</style>",
-        f'<text x="{width/2}" y="22" text-anchor="middle">Round1 1D single-core {dtype}: actual vs predicted</text>',
+        "<style>text{font-family:Arial,sans-serif;font-size:13px;fill:#1f2937}.axis{stroke:#374151}.actual{fill:#111827}.predicted{fill:#fff;stroke:#2563eb;stroke-width:2}</style>",
+        f'<text x="{width/2}" y="22" text-anchor="middle">Round1 1D single/multi-core {dtype}: actual vs predicted</text>',
         f'<line class="axis" x1="{left}" y1="{top}" x2="{left}" y2="{top+plot_h}"/><line class="axis" x1="{left}" y1="{top+plot_h}" x2="{left+plot_w}" y2="{top+plot_h}"/>',
-        f'<text x="{left+plot_w/2}" y="{height-20}" text-anchor="middle">bytes</text>',
+        f'<text x="{left+plot_w/2}" y="{height-20}" text-anchor="middle">logical total bytes</text>',
         f'<text x="18" y="{top+plot_h/2}" text-anchor="middle" transform="rotate(-90 18 {top+plot_h/2})">cycles</text>',
         f'<text x="{left}" y="{top+plot_h+22}">{x_min:.0f}</text>',
         f'<text x="{left+plot_w}" y="{top+plot_h+22}" text-anchor="end">{x_max:.0f}</text>',
@@ -55,11 +55,13 @@ def svg_for_dtype(dtype: str, rows: list[dict[str, str]], output: Path) -> None:
     ]
     for x_value, y_value in zip(xs, actual):
         parts.append(f'<circle class="actual" cx="{px(x_value)}" cy="{py(y_value)}" r="3"/>')
-    points = " ".join(f"{px(x):.2f},{py(y):.2f}" for x, y in zip(xs, predicted))
-    parts.append(f'<polyline class="predicted" points="{points}"/>')
+    for x_value, y_value in zip(xs, predicted):
+        parts.append(
+            f'<circle class="predicted" cx="{px(x_value)}" cy="{py(y_value)}" r="3"/>'
+        )
     parts.extend([
         f'<circle class="actual" cx="{left+plot_w-120}" cy="{top+25}" r="3"/><text x="{left+plot_w-110}" y="{top+30}">actual</text>',
-        f'<line class="predicted" x1="{left+plot_w-125}" y1="{top+48}" x2="{left+plot_w-115}" y2="{top+48}"/><text x="{left+plot_w-110}" y="{top+53}">predicted</text>',
+        f'<circle class="predicted" cx="{left+plot_w-120}" cy="{top+48}" r="3"/><text x="{left+plot_w-110}" y="{top+53}">predicted</text>',
         "</svg>",
     ])
     output.parent.mkdir(parents=True, exist_ok=True)

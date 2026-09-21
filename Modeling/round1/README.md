@@ -1,4 +1,4 @@
-# NDDMA2 Round1 1D single-core model
+# NDDMA2 Round1 1D single/multi-core model
 
 This directory contains the NDDMA2 Round1 workflow used as the continuous
 base model. Its formula is inherited from the legacy NDDMA Round2 model,
@@ -16,15 +16,29 @@ python3 e2e.py draw
 The fitted scope is intentionally narrow:
 
 - `dim=1`
-- `block_dim=1`
+- `block_dim=1..56`
 - contiguous GM and UB
 - `enable_store=0`
 - `int8_t`, `int16_t`, `int32_t`, `int64_t`
 
-The model is the `block_dim <= 2` branch inherited by Round4:
+The model has the two branches inherited from the original Round2 C-group
+piecewise model:
 
 ```text
-cycles(dtype, bytes) = alpha(dtype) + bytes / T(dtype)
+block_dim <= 2:
+    cycles = alpha_le2(dtype) + bytes_per_core / T_le2(dtype)
+
+block_dim > 2:
+    cycles = alpha_gt2(dtype) + bytes_per_core / T_gt2(dtype)
+```
+
+The current factor dataset contains 1904 rows:
+
+```text
+int8_t  = 336
+int16_t = 448
+int32_t = 560
+int64_t = 560
 ```
 
 The default output directory is `NDDMA2/Modeling/Ana/round1`:
