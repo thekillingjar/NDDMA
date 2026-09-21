@@ -93,8 +93,12 @@ def product_int(values: Iterable[int]) -> int:
     return result
 
 
+def round2_parameters(round2: Mapping[str, object]) -> Mapping[str, object]:
+    return round2.get("parameters", round2.get("dtype_models", {}))
+
+
 def base_params(round2: Mapping[str, object], dtype: str, block_dim: int) -> Mapping[str, object]:
-    base = round2["dtype_models"][dtype]["base"]
+    base = round2_parameters(round2)[dtype]["base"]
     return base["le2" if block_dim <= 2 else "gt2"]
 
 
@@ -108,7 +112,7 @@ def one_d_correction(round2: Mapping[str, object], dtype: str, bytes_value: floa
                      input_stride: int, output_stride: int, block_dim: int) -> float:
     if input_stride <= 1 and output_stride <= 1:
         return 0.0
-    model = round2["dtype_models"][dtype]
+    model = round2_parameters(round2)[dtype]
     s = min(float(input_stride) * DTYPE_SIZES[dtype], 128.0)
     gate = min(1.0, max(0.0, float(output_stride - 1)))
     ng = (float(model["N_G"]["a1"]) + float(model["N_G"]["a2"]) * bytes_value) * s

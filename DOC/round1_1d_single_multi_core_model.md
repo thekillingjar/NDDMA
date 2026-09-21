@@ -327,7 +327,7 @@ python3 Modeling/Data_collection/round1/scripts/e2e.py all \
 NDDMA2/Modeling/Ana/round1/round1_1d_single_multi_core_model.json
 ```
 
-JSON 只保留建模公式和最终参数，不再输出每个核数的局部拟合过程。
+JSON 保留建模公式、最终参数和整体误差指标，不再输出每个核数的局部拟合过程。
 
 ```json
 "model": "NDDMA_ROUND1_1D_PIECEWISE_SINGLE_MULTI_CORE"
@@ -339,7 +339,8 @@ JSON 只保留建模公式和最终参数，不再输出每个核数的局部拟
 {
   "model": "...",
   "formula": {},
-  "parameters": {}
+  "parameters": {},
+  "metrics": {}
 }
 ```
 

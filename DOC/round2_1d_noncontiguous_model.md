@@ -86,24 +86,27 @@ I/J: 多核验证配置
 `round2_1d_noncontiguous_model.json` 的核心字段：
 
 ```text
-formula.fit_order
+model
+formula
+parameters
+metrics
 ```
 
-记录拟合顺序，固定为：
+`formula.fit_order` 记录拟合顺序，固定为：
 
 ```text
 base -> N_G -> N_GU -> multicore_rho
 ```
 
 ```text
-dtype_models.<dtype>.base.le2
-dtype_models.<dtype>.base.gt2
+parameters.<dtype>.base.le2
+parameters.<dtype>.base.gt2
 ```
 
 连续基础项的两段参数，包含 `alpha` 和 `T_bytes_per_cycle`。
 
 ```text
-dtype_models.<dtype>.N_G
+parameters.<dtype>.N_G
 ```
 
 GM 非连续项参数：
@@ -113,7 +116,7 @@ a1, a2
 ```
 
 ```text
-dtype_models.<dtype>.N_GU
+parameters.<dtype>.N_GU
 ```
 
 GM/UB 联合非连续项参数：
@@ -123,7 +126,7 @@ b1, b2, b3, b4
 ```
 
 ```text
-dtype_models.<dtype>.rho
+parameters.<dtype>.rho
 ```
 
 多核 `block_dim>2` 的倍率参数：

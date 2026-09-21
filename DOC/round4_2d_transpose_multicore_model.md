@@ -73,18 +73,19 @@ round4_2d_transpose_multicore_model.json
 
 ```text
 formula
-fit_scope
-inherited_parameters
-dtype_models
+parameters
 metrics
 ```
 
-`dtype_models.<dtype>` 中：
+`parameters.rho_2d.<dtype>` 中：
 
 ```text
 c1, c2: 当前数据可识别的 rho 参数
 c3, c4: 当前固定为 0
 ```
+
+`parameters.one_d_multicore` 和 `parameters.single_core_2d_residual` 保存该
+二维转置模型公式依赖的继承参数。
 
 ```text
 round4_2d_transpose_multicore_predictions.csv

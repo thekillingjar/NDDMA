@@ -155,9 +155,32 @@ def rho(params: dict[str, object], dtype: str, s: float, gate: float) -> float:
             + gate * (float(values["c3"]) + float(values["c4"]) * s))
 
 
+def calc_metrics(rows: list[dict[str, object]]) -> dict[str, float | int]:
+    if not rows:
+        return {
+            "count": 0,
+            "rmse_cycles": 0.0,
+            "mae_cycles": 0.0,
+            "mape_percent": 0.0,
+            "max_absolute_error_cycles": 0.0,
+        }
+    errors = [float(row["predicted"]) - float(row["actual"]) for row in rows]
+    absolute = [abs(value) for value in errors]
+    ape = [
+        abs(error) / max(abs(float(row["actual"])), 1e-12)
+        for error, row in zip(errors, rows)
+    ]
+    return {
+        "count": len(rows),
+        "rmse_cycles": math.sqrt(sum(value * value for value in errors) / len(errors)),
+        "mae_cycles": sum(absolute) / len(absolute),
+        "mape_percent": 100.0 * sum(ape) / len(ape),
+        "max_absolute_error_cycles": max(absolute),
+    }
+
+
 def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
     params: dict[str, dict[str, object]] = {}
-    diagnostics: dict[str, object] = {}
     for dtype in DTYPES:
         dtype_rows = [row for row in rows if row["dtype"] == dtype]
         base_rows = [
@@ -175,7 +198,6 @@ def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
             base[segment] = {
                 "alpha": coefficients[0],
                 "T_bytes_per_cycle": 1.0 / coefficients[1],
-                "sample_count": len(selected),
             }
 
         ng_rows = [
@@ -235,13 +257,6 @@ def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
         params[dtype]["rho"] = {
             "c1": rho_coefficients[0], "c2": rho_coefficients[1],
             "c3": rho_coefficients[2], "c4": rho_coefficients[3],
-            "sample_count": len(multi_rows),
-        }
-        diagnostics[dtype] = {
-            "base_fit_samples": len(base_rows),
-            "N_G_fit_samples": len(ng_rows),
-            "N_GU_fit_samples": len(ngu_rows),
-            "multicore_rho_fit_samples": len(multi_rows),
         }
 
     output_rows = []
@@ -285,18 +300,22 @@ def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
             },
             "fit_order": ["base", "N_G", "N_GU", "multicore_rho"],
         },
-        "fit_scope": {
-            "dimension": 1,
-            "fit_groups": ["A", "B", "C", "F", "G", "H"],
-            "validation_groups": ["I", "J"],
-            "sample_count": len(rows),
-            "sample_count_by_group": {
-                group: sum(row["group"] == group for row in rows)
-                for group in ("A", "B", "C", "F", "G", "H", "I", "J")
+        "parameters": params,
+        "metrics": {
+            "all": calc_metrics(output_rows),
+            "by_dtype": {
+                dtype: calc_metrics([
+                    row for row in output_rows if row["dtype"] == dtype
+                ])
+                for dtype in DTYPES
+            },
+            "by_group": {
+                group: calc_metrics([
+                    row for row in output_rows if row["group"] == group
+                ])
+                for group in sorted({str(row["group"]) for row in output_rows})
             },
         },
-        "dtype_models": params,
-        "diagnostics": diagnostics,
         "predictions": output_rows,
     }
 

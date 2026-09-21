@@ -152,6 +152,30 @@ def calculate_metrics(
     }
 
 
+def summarize_metrics(rows: list[dict[str, object]]) -> dict[str, float | int]:
+    if not rows:
+        return {
+            "count": 0,
+            "rmse_cycles": 0.0,
+            "mae_cycles": 0.0,
+            "mape_percent": 0.0,
+            "max_absolute_error_cycles": 0.0,
+        }
+    errors = [float(row["predicted"]) - float(row["actual"]) for row in rows]
+    absolute = [abs(value) for value in errors]
+    ape = [
+        abs(error) / max(abs(float(row["actual"])), 1e-12)
+        for error, row in zip(errors, rows)
+    ]
+    return {
+        "count": len(rows),
+        "rmse_cycles": math.sqrt(sum(value * value for value in errors) / len(errors)),
+        "mae_cycles": sum(absolute) / len(absolute),
+        "mape_percent": 100.0 * sum(ape) / len(ape),
+        "max_absolute_error_cycles": max(absolute),
+    }
+
+
 def fit_branch(
     points: list[dict[str, object]], branch_name: str
 ) -> dict[str, object]:
@@ -232,6 +256,13 @@ def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
         }
         parameters[dtype] = branches
 
+    metric_rows = []
+    for row in rows:
+        dtype = str(row["dtype"])
+        branch_name = branch_for_block_dim(int(row["block_dim"]))
+        predicted = predict(parameters[dtype][branch_name], float(row["bytes_per_core"]))
+        metric_rows.append({**row, "branch": branch_name, "predicted": predicted})
+
     return {
         "model": "NDDMA_ROUND1_1D_PIECEWISE_SINGLE_MULTI_CORE",
         "formula": {
@@ -246,6 +277,21 @@ def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
             ),
         },
         "parameters": parameters,
+        "metrics": {
+            "all": summarize_metrics(metric_rows),
+            "by_dtype": {
+                dtype: summarize_metrics([
+                    row for row in metric_rows if row["dtype"] == dtype
+                ])
+                for dtype in DTYPES
+            },
+            "by_branch": {
+                branch_name: summarize_metrics([
+                    row for row in metric_rows if row["branch"] == branch_name
+                ])
+                for branch_name in ("le2", "gt2")
+            },
+        },
     }
 
 

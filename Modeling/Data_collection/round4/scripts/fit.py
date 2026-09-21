@@ -201,14 +201,29 @@ def fit_line(xs: list[float], ys: list[float], weights: list[float]) -> tuple[fl
 
 
 def calc_metrics(points: Sequence[Mapping[str, object]]) -> dict[str, float | int]:
-    errors = [float(p["predicted_cycles"]) - float(p["actual_cycles"]) for p in points]
-    ape = [abs(e) / max(abs(float(p["actual_cycles"])), 1e-12) for e, p in zip(errors, points)]
+    if not points:
+        return {
+            "count": 0,
+            "rmse_cycles": 0.0,
+            "mae_cycles": 0.0,
+            "mape_percent": 0.0,
+            "max_absolute_error_cycles": 0.0,
+        }
+    errors = [
+        float(point["predicted_cycles"]) - float(point["actual_cycles"])
+        for point in points
+    ]
+    absolute = [abs(value) for value in errors]
+    ape = [
+        abs(error) / max(abs(float(point["actual_cycles"])), 1e-12)
+        for error, point in zip(errors, points)
+    ]
     return {
         "count": len(points),
-        "rmse_cycles": math.sqrt(sum(e * e for e in errors) / len(errors)),
-        "mae_cycles": sum(abs(e) for e in errors) / len(errors),
+        "rmse_cycles": math.sqrt(sum(value * value for value in errors) / len(errors)),
+        "mae_cycles": sum(absolute) / len(absolute),
         "mape_percent": 100.0 * sum(ape) / len(ape),
-        "max_ape_percent": 100.0 * max(ape),
+        "max_absolute_error_cycles": max(absolute),
     }
 
 
@@ -233,13 +248,10 @@ def fit_model(rows: list[dict[str, str]], fit_byte_stride_max: float) -> dict[st
         weights = [abs(float(p["single_core_residual_cycles"])) for p in selected]
         c1, c2 = fit_line(xs, ys, weights)
         models[dtype] = {
-            "formula": "rho_2d=c1+c2*s; c3=c4=0 because output_stride=[N,1]",
             "c1": c1,
             "c2": c2,
             "c3": 0.0,
             "c4": 0.0,
-            "fit_sample_count": len(selected),
-            "fit_byte_stride_max": fit_byte_stride_max,
         }
 
     for point in points:
@@ -272,29 +284,25 @@ def fit_model(rows: list[dict[str, str]], fit_byte_stride_max: float) -> dict[st
             "s": "min(is1*dtype_size,128)",
             "single_core_residual": "r=(a0+a1*S)*N*(M-1)+b*M+d",
         },
-        "fit_scope": {
-            "dim": 2,
-            "layout": "[M,N]/[1,is1]/[N,1]",
-            "block_dims": sorted({int(p["block_dim"]) for p in points}),
-            "sample_count": len(points),
-            "fit_byte_stride_max": fit_byte_stride_max,
-        },
-        "inherited_parameters": {
-            "one_d_multicore_source": "NDDMA DOC 任意维度多核模型",
-            "single_core_2d_residual_source": "NDDMA DOC 二维转置residual模型",
+        "parameters": {
+            "rho_2d": models,
             "one_d_multicore": ONE_D,
             "single_core_2d_residual": TWO_D_RESIDUAL,
         },
-        "dtype_models": models,
         "metrics": {
             "all": calc_metrics(points),
             "by_dtype": {
-                dtype: calc_metrics([p for p in points if p["dtype"] == dtype])
+                dtype: calc_metrics([
+                    point for point in points if point["dtype"] == dtype
+                ])
                 for dtype in DTYPES
             },
             "by_block_dim": {
-                str(k): calc_metrics([p for p in points if int(p["block_dim"]) == k])
-                for k in sorted({int(p["block_dim"]) for p in points})
+                str(block_dim): calc_metrics([
+                    point for point in points
+                    if int(point["block_dim"]) == block_dim
+                ])
+                for block_dim in sorted({int(point["block_dim"]) for point in points})
             },
         },
         "predictions": points,
