@@ -1,0 +1,15 @@
+{
+    "dump":{
+        "dump_list":[
+            {
+                "model_name":"contact_nano",
+                "layer":[
+                    "concatv2"
+                ]
+            }
+        ],
+        "dump_debug":"on",
+        "dump_path":"./shart_with_qemu_guest",
+        "dump_data":"stats"
+    }
+}

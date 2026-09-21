@@ -1,0 +1,38 @@
+/**
+ * Copyright (c) Huawei Technologies Co., Ltd. 2025 All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include "default_reg_func_v2.h"
+
+namespace ge {
+namespace ascir {
+std::vector<std::unique_ptr<ge::TmpBufDesc>> CalcCosTmpSizeV2(const ge::AscNode &node)
+{
+    auto node_inputs = node.inputs;
+    GELOGD("Node %s[%s] inputs[0] data type size is: %d", node.GetTypePtr(), node.GetNamePtr(),
+           GetSizeByDataType(node_inputs[0].attr.dtype));
+    constexpr uint32_t COS_FLOAT_CALC_FAC = 3;
+    constexpr uint32_t COS_HALF_CALC_FAC = 8;
+    constexpr uint32_t COS_ONE_REPEAT_BYTE_SIZE = 256;
+    Expression buf_nums =
+        ((node_inputs[0].attr.dtype == ge::DT_FLOAT) ? ge::Symbol(COS_FLOAT_CALC_FAC) : ge::Symbol(COS_HALF_CALC_FAC));
+    Expression total_size = buf_nums * ge::Symbol(COS_ONE_REPEAT_BYTE_SIZE);
+    GELOGD("Get temp buffer size: %s", total_size.Str().get());
+    ge::TmpBufDesc desc = {total_size, -1};
+    std::vector<std::unique_ptr<ge::TmpBufDesc>> tmp_buf_descs;
+    tmp_buf_descs.emplace_back(std::make_unique<ge::TmpBufDesc>(desc));
+    return tmp_buf_descs;
+}
+}
+}

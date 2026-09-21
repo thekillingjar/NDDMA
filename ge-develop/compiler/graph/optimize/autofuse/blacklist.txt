@@ -1,0 +1,5 @@
+ascir/generator/v1/ascir_builtin_ops.cpp
+ascir/generator/v2/ascir_builtin_ops.cpp
+tests/depends/slog/src/slog_stub.cc
+tests/depends/runtime/src/runtime_stub.cc
+tests/depends/ascir/generator/ascir_builtin_ops.cpp

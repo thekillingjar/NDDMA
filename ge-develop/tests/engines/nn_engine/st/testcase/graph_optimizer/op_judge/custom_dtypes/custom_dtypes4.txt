@@ -1,0 +1,2 @@
+OpType::mat_mul_name:InputDtype:float16,,float16,OutputDtype:float,float
+MatMulV3:InputDtype:float16,,float16,OutputDtype:float,float

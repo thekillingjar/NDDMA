@@ -1,0 +1,120 @@
+{
+    "test_001":"abc",
+    "test_002":{
+
+    },
+    "test_003":{
+        "Nodes":[
+            {
+                "name": "node1",
+                "type": ["Min"]
+            },
+            {
+                "name": "node2",
+                "type": ["Fc"]
+            }
+        ],
+        "Edges":[
+            {
+                "src":"input",
+                "dst":"node1"
+            },
+            {
+                "src":"node1:0",
+                "dst":"node2:0"
+            },
+            {
+                "src":"node2",
+                "dst":"output"
+            }
+        ],
+        "Attrs":[
+            {
+                "attr":"node1.attr1",
+                "value":"node2.attr1",
+                "expr":"="
+            },
+            {
+                "attr":"node2.attr1",
+                "value":"1",
+                "expr":"="
+            }
+        ]
+    },
+    "test_004":{
+        "Nodes":[
+            {
+                "name": "node1",
+                "type": ["Min"]
+            },
+            {
+                "name": "node2",
+                "type": ["Conv"]
+            }
+        ],
+        "Edges":[
+            {
+                "src":"input",
+                "dst":"node1"
+            },
+            {
+                "src":"node1:0",
+                "dst":"node2:0"
+            },
+            {
+                "src":"node2",
+                "dst":"output"
+            }
+        ]
+    },
+    "test_005":{
+        "Nodes":{
+                "name": "node1",
+                "type": ["Min", "max"]
+            },
+        "Edges":[
+            {
+                "src":"input",
+                "dst":"node1"
+            },
+            {
+                "src":"node1:0",
+                "dst":"node2:0"
+            },
+            {
+                "src":"node2",
+                "dst":"output"
+            }
+        ]
+    },
+    "test_006":{
+        "Nodes":[
+            {
+                "name": "node1",
+                "type": ["Min"]
+            },
+            {
+                "name": "node2",
+                "type": ["Conv"]
+            }
+        ],
+        "Edges":
+            {
+                "src":"input",
+                "dst":"node1"
+            }
+    },
+    "test_007":{
+        "Nodes":[
+            {
+                "name": "node1",
+                "type": ["Min"]
+            },
+            {
+                "name": "node2",
+                "type": ["Conv"]
+            }
+        ],
+        "other":123
+    }
+}

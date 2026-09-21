@@ -1,0 +1,16 @@
+{
+    "dump":{
+        "dump_list":[
+            {
+                "model_name":"contact_nano",
+                "layer":[
+                    "concatv2"
+                ]
+            }
+        ],
+        "dump_debug":"off",
+        "dump_path":"./",
+        "dump_mode":"input",
+        "dump_op_switch":"off"
+    }
+}

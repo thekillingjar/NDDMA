@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<block name="DflowExecutorSo" copy_type="delivery" src_path="" dst_path="" install_path="" install_own="$username:$usergroup" install_mod="550" install_type="all">
+    <dir_info value="DflowExecutorSo">
+        <path value="$(TARGET_ENV)/lib64"/>
+        <path value="$(TARGET_ENV)/lib64/stub"/>
+        <path value="$(TARGET_ENV)/lib64/stub/linux"/>
+        <path value="$(TARGET_ENV)/lib64/stub/linux/$(ARCH)" install_softlink="$(TARGET_ENV)/lib64/stub/$(ARCH)"/>
+        <path value="$(TARGET_ENV)/lib64/stub/linux/aarch64" install_softlink="$(TARGET_ENV)/lib64/stub/aarch64"/>
+        <path value="$(TARGET_ENV)/devlib"/>
+        <path value="$(TARGET_ENV)/devlib/linux"/>
+        <path value="$(TARGET_ENV)/devlib/linux/$(ARCH)"/>
+        <path value="$(TARGET_ENV)/devlib/device"/>
+        <path value="compat"/>
+        <path value="runtime"/>
+        <path value="runtime/lib64"/>
+    </dir_info>
+    <file_info value="lib64" copy_type="delivery" src_path="" dst_path="lib64" install_path="$(TARGET_ENV)/lib64" install_type="all" install_mod="550">
+        <file value="libudf_dump.so" file_type="shared"/>
+        <file value="libreader_writer.so" file_type="shared"/>
+        <file value="libudf_profiling.so" file_type="shared"/>
+        <file value="libflow_func.so" file_type="shared"/>
+        <file value="libbuilt_in_flowfunc.so" file_type="shared"/>
+    </file_info>
+    <file_info value="lib64" copy_type="delivery" src_path="" dst_path="lib64" install_path="compat" install_type="all" install_mod="550">
+        <file value="cann-udf-compat.tar.gz" install_mod="440"/>
+    </file_info>
+    <file_info value="lib64" copy_type="delivery" src_path="" dst_path="lib64" install_path="runtime/lib64" install_type="all" install_mod="550">
+        <file value="Ascend-runtime_device-minios.tar.gz" install_mod="440" optional="true"/>
+    </file_info>
+    <file_info value="udf_stublib" copy_type="delivery" src_path="" dst_path="lib64" install_path="$(TARGET_ENV)/lib64/stub/linux/$(ARCH)" install_type="all" install_mod="550">
+        <file value="libflow_func.so" file_type="shared"/>
+    </file_info>
+    <file_info value="udf_devlib" copy_type="delivery" src_path="" dst_path="lib64" install_path="$(TARGET_ENV)/devlib/linux/$(ARCH)" install_type="all" install_mod="550">
+        <file value="libflow_func.so" file_type="shared"/>
+    </file_info>
+    <file_info value="udf_devlib_device" copy_type="delivery" src_path="" dst_path="devlib/device" install_path="$(TARGET_ENV)/devlib/device" install_type="all" install_mod="550">
+        <file value="libflow_func.so" file_type="shared"/>
+    </file_info>
+</block>

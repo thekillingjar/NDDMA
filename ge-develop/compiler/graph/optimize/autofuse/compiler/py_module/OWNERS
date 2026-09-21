@@ -1,0 +1,14 @@
+approvers:
+- wqtshg
+- wangxiaotian22
+- zhangfan_hq
+
+reviewers:
+- ni100die
+- dingdairong
+- sheng-nan
+- isaacxr
+- xchu42
+
+options:
+ no_parent_owners: true

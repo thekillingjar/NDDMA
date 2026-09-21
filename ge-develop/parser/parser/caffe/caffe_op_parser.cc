@@ -1,0 +1,168 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of 
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+#include "parser/caffe/caffe_op_parser.h"
+
+#include "base/err_msg.h"
+
+#include <memory>
+#include "parser/common/op_parser_factory.h"
+#include "base/err_msg.h"
+#include "framework/omg/parser/parser_types.h"
+#include "graph/def_types.h"
+
+using namespace ge::parser;
+using domi::caffe::BlobProto;
+using domi::CAFFE;
+
+namespace ge {
+namespace {
+  const char *kNetOutput = "NetOutput";
+  const char *kDropout = "Dropout";
+}
+Status CaffeOpParser::ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) {
+  (void)op_src;
+  (void)op_dest;
+  return SUCCESS;
+}
+
+Status CaffeOpParser::ParseWeights(const Message *op_src, ge::NodePtr &node) {
+  (void)op_src;
+  (void)node;
+  return SUCCESS;
+}
+
+Status CaffeOpParser::AddConstInput(ge::NodePtr &node) {
+  (void)node;
+  return SUCCESS;
+}
+
+void CaffeOpParser::ConvertShape(const BlobProto &proto, std::vector<int64_t> &shape) {
+  shape.clear();
+
+  if (proto.has_num() || proto.has_channels() || proto.has_height() || proto.has_width()) {
+    // Compatible with old formats, shape description: (num, channels, height, width)
+    shape.push_back(proto.num());
+    shape.push_back(proto.channels());
+    shape.push_back(proto.height());
+    shape.push_back(proto.width());
+  } else {
+    // The shape of the new format is described with "repeated Int64 dim"
+    for (int i = 0; i < proto.shape().dim_size(); ++i) {
+      shape.push_back(proto.shape().dim(i));
+    }
+  }
+}
+
+Status CaffeOpParser::ConvertWeight(const BlobProto &proto, const string &lay_name, ge::GeTensorPtr &weight) {
+  GE_CHECK_NOTNULL(weight);
+  std::vector<int64_t> shape_vec;
+  ConvertShape(proto, shape_vec);
+  ge::GeShape shape(shape_vec);
+  // Calculate the number of data in weight
+  int32_t count = 1;
+  for (size_t i = 0; i < shape.GetDimNum(); ++i) {
+    int32_t dim = static_cast<int32_t>(shape.GetDim(i));
+    if (dim <= 0) {
+      REPORT_INNER_ERR_MSG("E19999", "Convert weight fail, dim:%d of layer:%s <=0, check invalid", dim, lay_name.c_str());
+      GELOGE(FAILED, "[Check][Size]Convert weight fail, dim:%d of layer:%s <=0, check invalid", dim, lay_name.c_str());
+      return FAILED;
+    }
+
+    if (dim >= INT32_MAX / count) {
+      REPORT_INNER_ERR_MSG("E19999", "Convert weight fail, shape:%s of layer:%s will overflow after multi",
+                         shape.ToString().c_str(), lay_name.c_str());
+      GELOGE(FAILED, "[Check][Size]Convert weight fail, Blob size exceeds INT64_MAX, dim:%d, count:%d, layer name:%s",
+             dim, count, lay_name.c_str());
+      return FAILED;
+    }
+
+    count *= dim;
+  }
+  return ParseWeightType(proto, shape, count, lay_name, weight);
+}
+
+Status CaffeOpParser::CheckSizeInvalid(const string &lay_name, const int32_t blob_size, const int32_t size) {
+  if (blob_size == size) {
+    return SUCCESS;
+  }
+  REPORT_PREDEFINED_ERR_MSG("E11033", std::vector<const char *>({"opname", "blobsize", "reason"}),
+                            std::vector<const char *>({lay_name.c_str(), std::to_string(blob_size).c_str(),
+                                                      ("It does not match shape size " + std::to_string(size)).c_str()}));
+  GELOGE(FAILED, "[Check][Param]Convert weight fail, Blob size does not match shape size, "
+         "shape size:%d, blob size:%d, layer name:%s", size, blob_size, lay_name.c_str());
+  return FAILED;
+}
+
+Status CaffeOpParser::ParseWeightType(const BlobProto &proto, const ge::GeShape &shape, int size,
+                                      const string &lay_name, ge::GeTensorPtr &weight) {
+  // Extract weight data and store it in weightdef by float type
+  GE_CHECK_NOTNULL(weight);
+  ge::DataType dtype = ge::DT_FLOAT;
+  if (proto.double_data_size() > 0) {
+    // Convert by double type
+    GE_CHK_STATUS_RET_NOLOG(CheckSizeInvalid(lay_name, proto.double_data_size(), size));
+    std::unique_ptr<float[]> buf(new (std::nothrow) float[size]());
+    GE_CHECK_NOTNULL(buf);
+    for (int i = 0; i < size; ++i) {
+      buf[i] = static_cast<float>(proto.double_data(i));
+    }
+    GE_IF_BOOL_EXEC(weight->SetData(PtrToPtr<float, uint8_t>(buf.get()), size * sizeof(float)) != ge::GRAPH_SUCCESS,
+                    GELOGW("SetData failed for GeTensor."););  // no need to return
+  } else if (proto.int8_data().length() > 0) {
+    GE_CHK_STATUS_RET_NOLOG(CheckSizeInvalid(lay_name, static_cast<int32_t>(proto.int8_data().length()), size));
+    const char *data_ptr = proto.int8_data().data();
+    GE_CHECK_NOTNULL(data_ptr);
+    GE_IF_BOOL_EXEC(weight->SetData(PtrToPtr<const char, const uint8_t>(data_ptr), size * sizeof(int8_t)) !=
+                    ge::GRAPH_SUCCESS, GELOGW("SetData failed for GeTensor."););  // no need to return
+    dtype = ge::DT_INT8;
+  } else if (proto.int32_data_size() > 0) {
+    GE_CHK_STATUS_RET_NOLOG(CheckSizeInvalid(lay_name, static_cast<int32_t>(proto.int32_data_size()), size));
+    std::unique_ptr<int32_t[]> int32_weight_buf(new (std::nothrow) int32_t[size]());
+    GE_CHECK_NOTNULL(int32_weight_buf);
+    for (int i = 0; i < size; ++i) {
+      int32_weight_buf[i] = proto.int32_data(i);
+    }
+    GE_IF_BOOL_EXEC(weight->SetData(PtrToPtr<int32_t, uint8_t>(int32_weight_buf.get()), size * sizeof(int32_t)) !=
+                    ge::GRAPH_SUCCESS, GELOGW("SetData failed for GeTensor."););  // no need to return
+    dtype = ge::DT_INT32;
+  } else if (proto.uint64_data_size() > 0) {
+    GE_CHK_STATUS_RET_NOLOG(CheckSizeInvalid(lay_name, static_cast<int32_t>(proto.uint64_data_size()), size));
+    std::unique_ptr<uint64_t[]> uint64_weight_buf(new (std::nothrow) uint64_t[size]());
+    GE_CHECK_NOTNULL(uint64_weight_buf);
+    for (int i = 0; i < size; ++i) {
+      uint64_weight_buf[i] = proto.uint64_data(i);
+    }
+    GE_IF_BOOL_EXEC(weight->SetData(PtrToPtr<uint64_t, uint8_t>(uint64_weight_buf.get()), size * sizeof(uint64_t)) !=
+                    ge::GRAPH_SUCCESS, GELOGW("SetData failed for GeTensor."););  // no need to return
+    dtype = ge::DT_UINT64;
+  } else {
+    // Convert by float type
+    GE_CHK_STATUS_RET_NOLOG(CheckSizeInvalid(lay_name, static_cast<int32_t>(proto.data_size()), size));
+    const float *data_ptr = proto.data().data();
+    GE_CHECK_NOTNULL(data_ptr);
+    GE_IF_BOOL_EXEC(weight->SetData(PtrToPtr<const float, const uint8_t>(data_ptr), size * sizeof(float)) !=
+                    ge::GRAPH_SUCCESS, GELOGW("SetData failed for GeTensor."););  // no need to return
+  }
+  ge::GeTensorDesc weight_desc = ge::GeTensorDesc();
+  weight_desc.Update(shape, ge::FORMAT_NCHW, dtype);
+  weight->SetTensorDesc(weight_desc);
+  return SUCCESS;
+}
+
+// Dropout's corresponding op_parser is registered as caffeopparser, optimized in optimization stage.
+REGISTER_OP_PARSER_CREATOR(CAFFE, kDropout, CaffeOpParser);
+
+// A new operator added by framework in OM model is used to
+// collect and arrange all outputs in the order of the original model's output
+// Net output operator does not need special processing in the parse stage,
+// and directly registers in the op_parser file
+REGISTER_OP_PARSER_CREATOR(CAFFE, kNetOutput, CaffeOpParser);
+}  // namespace ge

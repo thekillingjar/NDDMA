@@ -1,0 +1,61 @@
+original axes : [b,n,g,s1,s2,d,l,]
+bngs1T : merged by [b,n,g,s1T,]
+s1t : split into [s1tT,s1tt,s1tT2,s1tt2,]
+bngs1T : split into [bngs1TB,bngs1Tb,]
+bngs1Tb : split into [bngs1TbT,bngs1Tbt,]
+s2 : split into [s2T,s2t,]
+s1 : split into [s1T,s1t,]
+
+inputs: [query,key,value,pse,scaleValue,attenMask,dropMask,]
+outputs: [buf,softmaxMax,]
+workspace: [addResOut,]
+
+Q0 : [bmm1_output_0]
+Q1 : [load1_output_0, add1_output_0, mul1_output_0, select_output_0, flashSoftmax_output_0, dropout_output_0]
+Q2 : [flashSoftmax_output_2]
+Q3 : [softmaxExp_output_0]
+Q4 : [storeVec1Res_output_0]
+Q5 : [bmm2_output_0]
+Q6 : [addResOut_output_0]
+BUF0 : [loadPse_output_0, castVec1Res_output_0]
+BUF1 : [castPse_output_0, softmaxApiTmpBuf_output_0, load2_output_0]
+BUF2 : [loadAttenMask_output_0]
+BUF3 : [loadDropMask_output_0]
+BUF4 : [flashSoftmax_output_1]
+BUF5 : [{castBmm2Res_output_0, castBmm2Res_output_0}, loadAddResOut_output_0, mulRes_output_0, addRes_output_0, div_output_0, castBmm2Res_output_0]
+
+for bngs1TB in range((B * G * N * S1 / (bngs1Tb_size * s1t_size)))
+  for bngs1TbT in range((bngs1Tb_size / (bngs1Tbt_size)))
+    for bngs1Tbt in range(bngs1Tbt_size)
+      for s2T in range((S2 / (s2t_size)))
+        query_output_0 [s1t_size,D]  = query()
+        key_output_0 [D,s2t_size]  = key()
+        bmm1_output_0 [s1t_size,s2t_size] : Q0_GM = bmm1(query_output_0, key_output_0)
+        for s1tT in range((s1t_size / (s1tt_size)))
+          load1_output_0 [s1tt_size,s2t_size] : Q1_UB = load1(bmm1_output_0)
+          loadPse_output_0 [s1tt_size,s2t_size] : BUF0_UB = loadPse(pse)
+          castPse_output_0 [s1tt_size,s2t_size] : BUF1_UB = castPse(loadPse_output_0)
+          add1_output_0 [s1tt_size,s2t_size] : Q1_UB = add1(load1_output_0, castPse_output_0)
+          mul1_output_0 [s1tt_size,s2t_size] : Q1_UB = mul1(add1_output_0, scaleValue)
+          loadAttenMask_output_0 [s1tt_size,s2t_size] : BUF2_UB = loadAttenMask(attenMask)
+          select_output_0 [s1tt_size,s2t_size] : Q1_UB = select(mul1_output_0, loadAttenMask_output_0)
+          softmaxExp_output_0 [s1tt_size,BL] : Q3_UB = softmaxExp()
+          softmaxApiTmpBuf_output_0 [s1tt_size,s2t_size] : BUF1_UB = softmaxApiTmpBuf()
+          flashSoftmax_output_0 [s1tt_size,s2t_size] : Q1_UB, flashSoftmax_output_1 [s1tt_size,BL] : BUF4_UB, flashSoftmax_output_2 [s1tt_size,BL] : Q2_UB = flashSoftmax(select_output_0, softmaxExp_output_0, softmaxApiTmpBuf_output_0)
+          storeSoftmaxMax_output_0 [s1tt_size,BL]  = storeSoftmaxMax(flashSoftmax_output_2)
+          loadDropMask_output_0 [s1tt_size,s2t_size] : BUF3_UB = loadDropMask(dropMask)
+          dropout_output_0 [s1tt_size,s2t_size] : Q1_UB = dropout(flashSoftmax_output_0, loadDropMask_output_0)
+          castVec1Res_output_0 [s1tt_size,s2t_size] : BUF0_UB = castVec1Res(dropout_output_0)
+          storeVec1Res_output_0 [s1tt_size,s2t_size] : Q4_GM = storeVec1Res(castVec1Res_output_0)
+        value_output_0 [s2t_size,D]  = value()
+        bmm2_output_0 [s1t_size,D] : Q5_GM = bmm2(storeVec1Res_output_0, value_output_0)
+        for s1tT2 in range((s1t_size / (s1tt2_size)))
+          load2_output_0 [s1tt2_size,D] : BUF1_UB = load2(bmm2_output_0)
+          addResOut_output_0 [s1tt2_size,D] : Q6_GM = addResOut()
+          loadAddResOut_output_0 [s1tt2_size,D] : BUF5_UB = loadAddResOut(addResOut_output_0)
+          mulRes_output_0 [s1tt2_size,D] : BUF5_UB = mulRes(loadAddResOut_output_0, softmaxExp_output_0)
+          addRes_output_0 [s1tt2_size,D] : BUF5_UB = addRes(load2_output_0, mulRes_output_0)
+          div_output_0 [s1tt2_size,D] : BUF5_UB = div(addRes_output_0, flashSoftmax_output_2)
+          castBmm2Res_output_0 [s1tt2_size,D] : BUF5_UB = castBmm2Res(div_output_0)
+          store_output_0 [s1tt2_size,D]  = store(castBmm2Res_output_0)
+

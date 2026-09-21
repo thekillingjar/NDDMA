@@ -1,0 +1,23 @@
+{
+  "dynamic_schedule_enable": true,
+  "batch_deploy_info": [
+    {
+      "flow_node_list": [
+        "node0"
+      ],
+      "logic_device_list": "0:0:0:0"
+    },
+    {
+      "flow_node_list": [
+        "node1"
+      ],
+      "logic_device_list": "0:0:0:0"
+    },
+    {
+      "flow_node_list": [
+        "node2"
+      ],
+      "logic_device_list": "0:0:1~2:0"
+    }
+  ]
+}

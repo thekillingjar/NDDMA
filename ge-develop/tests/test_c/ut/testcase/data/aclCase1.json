@@ -1,0 +1,16 @@
+{
+    "dump1":{
+        "dump_list":[
+            {
+                "model_name":"contact_nano",
+                "layer":[
+                    "concatv2"
+                ]
+            }
+        ],
+        "dump_path":"./",
+        "dump_mode":"all",
+        "dump_data":"tensor",
+        "dump_op_switch":"off"
+    }
+}

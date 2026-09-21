@@ -1,0 +1,106 @@
+{
+  "Rules":[
+    {
+      "RuleName":"ClipFusion",
+      "OuterInputs":[
+        {
+          "name":"input0"
+        },
+        {
+          "name":"input1"
+        }
+      ],
+      "OuterOutputs":[
+        {
+          "name":"output0"
+        }
+      ],
+      "OriginGraph":{
+        "Edges":[
+          {
+            "src":"input0",
+            "dst":"node1:0"
+          },
+          {
+            "src":"input1",
+            "dst":"node1:1"
+          },
+          {
+            "src":"node1:0",
+            "dst":"node2:0"
+          },
+          {
+            "src":"node2:0",
+            "dst":"output0"
+          }
+        ]
+      },
+      "FusionGraph":{
+        "Nodes":[
+          {
+            "name":"node3",
+            "type":[
+              "clip"
+            ]
+          }
+        ],
+        "Edges":[
+          {
+            "src":"input0",
+            "dst":"node3:0"
+          },
+          {
+            "src":"input1",
+            "dst":"node3:1"
+          },
+          {
+            "src":"node3:0",
+            "dst":"output0"
+          }
+        ],
+        "Attrs": [
+          {
+            "attr": "node3.attr1",
+            "value": "node1.attr1",
+            "expr": "="
+          },
+          {
+            "attr": "node3.attr2",
+            "value": "true",
+            "expr": "="
+          },
+          {
+            "attr": "node3.attr3",
+            "value": "18",
+            "expr": "="
+          },
+          {
+            "attr": "node3.attr4",
+            "value": "alpha",
+            "expr": "="
+          },
+          {
+            "attr": "node3.attr5",
+            "value": ["18.2","18.3"],
+            "expr": "="
+          },
+          {
+            "attr": "node3.attr6",
+            "value": ["true","false"],
+            "expr": "="
+          },
+          {
+            "attr": "node3.attr7",
+            "value": ["18","19"],
+            "expr": "="
+          },
+          {
+            "attr": "node3.attr8",
+            "value": ["alpha","gmma"],
+            "expr": "="
+          }
+        ]
+      }
+    }
+  ]
+}

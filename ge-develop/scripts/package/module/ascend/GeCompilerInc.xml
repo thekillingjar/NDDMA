@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<block name="GeCompilerInc" copy_type="delivery" src_path="" dst_path="" install_path="" install_own="$username:$usergroup" install_mod="550" install_type="all">
+    <dir_info value="GeCompilerInc">
+        <path value="$(TARGET_ENV)/include/ge/fusion" install_mod="555"/>
+        <path value="$(TARGET_ENV)/include/ge/fusion/pass" install_mod="555"/>
+        <path value="$(TARGET_ENV)/include/ge/cmake" install_mod="555"/>
+        <path value="$(TARGET_ENV)/include/flow_graph" install_mod="555"/>
+        <path value="$(TARGET_ENV)/include/acl" install_mod="555"/>
+        <path value="$(TARGET_ENV)/include/acl/error_codes" install_mod="555"/>
+        <path value="$(TARGET_ENV)/include/parser" install_mod="555"/>
+        <path value="python" install_mod="555"/>
+        <path value="python/site-packages" install_mod="555"/>
+        <path value="python/site-packages/autofuse" install_mod="555"/>
+        <path value="$(TARGET_ENV)/lib64" install_mod="555"/>
+        <path value="$(TARGET_ENV)/lib64/plugin" install_mod="555"/>
+        <path value="$(TARGET_ENV)/lib64/plugin/nnengine/ge_config" install_mod="555"/>
+        <path value="$(TARGET_ENV)/lib64/plugin/opskernel" install_mod="555"/>
+        <path value="$(TARGET_ENV)/lib64/plugin/opskernel/config" install_mod="555"/>
+        <path value="$(TARGET_ENV)/lib64/plugin/opskernel/fe_config" install_mod="555"/>
+        <path value="$(TARGET_ENV)/lib64/plugin/opskernel/ffts_config" install_mod="555"/>
+        <path value="$(TARGET_ENV)/python" install_mod="555"/>
+        <path value="$(TARGET_ENV)/python/func2graph" install_mod="555"/>
+    </dir_info>
+    <file_info value="include" copy_type="source" dst_path="include/ge" install_path="$(TARGET_ENV)/include/ge" install_type="devel" install_mod="440">
+        <file value="ge_ir_build.h"/>
+        <file value="ge_utils.h"/>
+    </file_info>
+    <file_info value="include" copy_type="source" dst_path="include/ge" install_path="$(TARGET_ENV)/include/ge" install_type="devel" install_mod="440">
+        <file value="ge_api.h"/>
+        <file value="ge_api_v2.h"/>
+        <file value="ge_feature_memory.h"/>
+        <file value="ge_data_flow_api.h"/>
+        <file value="ge_graph_compile_summary.h"/>
+        <file value="esb_funcs.h"/>
+        <file value="compliant_node_builder.h"/>
+        <file value="es_c_graph_builder.h"/>
+        <file value="es_c_tensor_holder.h"/>
+        <file value="es_graph_builder.h"/>
+        <file value="es_tensor_holder.h"/>
+        <file value="es_tensor_like.h"/>
+        <file value="hcom_ops_stores.h"/>
+        <file value="hcom_gradient_split_tune.h"/>
+    </file_info>
+    <file_info value="include" copy_type="source" dst_path="include/ge/cmake" install_path="$(TARGET_ENV)/include/ge/cmake" install_type="devel" install_mod="440">
+        <file value="FindGenerateEsPackage.cmake"/>
+        <file value="generate_es_package.cmake"/>
+    </file_info>
+    <file_info value="include" copy_type="source" dst_path="include/acl" install_path="$(TARGET_ENV)/include/acl" install_type="devel" install_mod="440">
+        <file value="acl_op_compiler.h"/>
+    </file_info>
+    <file_info value="include" copy_type="source" dst_path="include/ge/fusion" install_path="$(TARGET_ENV)/include/ge/fusion" install_type="devel" install_mod="440">
+        <file value="graph_rewriter.h"/>
+        <file value="match_result.h"/>
+        <file value="pattern.h"/>
+        <file value="pattern_matcher.h"/>
+        <file value="subgraph_boundary.h"/>
+        <file value="pattern_matcher_config.h"/>
+    </file_info>
+    <file_info value="include" copy_type="source" dst_path="include/ge/fusion/pass" install_path="$(TARGET_ENV)/include/ge/fusion/pass" install_type="devel" install_mod="440">
+        <file value="decompose_pass.h"/>
+        <file value="fusion_base_pass.h"/>
+        <file value="fusion_pass_reg.h"/>
+        <file value="pattern_fusion_pass.h"/>
+    </file_info>
+    <file_info value="include" copy_type="source" dst_path="include/flow_graph" install_path="$(TARGET_ENV)/include/flow_graph" install_type="devel" install_mod="440">
+        <file value="data_flow.h"/>
+        <file value="flow_attr.h"/>
+        <file value="flow_graph.h"/>
+        <file value="process_point.h"/>
+    </file_info>
+    <file_info value="include" copy_type="source" dst_path="include/parser" install_path="$(TARGET_ENV)/include/parser" install_type="devel" install_mod="440">
+        <file value="caffe_parser.h"/>
+        <file value="onnx_parser.h"/>
+        <file value="tensorflow_parser.h"/>
+    </file_info>
+    <file_info value="python" copy_type="source" dst_path="python/site-packages/autofuse" install_path="python/site-packages/autofuse" install_type="devel" install_mod="550">
+        <file value="ascbc_kernel_compile.py"/>
+        <file value="asc_codegen_compile.py"/>
+        <file value="ascendc_compile.py"/>
+        <file value="ascir_api.py"/>
+        <file value="compile_adapter.py"/>
+        <file value="__init__.py"/>
+    </file_info>
+    <file_info value="python" copy_type="source" dst_path="python/func2graph" install_path="$(TARGET_ENV)/python/func2graph" install_type="all" install_mod="550">
+        <file value="func2graph.py"/>
+        <file value="util_3_14" install_type="devel"/>
+        <file value="util" install_type="devel"/>
+    </file_info>
+    <file_info value="lib64" copy_type="source" dst_path="lib64" install_path="$(TARGET_ENV)/lib64" install_type="all" install_mod="440">
+        <!-- ge -->
+        <file value="engine_conf.json" dst_path="lib64/plugin/nnengine/ge_config" install_path="$(TARGET_ENV)/lib64/plugin/nnengine/ge_config"/>
+        <file value="optimizer_priority.pbtxt" dst_path="lib64/plugin/opskernel" install_path="$(TARGET_ENV)/lib64/plugin/opskernel"/>
+        <!-- aicpu -->
+        <file value="init.conf" dst_path="lib64/plugin/opskernel/config" install_path="$(TARGET_ENV)/lib64/plugin/opskernel/config" install_mod="640"/>
+        <file value="ir2tf_op_mapping_lib.json" dst_path="lib64/plugin/opskernel/config" install_path="$(TARGET_ENV)/lib64/plugin/opskernel/config" install_mod="440"/>
+        <file value="aicpu_ops_parallel_rule.json" dst_path="lib64/plugin/opskernel/config" install_path="$(TARGET_ENV)/lib64/plugin/opskernel/config" install_mod="440"/>
+    </file_info>
+    <file_info value="lib64" copy_type="source" dst_path="lib64/plugin/opskernel/fe_config" install_path="$(TARGET_ENV)/lib64/plugin/opskernel/fe_config" install_type="all" install_mod="440">
+        <file value="fe.ini"/>
+    </file_info>
+    <file_info value="lib64" copy_type="source" dst_path="lib64/plugin/opskernel/ffts_config" install_path="$(TARGET_ENV)/lib64/plugin/opskernel/ffts_config" install_type="all" install_mod="440">
+        <file value="ffts.ini"/>
+    </file_info>
+</block>

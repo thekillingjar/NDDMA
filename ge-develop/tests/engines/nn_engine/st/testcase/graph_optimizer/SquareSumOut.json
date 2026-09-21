@@ -1,0 +1,1137 @@
+{
+  "Rules": [
+    {
+      "RuleName": "SquareSumV1MCtrl",
+      "OuterInputs": [
+        {
+          "name": "Input0"
+        }
+      ],
+      "OuterOutputs": [
+        {
+          "name": "Output0"
+        }
+      ],
+      "OriginGraph": {
+        "Nodes": [
+          {
+            "name": "Square0",
+            "type": [
+              "Square"
+            ]
+          },
+          {
+            "name": "Sum0",
+            "type": [
+              "ReduceSum"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0",
+            "dst": "Square0:0"
+          },
+          {
+            "src": "Square0:0",
+            "dst": "Sum0:0"
+          },
+          {
+            "src": "Square0:-1",
+            "dst": "Sum0:-1"
+          },
+          {
+            "src": "Sum0:0",
+            "dst": "Output0"
+          },
+          {
+            "src": "Sum0:-1",
+            "dst": "Output0:-1"
+          },
+          {
+            "src": "Input0:-1",
+            "dst": "Square0:-1"
+          }
+        ]
+      },
+      "FusionGraph": {
+        "Nodes": [
+          {
+            "name": "SquareSumV1Ctrl",
+            "type": [
+              "Square"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0",
+            "dst": "SquareSumV1Ctrl:0"
+          },
+          {
+            "src": "SquareSumV1Ctrl:0",
+            "dst": "Output0"
+          },
+          {
+            "src": "Input0:-1",
+            "dst": "SquareSumV1Ctrl:-1"
+          },
+          {
+            "src": "SquareSumV1Ctrl:-1",
+            "dst": "Output0:-1"
+          }
+        ]
+      }
+    },
+    {
+      "RuleName": "SquareSumAddMul_ALLCtrl",
+      "OuterInputs": [
+        {
+          "name": "InputSquare0"
+        },
+        {
+          "name": "InputAdd0"
+        }
+      ],
+      "OuterOutputs": [
+        {
+          "name": "OutputMul0"
+        },
+        {
+          "name": "OutputAdd0"
+        },
+        {
+          "name": "OutputSquare1"
+        }
+      ],
+      "OriginGraph": {
+        "Nodes": [
+          {
+            "name": "Square0",
+            "type": [
+              "Square"
+            ]
+          },
+          {
+            "name": "Square1",
+            "type": [
+              "Square"
+            ]
+          },
+          {
+            "name": "Mul0",
+            "type": [
+              "Mul"
+            ]
+          },
+          {
+            "name": "Add0",
+            "type": [
+              "Add"
+            ]
+          },
+          {
+            "name": "Sum0",
+            "type": [
+              "ReduceSum"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "InputSquare0",
+            "dst": "Square0:0"
+          },
+          {
+            "src": "InputSquare0:-1",
+            "dst": "Square0:-1"
+          },
+          {
+            "src": "Square0:0",
+            "dst": "Sum0:0"
+          },
+          {
+            "src": "Square0:-1",
+            "dst": "Square1:-1"
+          },
+          {
+            "src": "Square1:0",
+            "dst": "OutputSquare1"
+          },
+          {
+            "src": "Sum0:0",
+            "dst": "Add0:0"
+          },
+          {
+            "src": "Sum0:-1",
+            "dst": "Add0:-1"
+          },
+          {
+            "src": "Sum0:0",
+            "dst": "Mul0:0"
+          },
+          {
+            "src": "Add0:0",
+            "dst": "OutputAdd0"
+          },
+          {
+            "src": "Add0:0",
+            "dst": "Mul0:1"
+          },
+          {
+            "src": "Add0:-1",
+            "dst": "Mul0:-1"
+          },
+          {
+            "src": "Mul0:-1",
+            "dst": "OutputMul0:-1"
+          },
+          {
+            "src": "Mul0:0",
+            "dst": "OutputMul0"
+          },
+          {
+            "src": "InputAdd0",
+            "dst": "Add0:1"
+          }
+        ]
+      },
+      "FusionGraph": {
+        "Nodes": [
+          {
+            "name": "SquareSumV1Ctrl",
+            "type": [
+              "Square"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "InputSquare0",
+            "dst": "SquareSumV1Ctrl:0"
+          },
+          {
+            "src": "InputSquare0:-1",
+            "dst": "SquareSumV1Ctrl:-1"
+          },
+          {
+            "src": "InputAdd0",
+            "dst": "SquareSumV1Ctrl:1"
+          },
+          {
+            "src": "SquareSumV1Ctrl:0",
+            "dst": "OutputSquare1"
+          },
+          {
+            "src": "SquareSumV1Ctrl:1",
+            "dst": "OutputMul0"
+          },
+          {
+            "src": "SquareSumV1Ctrl:2",
+            "dst": "OutputAdd0"
+          },
+          {
+            "src": "SquareSumV1Ctrl:-1",
+            "dst": "OutputMul0:-1"
+          }
+        ]
+      }
+    },
+    {
+      "RuleName": "SquareSumAddMul_ALLCtrl_multiinput",
+      "OuterInputs": [
+        {
+          "name": "InputSquare0"
+        },
+        {
+          "name": "InputAdd0"
+        }
+      ],
+      "OuterOutputs": [
+        {
+          "name": "OutputMul0"
+        },
+        {
+          "name": "OutputAdd0"
+        }
+      ],
+      "OriginGraph": {
+        "Nodes": [
+          {
+            "name": "Square0",
+            "type": [
+              "Square"
+            ]
+          },
+          {
+            "name": "Square1",
+            "type": [
+              "Square"
+            ]
+          },
+          {
+            "name": "Square2",
+            "type": [
+              "Square"
+            ]
+          },
+          {
+            "name": "Mul0",
+            "type": [
+              "Mul"
+            ]
+          },
+          {
+            "name": "Add0",
+            "type": [
+              "Add"
+            ]
+          },
+          {
+            "name": "Sum0",
+            "type": [
+              "ReduceSum"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "InputSquare0",
+            "dst": "Square0:0"
+          },
+          {
+            "src": "InputSquare0:-1",
+            "dst": "Add0:-1"
+          },
+          {
+            "src": "InputSquare0:-1",
+            "dst": "Square0:-1"
+          },
+          {
+            "src": "Square0:0",
+            "dst": "Sum0:0"
+          },
+          {
+            "src": "Square0:-1",
+            "dst": "Square1:-1"
+          },
+          {
+            "src": "Square1:-1",
+            "dst": "Square2:-1"
+          },
+          {
+            "src": "Sum0:0",
+            "dst": "Add0:0"
+          },
+          {
+            "src": "Square0:-1",
+            "dst": "Add0:-1"
+          },
+          {
+            "src": "Square2:0",
+            "dst": "Mul0:0"
+          },
+          {
+            "src": "Add0:0",
+            "dst": "OutputAdd0"
+          },
+          {
+            "src": "Add0:0",
+            "dst": "Mul0:1"
+          },
+          {
+            "src": "Square0:-1",
+            "dst": "Mul0:-1"
+          },
+          {
+            "src": "Mul0:-1",
+            "dst": "OutputMul0:-1"
+          },
+          {
+            "src": "Mul0:0",
+            "dst": "OutputMul0"
+          },
+          {
+            "src": "InputAdd0",
+            "dst": "Add0:1"
+          },
+          {
+            "src": "InputAdd0:-1",
+            "dst": "Add0:-1"
+          }
+        ]
+      },
+      "FusionGraph": {
+        "Nodes": [
+          {
+            "name": "SquareSumV1Ctrl",
+            "type": [
+              "Square"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "InputSquare0",
+            "dst": "SquareSumV1Ctrl:0"
+          },
+          {
+            "src": "InputSquare0:-1",
+            "dst": "SquareSumV1Ctrl:-1"
+          },
+          {
+            "src": "InputAdd0",
+            "dst": "SquareSumV1Ctrl:1"
+          },
+          {
+            "src": "InputAdd0:-1",
+            "dst": "SquareSumV1Ctrl:-1"
+          },
+          {
+            "src": "SquareSumV1Ctrl:0",
+            "dst": "OutputMul0"
+          },
+          {
+            "src": "SquareSumV1Ctrl:1",
+            "dst": "OutputAdd0"
+          },
+          {
+            "src": "SquareSumV1Ctrl:-1",
+            "dst": "OutputMul0:-1"
+          }
+        ]
+      }
+    },
+    {
+      "RuleName": "SquareSumAddMul_ALLCtrl_outputRef",
+      "OuterInputs": [
+        {
+          "name": "InputSquare0"
+        },
+        {
+          "name": "InputAdd0"
+        }
+      ],
+      "OuterOutputs": [
+        {
+          "name": "OutputMul0"
+        },
+        {
+          "name": "OutputAdd0"
+        }
+      ],
+      "OriginGraph": {
+        "Nodes": [
+          {
+            "name": "Square0",
+            "type": [
+              "Square"
+            ]
+          },
+          {
+            "name": "Square1",
+            "type": [
+              "Square"
+            ]
+          },
+          {
+            "name": "Square2",
+            "type": [
+              "Square"
+            ]
+          },
+          {
+            "name": "Mul0",
+            "type": [
+              "Mul"
+            ]
+          },
+          {
+            "name": "Add0",
+            "type": [
+              "Add"
+            ]
+          },
+          {
+            "name": "Sum0",
+            "type": [
+              "ReduceSum"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "InputSquare0",
+            "dst": "Square0:0"
+          },
+          {
+            "src": "InputSquare0:-1",
+            "dst": "Square0:-1"
+          },
+          {
+            "src": "Square0:0",
+            "dst": "Sum0:0"
+          },
+          {
+            "src": "Square0:-1",
+            "dst": "Square1:-1"
+          },
+          {
+            "src": "Square1:-1",
+            "dst": "Square2:-1"
+          },
+          {
+            "src": "Sum0:0",
+            "dst": "Add0:0"
+          },
+          {
+            "src": "Square0:-1",
+            "dst": "Add0:-1"
+          },
+          {
+            "src": "Square2:0",
+            "dst": "Mul0:0"
+          },
+          {
+            "src": "Add0:0",
+            "dst": "OutputAdd0"
+          },
+          {
+            "src": "Add0:0",
+            "dst": "Mul0:1"
+          },
+          {
+            "src": "Square0:-1",
+            "dst": "Mul0:-1"
+          },
+          {
+            "src": "Mul0:-1",
+            "dst": "OutputMul0:-1"
+          },
+          {
+            "src": "Mul0:0",
+            "dst": "OutputMul0"
+          },
+          {
+            "src": "InputAdd0",
+            "dst": "Add0:1"
+          }
+        ]
+      },
+      "FusionGraph": {
+        "Nodes": [
+          {
+            "name": "SquareSumV1Ctrl",
+            "type": [
+              "Square"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "InputSquare0",
+            "dst": "SquareSumV1Ctrl:0"
+          },
+          {
+            "src": "InputSquare0:-1",
+            "dst": "SquareSumV1Ctrl:-1"
+          },
+          {
+            "src": "InputAdd0",
+            "dst": "SquareSumV1Ctrl:1"
+          },
+          {
+            "src": "SquareSumV1Ctrl:0",
+            "dst": "OutputMul0"
+          },
+          {
+            "src": "SquareSumV1Ctrl:1",
+            "dst": "OutputAdd0"
+          },
+          {
+            "src": "SquareSumV1Ctrl:-1",
+            "dst": "OutputMul0:-1"
+          }
+        ]
+      }
+    },
+    {
+      "RuleName": "SquareSumAddMul_ALLCtrl_1",
+      "OuterInputs": [
+        {
+          "name": "InputSquare0"
+        },
+        {
+          "name": "InputAdd0"
+        }
+      ],
+      "OuterOutputs": [
+        {
+          "name": "OutputMul0"
+        },
+        {
+          "name": "OutputAdd0"
+        }
+      ],
+      "OriginGraph": {
+        "Nodes": [
+          {
+            "name": "Square0",
+            "type": [
+              "Square"
+            ]
+          },
+          {
+            "name": "Square1",
+            "type": [
+              "Square"
+            ]
+          },
+          {
+            "name": "Square2",
+            "type": [
+              "Square"
+            ]
+          },
+          {
+            "name": "Mul0",
+            "type": [
+              "Mul"
+            ]
+          },
+          {
+            "name": "Add0",
+            "type": [
+              "Add"
+            ]
+          },
+          {
+            "name": "Sum0",
+            "type": [
+              "ReduceSum"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "InputSquare0",
+            "dst": "Square0:0"
+          },
+          {
+            "src": "InputSquare0:-1",
+            "dst": "Square0:-1"
+          },
+          {
+            "src": "Square0:0",
+            "dst": "Sum0:0"
+          },
+          {
+            "src": "Square0:-1",
+            "dst": "Square1:-1"
+          },
+          {
+            "src": "Square1:-1",
+            "dst": "Square2:-1"
+          },
+          {
+            "src": "Sum0:0",
+            "dst": "Add0:0"
+          },
+          {
+            "src": "Sum0:-1",
+            "dst": "Add0:-1"
+          },
+          {
+            "src": "Square2:0",
+            "dst": "Mul0:0"
+          },
+          {
+            "src": "Add0:0",
+            "dst": "OutputAdd0"
+          },
+          {
+            "src": "Add0:0",
+            "dst": "Mul0:1"
+          },
+          {
+            "src": "Add0:-1",
+            "dst": "Mul0:-1"
+          },
+          {
+            "src": "Mul0:-1",
+            "dst": "OutputMul0:-1"
+          },
+          {
+            "src": "Mul0:0",
+            "dst": "OutputMul0"
+          },
+          {
+            "src": "InputAdd0",
+            "dst": "Add0:1"
+          }
+        ]
+      },
+      "FusionGraph": {
+        "Nodes": [
+          {
+            "name": "SquareSumV1Ctrl",
+            "type": [
+              "Square"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "InputSquare0",
+            "dst": "SquareSumV1Ctrl:0"
+          },
+          {
+            "src": "InputSquare0:-1",
+            "dst": "SquareSumV1Ctrl:-1"
+          },
+          {
+            "src": "InputAdd0",
+            "dst": "SquareSumV1Ctrl:1"
+          },
+          {
+            "src": "SquareSumV1Ctrl:0",
+            "dst": "OutputMul0"
+          },
+          {
+            "src": "SquareSumV1Ctrl:1",
+            "dst": "OutputAdd0"
+          },
+          {
+            "src": "SquareSumV1Ctrl:-1",
+            "dst": "OutputMul0:-1"
+          }
+        ]
+      }
+    },
+    {
+      "RuleName": "SquareSumAddMul_ALLCtrl_2input",
+      "OuterInputs": [
+        {
+          "name": "InputSquare0"
+        },
+        {
+          "name": "InputAdd0"
+        }
+      ],
+      "OuterOutputs": [
+        {
+          "name": "OutputMul0"
+        },
+        {
+          "name": "OutputAdd0"
+        }
+      ],
+      "OriginGraph": {
+        "Nodes": [
+          {
+            "name": "Square0",
+            "type": [
+              "Square"
+            ]
+          },
+          {
+            "name": "Square1",
+            "type": [
+              "Square"
+            ]
+          },
+          {
+            "name": "Square2",
+            "type": [
+              "Square"
+            ]
+          },
+          {
+            "name": "Mul0",
+            "type": [
+              "Mul"
+            ]
+          },
+          {
+            "name": "Add0",
+            "type": [
+              "Add"
+            ]
+          },
+          {
+            "name": "Sum0",
+            "type": [
+              "ReduceSum"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "InputSquare0",
+            "dst": "Square0:0"
+          },
+          {
+            "src": "InputSquare0:-1",
+            "dst": "Square0:-1"
+          },
+          {
+            "src": "Square0:0",
+            "dst": "Sum0:0"
+          },
+          {
+            "src": "Square0:-1",
+            "dst": "Square1:-1"
+          },
+          {
+            "src": "Square1:-1",
+            "dst": "Square2:-1"
+          },
+          {
+            "src": "Sum0:0",
+            "dst": "Add0:0"
+          },
+          {
+            "src": "InputAdd0:-1",
+            "dst": "Add0:-1"
+          },
+          {
+            "src": "Square2:0",
+            "dst": "Mul0:0"
+          },
+          {
+            "src": "Add0:0",
+            "dst": "OutputAdd0"
+          },
+          {
+            "src": "Add0:0",
+            "dst": "Mul0:1"
+          },
+          {
+            "src": "Add0:-1",
+            "dst": "Mul0:-1"
+          },
+          {
+            "src": "Mul0:-1",
+            "dst": "OutputMul0:-1"
+          },
+          {
+            "src": "Mul0:0",
+            "dst": "OutputMul0"
+          },
+          {
+            "src": "InputAdd0",
+            "dst": "Add0:1"
+          }
+        ]
+      },
+      "FusionGraph": {
+        "Nodes": [
+          {
+            "name": "SquareSumV1Ctrl",
+            "type": [
+              "Square"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "InputSquare0",
+            "dst": "SquareSumV1Ctrl:0"
+          },
+          {
+            "src": "InputSquare0:-1",
+            "dst": "SquareSumV1Ctrl:-1"
+          },
+          {
+            "src": "InputAdd0",
+            "dst": "SquareSumV1Ctrl:1"
+          },
+          {
+            "src": "InputAdd0:-1",
+            "dst": "SquareSumV1Ctrl:-1"
+          },
+          {
+            "src": "SquareSumV1Ctrl:0",
+            "dst": "OutputMul0"
+          },
+          {
+            "src": "SquareSumV1Ctrl:1",
+            "dst": "OutputAdd0"
+          },
+          {
+            "src": "SquareSumV1Ctrl:-1",
+            "dst": "OutputMul0:-1"
+          }
+        ]
+      }
+    },
+    {
+      "RuleName": "SquareSumV1",
+      "OuterInputs": [
+        {
+          "name": "Input0"
+        }
+      ],
+      "OuterOutputs": [
+        {
+          "name": "Output0"
+        }
+      ],
+      "OriginGraph": {
+        "Nodes": [
+          {
+            "name": "Square0",
+            "type": [
+              "Square"
+            ]
+          },
+          {
+            "name": "Sum0",
+            "type": [
+              "ReduceSum"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0",
+            "dst": "Square0:0"
+          },
+          {
+            "src": "Square0:0",
+            "dst": "Sum0:0"
+          },
+          {
+            "src": "Sum0:0",
+            "dst": "Output0"
+          }
+        ]
+      },
+      "FusionGraph": {
+        "Nodes": [
+          {
+            "name": "SquareSumV1",
+            "type": [
+              "Square"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0",
+            "dst": "SquareSumV1:0"
+          },
+          {
+            "src": "SquareSumV1:0",
+            "dst": "Output0"
+          }
+        ]
+      }
+    },
+    {
+      "RuleName": "LambUpdateWithLrV2RuleCond1",
+      "OuterInputs": [
+        {
+          "name": "Input0"
+        },
+        {
+          "name": "Input1"
+        },
+        {
+          "name": "Input2"
+        },
+        {
+          "name": "Input3"
+        },
+        {
+          "name": "Input4"
+        },
+        {
+          "name": "Greater_y"
+        },
+        {
+          "name": "Select_e"
+        }
+      ],
+      "OuterOutputs": [
+        {
+          "name": "Output0"
+        }
+      ],
+      "OriginGraph": {
+        "Nodes": [
+          {
+            "name": "Greater0",
+            "type": [
+              "Greater"
+            ]
+          },
+          {
+            "name": "Greater1",
+            "type": [
+              "Greater"
+            ]
+          },
+          {
+            "name": "RealDiv0",
+            "type": [
+              "RealDiv"
+            ]
+          },
+          {
+            "name": "Select0",
+            "type": [
+              "Select"
+            ]
+          },
+          {
+            "name": "Select1",
+            "type": [
+              "Select"
+            ]
+          },
+          {
+            "name": "Mul0",
+            "type": [
+              "Mul"
+            ]
+          },
+          {
+            "name": "Mul1",
+            "type": [
+              "Mul"
+            ]
+          },
+          {
+            "name": "Sub0",
+            "type": [
+              "Sub"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0",
+            "dst": "Greater0:0"
+          },
+          {
+            "src": "Greater_y",
+            "dst": "Greater0:1"
+          },
+          {
+            "src": "Input1",
+            "dst": "Greater1:0"
+          },
+          {
+            "src": "Greater_y",
+            "dst": "Greater1:1"
+          },
+          {
+            "src": "Input0",
+            "dst": "RealDiv0:0"
+          },
+          {
+            "src": "Input1",
+            "dst": "RealDiv0:1"
+          },
+          {
+            "src": "Greater1:0",
+            "dst": "Select0:0"
+          },
+          {
+            "src": "RealDiv0:0",
+            "dst": "Select0:1"
+          },
+          {
+            "src": "Select_e",
+            "dst": "Select0:2"
+          },
+          {
+            "src": "Greater0:0",
+            "dst": "Select1:0"
+          },
+          {
+            "src": "Select0:0",
+            "dst": "Select1:1"
+          },
+          {
+            "src": "Select_e",
+            "dst": "Select1:2"
+          },
+          {
+            "src": "Input2",
+            "dst": "Mul0:0"
+          },
+          {
+            "src": "Select1:0",
+            "dst": "Mul0:1"
+          },
+          {
+            "src": "Mul0:0",
+            "dst": "Mul1:0"
+          },
+          {
+            "src": "Input3",
+            "dst": "Mul1:1"
+          },
+          {
+            "src": "Input4",
+            "dst": "Sub0:0"
+          },
+          {
+            "src": "Mul1:0",
+            "dst": "Sub0:1"
+          },
+          {
+            "src": "Sub0:0",
+            "dst": "Output0"
+          }
+        ]
+      },
+      "FusionGraph": {
+        "Nodes": [
+          {
+            "name": "LambUpdateWithLrV2",
+            "type": [
+              "Sub"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0",
+            "dst": "LambUpdateWithLrV2:0"
+          },
+          {
+            "src": "Input1",
+            "dst": "LambUpdateWithLrV2:1"
+          },
+          {
+            "src": "Input2",
+            "dst": "LambUpdateWithLrV2:2"
+          },
+          {
+            "src": "Input3",
+            "dst": "LambUpdateWithLrV2:3"
+          },
+          {
+            "src": "Input4",
+            "dst": "LambUpdateWithLrV2:4"
+          },
+          {
+            "src": "Greater_y",
+            "dst": "LambUpdateWithLrV2:5"
+          },
+          {
+            "src": "Select_e",
+            "dst": "LambUpdateWithLrV2:6"
+          },
+          {
+            "src": "LambUpdateWithLrV2:0",
+            "dst": "Output0"
+          }
+        ]
+      }
+    }
+  ]
+}

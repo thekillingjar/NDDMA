@@ -1,0 +1,99 @@
+{
+    "Conv2D": {
+      "async": {
+        "flag": "false"
+      },
+      "attr": {
+        "list": "strides,pad,dilations"
+      },
+      "attr_dilations": {
+        "paramType": "required",
+        "type": "listInt",
+        "value": "all"
+      },
+      "attr_pad": {
+        "paramType": "required",
+        "type": "listInt",
+        "value": "all"
+      },
+      "attr_strides": {
+        "paramType": "required",
+        "type": "listInt",
+        "value": "all"
+      },
+      "binfile": {
+        "name": "conv2d.so"
+      },
+      "compute": {
+        "cost": "10"
+      },
+      "input0": {
+        "dtype": "float16",
+        "format": "NC1HWC0",
+        "name": "x",
+        "paramType": "required",
+        "shape": "all"
+      },
+      "input1": {
+        "dtype": "float16",
+        "format": "FRACTAL_Z",
+        "name": "filter",
+        "paramType": "required",
+        "shape": "all"
+      },
+      "input2": {
+        "dtype": "float16",
+        "format": "ND",
+        "name": "bias",
+        "paramType": "optional",
+        "shape": "all"
+      },
+      "kernel": {
+        "name": "conv2d"
+      },
+      "output0": {
+        "dtype": "float16",
+        "format": "NC1HWC0",
+        "name": "y",
+        "paramType": "required",
+        "shape": "all"
+      },
+      "partial": {
+        "flag": "true"
+      },
+      "heavyOp": {
+        "flag": "true"
+      }
+    },
+    "FormatAgnosticOp":{
+      "op": {
+        "pattern":"formatAgnostic"
+      },
+      "dynamicShapeSupport": {
+        "flag":"true"
+      },
+      "attr":{
+        "list":"axis,keep_dims"
+      },
+      "attr_axis":{
+        "paramType":"optional",
+        "type":"listInt",
+        "value":"all"
+      },
+      "attr_keep_dims":{
+        "paramType":"optional",
+        "type":"bool",
+        "value":"true"
+      },
+      "input0":{
+        "name":"x",
+        "dtype":"float16,float",
+        "paramType":"required"
+      },
+      "output0":{
+        "name":"y",
+        "dtype":"float16,float",
+        "paramType":"required"
+      }
+    }
+}

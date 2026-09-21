@@ -1,0 +1,125 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of 
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+#ifndef __PYASCIR_H__
+#define __PYASCIR_H__
+
+#include <Python.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void pyautofuse_type_init();
+void pyascir_type_init();
+void pyascir_types_type_init();
+
+PyMODINIT_FUNC PyInit_ascir(void);
+PyMODINIT_FUNC PyInit_pyautofuse(void);
+
+#ifdef __cplusplus
+}
+#endif
+// 定义统一的算子注册列表
+#define REGISTERED_OPS \
+  OP(Data)             \
+  OP(Scalar)           \
+  OP(Workspace)        \
+  OP(Output)           \
+  OP(IndexExpr)        \
+  OP(Load)             \
+  OP(Broadcast)        \
+  OP(Store)            \
+  OP(Cast)             \
+  OP(Abs)              \
+  OP(Exp)              \
+  OP(Exp2)             \
+  OP(Floor)            \
+  OP(Fma)              \
+  OP(BitwiseNot)       \
+  OP(BitwiseOr)        \
+  OP(BitwiseXor)       \
+  OP(Ceil)             \
+  OP(Cos)              \
+  OP(Acos)             \
+  OP(Cosh)             \
+  OP(Atan2)            \
+  OP(Sqrt)             \
+  OP(Rsqrt)            \
+  OP(RemovePad)        \
+  OP(Pad)              \
+  OP(Round)            \
+  OP(Neg)              \
+  OP(Relu)             \
+  OP(Reciprocal)       \
+  OP(Erf)              \
+  OP(Sign)             \
+  OP(Tanh)             \
+  OP(Sin)              \
+  OP(Acosh)            \
+  OP(Asinh)            \
+  OP(Asin)             \
+  OP(Atan)             \
+  OP(Atanh)            \
+  OP(Digamma)          \
+  OP(Erfc)             \
+  OP(Erfcx)            \
+  OP(RShift)           \
+  OP(Isnan)            \
+  OP(Max)              \
+  OP(Any)              \
+  OP(All)              \
+  OP(Sum)              \
+  OP(Min)              \
+  OP(Mean)             \
+  OP(Prod)             \
+  OP(Ge)               \
+  OP(Ne)               \
+  OP(Eq)               \
+  OP(Gt)               \
+  OP(Le)               \
+  OP(Add)              \
+  OP(Sub)              \
+  OP(Div)              \
+  OP(Mul)              \
+  OP(TrueDiv)          \
+  OP(Minimum)          \
+  OP(Maximum)          \
+  OP(LogicalOr)        \
+  OP(LogicalNot)       \
+  OP(LogicalAnd)       \
+  OP(Select)           \
+  OP(Sigmoid)          \
+  OP(Concat)           \
+  OP(MatMul)           \
+  OP(BatchMatMul)      \
+  OP(Where)            \
+  OP(Gather)           \
+  OP(Transpose)        \
+  OP(BitwiseAnd)       \
+  OP(Ln)               \
+  OP(Expm)             \
+  OP(Log2)             \
+  OP(LShift)           \
+  OP(Mod)              \
+  OP(Lt)               \
+  OP(Pow)              \
+  OP(ClipByValue)      \
+  OP(LeakyRelu)        \
+  OP(Nop)              \
+  OP(Transpose)        \
+  OP(IsFinite)         \
+  OP(FloorDiv)         \
+  OP(Gelu)             \
+  OP(Split)            \
+  OP(Axpy)             \
+  OP(CopySign)         \
+  OP(Ceil2Int)
+#endif

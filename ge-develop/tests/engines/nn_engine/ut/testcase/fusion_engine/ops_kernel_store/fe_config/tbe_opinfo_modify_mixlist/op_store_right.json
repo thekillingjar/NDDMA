@@ -1,0 +1,37 @@
+{
+    "Yolo":{
+        "precision_reduce":{
+           "flag":"false"
+        }
+    },
+    "Conv2D":{
+        "precision_reduce":{
+           "flag":"true"
+        }
+    },
+    "Add":{
+        "precision_reduce":{
+           "flag":"true"
+        }
+    },
+    "Matmul":{
+        "precision_reduce":{
+           "flag":""
+        }
+    },
+    "Abs":{
+        "precision_reduce":{
+           "flag":"false"
+        }
+    },
+    "Cast":{
+        "precision_reduce":{
+           "flag":""
+        }
+    },
+    "Bias":{
+        "precision_reduce":{
+           "flag":""
+        }
+    }
+}

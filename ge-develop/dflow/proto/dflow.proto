@@ -1,0 +1,47 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of 
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+syntax = "proto3";
+
+package dataflow;
+import "ge_ir.proto";
+
+message FlowEdge {
+  string node_name = 1; // node name
+  uint32 index = 2; // node input/output index
+}
+
+message ProcessFunc {
+  string name = 1; // Func name
+  repeated uint32 in_index = 2; // Func inputs
+  repeated uint32 out_index = 3; // Func outputs
+}
+
+message ProcessPoint {
+  enum ProcessPointType {
+    FUNCTION = 0;
+    GRAPH = 1;
+    INNER = 2;
+    FLOW_GRAPH = 3;
+    INVALID = 4;
+  }
+
+  string name = 1; // PP name
+  ProcessPointType type = 2; // PP type : graph, func
+  string compile_cfg_file = 3;
+  repeated ProcessFunc funcs = 4; // when type is func pp
+  repeated string graphs = 5; // when type is graph pp
+  map<string, ProcessPoint> invoke_pps = 6; // pp invoke pps
+  repeated FlowEdge in_edges = 7; // node inputs
+  repeated FlowEdge out_edges = 8; // node outputs
+  map<string, ge.proto.AttrDef> attrs = 9; // func init attrs
+  bool is_built_in = 10;
+  map<string, string> pp_extend_attrs = 11; // pp extend attrs
+}

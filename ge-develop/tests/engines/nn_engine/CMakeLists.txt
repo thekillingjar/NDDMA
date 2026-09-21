@@ -1,0 +1,382 @@
+# -----------------------------------------------------------------------------------------------------------
+# Copyright (c) 2025 Huawei Technologies Co., Ltd.
+# This program is free software, you can redistribute it and/or modify it under the terms and conditions of 
+# CANN Open Software License Agreement Version 2.0 (the "License").
+# Please refer to the License for details. You may not use this file except in compliance with the License.
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
+# INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+# See LICENSE in the root of the software repository for the full text of the License.
+# -----------------------------------------------------------------------------------------------------------
+
+if (ENABLE_LLT_COV)
+    set(COVERAGE_COMPILER_FLAGS "-g --coverage -fprofile-arcs -fPIC -O0 -ftest-coverage")
+    set(CMAKE_CXX_FLAGS "${COVERAGE_COMPILER_FLAGS}")
+endif()
+
+if (NOT DEFINED ASCEND_INSTALL_PATH)
+    message("Find ge_compiler in fix path /usr/local/Ascend/cann/lib64")
+    find_module(ge_compiler_pkg libge_compiler.so /usr/local/Ascend/cann/lib64)
+else()
+    message("Find ge_compiler in ascend install path ${ASCEND_INSTALL_PATH}/lib64")
+    find_module(ge_compiler_pkg libge_compiler.so ${ASCEND_INSTALL_PATH}/lib64)
+endif()
+
+if (NOT DEFINED ASCEND_INSTALL_PATH)
+    message("Find ge_common in fix path /usr/local/Ascend/cann/lib64")
+    find_module(ge_common_pkg libge_common.so /usr/local/Ascend/cann/lib64)
+else()
+    message("Find ge_common in ascend install path ${ASCEND_INSTALL_PATH}/lib64")
+    find_module(ge_common_pkg libge_common.so ${ASCEND_INSTALL_PATH}/lib64)
+endif()
+
+set(FE_ROOT_PATH ${AIR_CODE_DIR}/compiler/engines/nn_engine)
+set(FFTS_ROOT_PATH ${AIR_CODE_DIR}/compiler/engines/ffts_engine)
+set(OP_COMPILE_ADAPTER_ROOT_PATH ${AIR_CODE_DIR}/compiler/opcompiler/op_compile_adapter)
+set(FE_TEST_ROOT_PATH ${CMAKE_CURRENT_LIST_DIR})
+set(FE_SRC_CC_LIST
+        ${FE_ROOT_PATH}/utils/common/format/axis_name_util.cc
+        ${FE_ROOT_PATH}/utils/common/format/axis_util.cc
+        ${FE_ROOT_PATH}/utils/common/format/range_axis_util.cc
+        ${FE_ROOT_PATH}/utils/common/graph/fe_graph_utils.cc
+        ${FE_ROOT_PATH}/utils/common/range_format_transfer/transfer_range_according_to_format.cc
+        ${FE_ROOT_PATH}/utils/common/util/json_util.cc
+        ${FE_ROOT_PATH}/utils/common/config_parser/modify_mixlist_config_parser.cc
+        ${FE_ROOT_PATH}/utils/common/config_parser/op_cust_dtypes_config_parser.cc
+        ${FE_ROOT_PATH}/utils/common/config_parser/op_impl_mode_config_parser.cc
+        ${FE_ROOT_PATH}/utils/common/config_parser/op_debug_config_parser.cc
+        ${FE_ROOT_PATH}/utils/common/aicore_util_attr_define.cc
+        ${FE_ROOT_PATH}/utils/common/fe_gentask_utils.cc
+        ${FE_ROOT_PATH}/utils/common/platform_utils.cc
+        ${FE_ROOT_PATH}/utils/common/configuration.cc
+        ${FE_ROOT_PATH}/utils/common/fe_context_utils.cc
+        ${FE_ROOT_PATH}/utils/common/fe_fp16_t.cc
+        ${FE_ROOT_PATH}/utils/common/fe_type_utils.cc
+        ${FE_ROOT_PATH}/utils/common/fe_graph_common.cc
+        ${FE_ROOT_PATH}/utils/common/fe_utils.cc
+        ${FE_ROOT_PATH}/utils/common/graph_comm.cc
+        ${FE_ROOT_PATH}/utils/common/graph_comm_impl.cc
+        ${FE_ROOT_PATH}/utils/common/large_bitmap.cc
+        ${FE_ROOT_PATH}/utils/common/lxfusion_json_util.cc
+        ${FE_ROOT_PATH}/utils/common/op_tensor_utils.cc
+        ${FE_ROOT_PATH}/utils/common/scope_allocator.cc
+        ${FE_ROOT_PATH}/utils/common/function_state.cc
+        ${FE_ROOT_PATH}/utils/common/op_slice_util.cc
+        ${FE_ROOT_PATH}/utils/common/op_info_common.cc
+        ${FE_ROOT_PATH}/utils/common/plugin_manager.cc
+        ${FE_ROOT_PATH}/utils/common/unknown_shape_util.cc
+        ${FE_ROOT_PATH}/utils/common/math_util.cc
+        ${FE_ROOT_PATH}/utils/common/fe_report_error.cc
+        ${FE_ROOT_PATH}/utils/common/thread_slice_info_utils.cc
+        ${FE_ROOT_PATH}/utils/common/weight_compress_utils.cc
+        ${FE_ROOT_PATH}/utils/param_calculate/tensorsize_calculator.cc
+        ${FE_ROOT_PATH}/utils/param_calculate/tensor_compute_util.cc
+        ${FE_ROOT_PATH}/fusion/common/fusion_statistic/buffer_fusion_info_collecter.cc
+        ${FE_ROOT_PATH}/fusion/common/fusion_statistic/fusion_statistic_writer.cc
+        ${FE_ROOT_PATH}/fusion/common/calc_slice_utils.cc
+        ${FE_ROOT_PATH}/fusion/common/fusion_op_comm.cc
+        ${FE_ROOT_PATH}/fusion/common/l2_stream_info.cc
+        ${FE_ROOT_PATH}/fusion/fusion_config_manager/fusion_config_parser.cc
+        ${FE_ROOT_PATH}/fusion/fusion_config_manager/fusion_attr_manager.cc
+        ${FE_ROOT_PATH}/fusion/fusion_config_manager/fusion_priority_manager.cc
+        ${FE_ROOT_PATH}/fusion/fusion_rule_manager/fusion_rule_data/fusion_rule_pattern.cc
+        ${FE_ROOT_PATH}/fusion/fusion_rule_manager/fusion_rule_parser/attr_assignment_expression.cc
+        ${FE_ROOT_PATH}/fusion/fusion_rule_manager/fusion_rule_parser/fusion_rule_json_pattern.cc
+        ${FE_ROOT_PATH}/fusion/fusion_rule_manager/fusion_rule_parser/fusion_rule_node_constructor.cc
+        ${FE_ROOT_PATH}/fusion/fusion_rule_manager/fusion_rule_parser/fusion_rule_parser_utils.cc
+        ${FE_ROOT_PATH}/fusion/fusion_rule_manager/fusion_rule_parser/fusion_rule_pattern_constructor.cc
+        ${FE_ROOT_PATH}/fusion/fusion_rule_manager/fusion_rule_manager.cc
+        ${FE_ROOT_PATH}/fusion/fusion_rule_manager/fusion_cycle_detector.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/fusion_common/fusion_pass_manager.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/fusion_common/graph_node_map_util.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/graph_fusion.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/graph_matcher.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/graph_replace.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/fusion_pass_manager/builtin_pass/refresh_cube_c0_fusion_pass.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/fusion_pass_manager/builtin_pass/depthwise_insert_transdata_fusion_pass.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/fusion_pass_manager/builtin_pass/conv_weight_compress_fusion_pass.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/fusion_pass_manager/builtin_pass/concat_tile_fusion_pass.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/fusion_pass_manager/builtin_pass/swap_merge_cast_fusion_pass.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/fusion_pass_manager/builtin_pass/strided_slice_d_to_split_fusion_pass.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/fusion_pass_manager/builtin_pass/concat_c_optimize_fusion_pass.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/fusion_pass_manager/builtin_pass/user_semantic_inference.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/fusion_pass_manager/builtin_pass/node_optimize/conv_concat_fusion_pass.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/fusion_pass_manager/builtin_pass/node_optimize/node_optimize_pass_base.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/fusion_pass_manager/builtin_pass/node_optimize/split_conv_fusion_pass.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/fusion_pass_manager/builtin_pass/node_optimize/split_conv_concat_fusion_pass.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/fusion_pass_manager/builtin_pass/node_optimize/checker/concat_optimize_checker.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/fusion_pass_manager/builtin_pass/node_optimize/checker/node_optimize_checker_base.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/fusion_pass_manager/builtin_pass/node_optimize/checker/split_optimize_checker.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/fusion_pass_manager/builtin_pass/node_optimize/common/node_optimize_utils.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/fusion_pass_manager/builtin_pass/node_optimize/common/node_optimize_utils.h
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/fusion_pass_manager/builtin_pass/quant_pass/quant_host_cpu_op_common.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/fusion_pass_manager/builtin_pass/quant_pass/cast_relu_cast_fusion_pass.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/graph_fusion/fusion_pass_manager/builtin_pass/quant_pass/delete_no_const_folding_fusion_pass.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/lx_fusion_optimizer/lx_fusion_optimizer.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/node_optimizer/stridedwrite_optimizer.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/node_optimizer/stridedread_optimizer.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/node_optimizer/split_c_to_n_optimizer.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/node_optimizer/split_n_optimizer.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/stream_graph_optimizer/l2_optimizer/l2_fusion_allocation/l2_fusion_allocation.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/stream_graph_optimizer/l2_optimizer/l2_fusion_comm/l2_fusion_comm.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/stream_graph_optimizer/l2_optimizer/l2_fusion_handler/l2_fusion_handler.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/stream_graph_optimizer/l2_optimizer/l2_fusion_parser/l2_fusion_parser.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/stream_graph_optimizer/l2_optimizer/l2_fusion_rtl2ctrl/l2_fusion_rtl2ctrl.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/stream_graph_optimizer/l2_optimizer/l2_optimizer.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/ub_fusion/automatic_buffer_fusion.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/ub_fusion/buffer_fusion.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/ub_fusion/buffer_fusion_optimizer.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/ub_fusion/buffer_fusion_pass_runner.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/ub_fusion/base_buffer_fusion_pass_runner.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/ub_fusion/auto_buffer_fusion_pass_runner.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/ub_fusion/fusion_graph_merge/fusion_graph_merge.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/ub_fusion/fusion_graph_merge/ub_fusion_graph_merge.cc
+        ${FE_ROOT_PATH}/fusion/graph_optimizer/ub_fusion/fusion_graph_merge/l1_fusion_graph_merge.cc
+        ${FE_ROOT_PATH}/fusion/ub_pass_slice_info/aipp_conv_slice_info.cc
+        ${FE_ROOT_PATH}/fusion/ub_pass_slice_info/conv_dequant_slice_info.cc
+        ${FE_ROOT_PATH}/fusion/ub_pass_slice_info/conv_dequants16_slice_info.cc
+        ${FE_ROOT_PATH}/fusion/ub_pass_slice_info/conv_eltwise_slice_info.cc
+        ${FE_ROOT_PATH}/fusion/ub_pass_slice_info/conv_pooling_slice_info.cc
+        ${FE_ROOT_PATH}/fusion/ub_pass_slice_info/conv_requant_slice_info.cc
+        ${FE_ROOT_PATH}/fusion/ub_pass_slice_info/conv_requants16_slice_info.cc
+        ${FE_ROOT_PATH}/fusion/ub_pass_slice_info/conv_select_slice_info.cc
+        ${FE_ROOT_PATH}/fusion/ub_pass_slice_info/conv_strided_slice_info.cc
+        ${FE_ROOT_PATH}/fusion/ub_pass_slice_info/dequant_slice_info.cc
+        ${FE_ROOT_PATH}/fusion/ub_pass_slice_info/ub_pass_slice_info_base.cc
+        ${FE_ROOT_PATH}/fusion/ub_pass_slice_info/ub_pass_slice_info_manager.cc
+        ${FE_ROOT_PATH}/opskernel/ops_store/op_kernel_info.cc
+        ${FE_ROOT_PATH}/opskernel/ops_store/op_kernel_info_constructor.cc
+        ${FE_ROOT_PATH}/opskernel/ops_store/ops_kernel_manager.cc
+        ${FE_ROOT_PATH}/opskernel/ops_store/ops_kernel_common.cc
+        ${FE_ROOT_PATH}/opskernel/ops_store/ops_kernel_utils.cc
+        ${FE_ROOT_PATH}/opskernel/ops_store/sub_op_info_store.cc
+        ${FE_ROOT_PATH}/opskernel/ops_store/binary_kernel_info.cc
+        ${FE_ROOT_PATH}/optimizer/adapter/common/get_attr_by_type.cc
+        ${FE_ROOT_PATH}/optimizer/adapter/common/op_store_adapter_manager.cc
+        ${FE_ROOT_PATH}/optimizer/adapter/tbe_adapter/tbe_op_store_adapter.cc
+        ${FE_ROOT_PATH}/optimizer/adapter/dsa_adapter/dsa_op_store_adapter.cc
+        ${FE_ROOT_PATH}/optimizer/adapter/tbe_adapter/tbe_info/tbe_info_assembler.cc
+        ${FE_ROOT_PATH}/optimizer/adapter/tbe_adapter/tbe_info/tbe_single_op_info_assembler.cc
+        ${FE_ROOT_PATH}/optimizer/adapter/tbe_adapter/tbe_info/execution_time_estimator.cc
+        ${FE_ROOT_PATH}/optimizer/adapter/tbe_adapter/tbe_info/estimator/basic_estimator.cc
+        ${FE_ROOT_PATH}/optimizer/adapter/tbe_adapter/tbe_info/estimator/conv_estimator.cc
+        ${FE_ROOT_PATH}/optimizer/adapter/tbe_adapter/tbe_info/estimator/matmul_estimator.cc
+        ${FE_ROOT_PATH}/optimizer/adapter/tbe_adapter/tbe_info/estimator/vector_estimator.cc
+        ${FE_ROOT_PATH}/optimizer/adapter/adapter_itf/task_builder_adapter.cc
+        ${FE_ROOT_PATH}/optimizer/adapter/common/task_builder_adapter_factory.cc
+        ${FE_ROOT_PATH}/optimizer/adapter/tbe_adapter/kernel_launch/l2_cache_kernel_launch.cc
+        ${FE_ROOT_PATH}/optimizer/adapter/tbe_adapter/kernel_launch/tbe_kernel_launch.cc
+        ${FE_ROOT_PATH}/optimizer/adapter/tbe_adapter/tbe_task_builder_adapter.cc
+        ${FE_ROOT_PATH}/optimizer/adapter/ffts_adapter/ffts_task_builder_adapter.cc
+        ${FE_ROOT_PATH}/optimizer/common/dump_util.cc
+        ${FE_ROOT_PATH}/optimizer/common/fe_thread_pool.cc
+        ${FE_ROOT_PATH}/optimizer/common/tile_fwk_op_info.cc
+        ${FE_ROOT_PATH}/optimizer/common/fe_op_info_common.cc
+        ${FE_ROOT_PATH}/optimizer/common/update_tensor_desc.cc
+        ${FE_ROOT_PATH}/optimizer/format_selector/builtin/format_dtype_op_builtin_selector.cc
+        ${FE_ROOT_PATH}/optimizer/format_selector/builtin/broadcast/format_process/broadcast_format_process.cc
+        ${FE_ROOT_PATH}/optimizer/format_selector/builtin/broadcast/format_process/broadcast_process_5hd.cc
+        ${FE_ROOT_PATH}/optimizer/format_selector/builtin/broadcast/format_process/broadcast_process_6d.cc
+        ${FE_ROOT_PATH}/optimizer/format_selector/builtin/broadcast/format_process/broadcast_process_6hd.cc
+        ${FE_ROOT_PATH}/optimizer/format_selector/builtin/broadcast/format_process/broadcast_process_fractal_z.cc
+        ${FE_ROOT_PATH}/optimizer/format_selector/builtin/broadcast/format_process/broadcast_process_fractal_z_3d.cc
+        ${FE_ROOT_PATH}/optimizer/format_selector/builtin/broadcast/format_process/broadcast_process_nz.cc
+        ${FE_ROOT_PATH}/optimizer/format_selector/builtin/broadcast/format_process/broadcast_enhanced_process_5hd.cc
+        ${FE_ROOT_PATH}/optimizer/format_selector/builtin/process/format_process_registry.cc
+        ${FE_ROOT_PATH}/optimizer/format_selector/builtin/reduce/reduce_format_selector/reduce_format_process.cc
+        ${FE_ROOT_PATH}/optimizer/format_selector/builtin/reduce/reduce_format_selector/reduce_process_5hd.cc
+        ${FE_ROOT_PATH}/optimizer/format_selector/builtin/reduce/reduce_format_selector/reduce_process_6hd.cc
+        ${FE_ROOT_PATH}/optimizer/format_selector/builtin/reduce/reduce_format_selector/reduce_process_fractal_z.cc
+        ${FE_ROOT_PATH}/optimizer/format_selector/builtin/reduce/reduce_format_selector/reduce_process_nz.cc
+        ${FE_ROOT_PATH}/optimizer/format_selector/common/format_dtype_selector_base.cc
+        ${FE_ROOT_PATH}/optimizer/format_selector/manager/format_dtype_manager_base.cc
+        ${FE_ROOT_PATH}/optimizer/format_selector/manager/format_dtype_querier.cc
+        ${FE_ROOT_PATH}/optimizer/format_selector/manager/format_dtype_setter.cc
+        ${FE_ROOT_PATH}/optimizer/format_selector/op_customize/format_dtype_op_customize_selector.cc
+        ${FE_ROOT_PATH}/optimizer/format_selector/op_kernel/format_dtype_op_kernel_selector.cc
+        ${FE_ROOT_PATH}/optimizer/fusion_manager/fusion_manager.cc
+        ${FE_ROOT_PATH}/optimizer/itf_handler/itf_handler.cc
+        ${FE_ROOT_PATH}/optimizer/ops_kernel_store/fe_ops_kernel_info_store.cc
+        ${FE_ROOT_PATH}/optimizer/ops_kernel_store/sub_ops_store.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/json_parser/tbe_json_parse_impl.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/json_parser/tbe_json_parse.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/dynamic_shape_optimizer/fuzzy_compiler/fuzzy_generalize.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/dynamic_shape_optimizer/fuzzy_compiler/input_node_generalize.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/dynamic_shape_optimizer/model_binary_compiler/model_binary_compiler.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/heavy_format_propagation/heavy_format_propagation.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/heavy_format_propagation/heavy_format_selector.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/heavy_format_propagation/heavy_format_supportformats_updater.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_axis_update/op_axis_update_desc.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_compiler/op_compiler.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_compiler/op_compiler_baseline.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_compiler/op_compiler_mstune_before_ub_match.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_compiler/op_compiler_normal.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_compiler/op_compiler_optune.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_compiler/op_format_tune.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/dtype_strategy/op_dtype_selection_strategy_allow_fp32_to_fp16.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/dtype_strategy/op_dtype_selection_strategy_allow_fp32_to_bf16.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/dtype_strategy/op_dtype_selection_strategy_allow_fp32_to_lowprecision.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/dtype_strategy/op_dtype_selection_strategy_allow_mix_precision_fp16.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/dtype_strategy/op_dtype_selection_strategy_allow_mix_precision_bf16.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/dtype_strategy/op_dtype_selection_strategy_allow_mix_precision_base.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/dtype_strategy/op_dtype_selection_strategy_base.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/dtype_strategy/op_dtype_selection_strategy_default_mode.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/dtype_strategy/op_dtype_selection_strategy_force_fp16.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/dtype_strategy/op_dtype_selection_strategy_force_lowerprecision.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/dtype_strategy/op_dtype_selection_strategy_force_fp32.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/dtype_strategy/op_dtype_selection_strategy_table_select_base.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/dtype_strategy/op_dtype_selection_strategy_cube_hif8.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/dtype_strategy/op_dtype_selection_strategy_mixed_hif8.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/format_strategy/op_format_selection_strategy_default_mode.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/format_strategy/op_format_selection_strategy_follow_predecessor.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/matcher/dtype/op_dtype_matcher_base.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/matcher/dtype/op_dtype_mix_precision_matcher.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/matcher/dtype/op_dtype_precise_matcher.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/matcher/dtype/op_dtype_reduce_matcher.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/matcher/dtype/op_dtype_rise_matcher.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/matcher/format/op_format_matcher.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/strategy/op_format_dtype_strategy_manager.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/update_desc/subgraph/sub_data_format_dtype_update.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/update_desc/subgraph/sub_graph_format_dtype_update.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/update_desc/subgraph/sub_netoutput_format_dtype_update.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/update_desc/op_format_dtype_update_desc.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/update_desc/op_format_dtype_update_desc_base.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/format_and_dtype/op_format_dtype_judge.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/imply_type/op_impl_type_judge.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_judge/op_judge_base.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/op_setter/op_setter.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/shape_format_transfer/trans_node_implementation/trans_node_base_generator.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/shape_format_transfer/trans_node_implementation/trans_node_cast_generator.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/shape_format_transfer/trans_node_implementation/trans_node_reformat_generator.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/shape_format_transfer/trans_node_implementation/trans_node_reshape_generator.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/shape_format_transfer/trans_node_implementation/trans_node_transdata_generator.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/shape_format_transfer/trans_node_implementation/trans_node_transdatarnn_generator.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/shape_format_transfer/trans_node_implementation/trans_node_transpose_generator.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/shape_format_transfer/trans_node_implementation/trans_node_squeeze_v2_generator.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/shape_format_transfer/trans_node_implementation/trans_node_unsqueeze_v2_generator.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/shape_format_transfer/trans_node_manager/trans_node_insertion/trans_node_insertion.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/shape_format_transfer/trans_node_manager/trans_node_merging/trans_node_merging.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/shape_format_transfer/trans_node_manager/trans_node_manager.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/spacesize_calculator/spacesize_calculator.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/weight_compress_flag/weight_compress_judge.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/weight_prefetch/weight_prefetch_utils.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/dsa_optimizer/dsa_graph_optimizer.cc
+        ${FE_ROOT_PATH}/optimizer/graph_optimizer/fe_graph_optimizer.cc
+        ${FE_ROOT_PATH}/optimizer/ops_kernel_builder/task_builder/args_format_constructor.cc
+        ${FE_ROOT_PATH}/optimizer/ops_kernel_builder/aicore_ops_kernel_builder.cc
+        ${FE_ROOT_PATH}/optimizer/ops_kernel_builder/dsa_ops_kernel_builder.cc
+        ${FE_ROOT_PATH}/optimizer/ops_kernel_builder/task_builder/task_builder.cc
+        ${FE_ROOT_PATH}/optimizer/ops_kernel_builder/task_builder/superkernel_task_builder.cc
+        ${FE_ROOT_PATH}/optimizer/ops_kernel_builder/task_builder/superkernel_args_format_utils.cc
+        ${FE_ROOT_PATH}/optimizer/ops_kernel_builder/task_builder/ffts_task_builder.cc
+        ${FE_ROOT_PATH}/optimizer/ops_kernel_builder/task_builder/dsa_task_builder.cc
+        ${FE_ROOT_PATH}/optimizer/ops_kernel_builder/task_builder/cmo_task_builder.cc
+        ${FE_ROOT_PATH}/optimizer/ops_kernel_builder/task_builder/cmo_task/cmo_id_gen_strategy.cc
+        ${FE_ROOT_PATH}/optimizer/ops_kernel_builder/task_builder/cmo_task/generate_cmo_task_base.cc
+        ${FE_ROOT_PATH}/optimizer/ops_kernel_builder/task_builder/cmo_task/generate_cmo_barrier_task.cc
+        ${FE_ROOT_PATH}/optimizer/ops_kernel_builder/task_builder/cmo_task/generate_cmo_invalid_task.cc
+        ${FE_ROOT_PATH}/optimizer/ops_kernel_builder/task_builder/cmo_task/generate_cmo_prefetch_task.cc
+        ${FE_ROOT_PATH}/optimizer/ops_kernel_builder/task_builder/cmo_task/generate_cmo_writeback_task.cc
+        ${FE_ROOT_PATH}/optimizer/cmo/generate_cmo_type_manager.cc
+        ${FE_ROOT_PATH}/optimizer/cmo/generate_cmo_type_base.cc
+        ${FE_ROOT_PATH}/optimizer/cmo/generate_cmo_type_invalid.cc
+        ${FE_ROOT_PATH}/optimizer/cmo/generate_cmo_type_prefetch.cc
+        ${FE_ROOT_PATH}/optimizer/cmo/generate_cmo_type_writeback.cc
+        ${FE_ROOT_PATH}/optimizer/trace_handle_manager/trace_handle_manager.cc
+        ${FE_ROOT_PATH}/optimizer/trace_handle_manager/trace_msg/compile_process_trace_msg.cc
+        ${FE_ROOT_PATH}/optimizer/trace_handle_manager/trace_msg/long_time_trace_msg.cc
+        ${FFTS_ROOT_PATH}/utils/param_calculate/ffts_param_calculator.cc
+        ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/python_adapter/py_decouple.cc
+ 	  	${OP_COMPILE_ADAPTER_ROOT_PATH}/source/python_adapter/py_object_utils.cc
+ 	  	${OP_COMPILE_ADAPTER_ROOT_PATH}/source/python_adapter/py_wrapper.cc
+ 	  	${OP_COMPILE_ADAPTER_ROOT_PATH}/source/python_adapter/pyobj_assemble_utils.cc
+ 	  	${OP_COMPILE_ADAPTER_ROOT_PATH}/source/python_adapter/python_adapter_manager.cc
+ 	  	${OP_COMPILE_ADAPTER_ROOT_PATH}/source/python_adapter/python_api_call.cc
+ 	  	${OP_COMPILE_ADAPTER_ROOT_PATH}/source/api/fusion_api.cc
+ 	  	${OP_COMPILE_ADAPTER_ROOT_PATH}/source/common/common_utils.cc
+ 	  	${OP_COMPILE_ADAPTER_ROOT_PATH}/source/common/compile_result_utils.cc
+ 	  	${OP_COMPILE_ADAPTER_ROOT_PATH}/source/common/fusion_common.cc
+ 	  	${OP_COMPILE_ADAPTER_ROOT_PATH}/source/common/signal_manager.cc
+ 	  	${OP_COMPILE_ADAPTER_ROOT_PATH}/source/common/tbe_op_info.cc
+ 	  	${OP_COMPILE_ADAPTER_ROOT_PATH}/source/common/tbe_op_info_cache.cc
+ 	  	${OP_COMPILE_ADAPTER_ROOT_PATH}/source/common/tbe_op_info_hash.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/common/te_config_info.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/common/te_context_utils.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/common/te_file_utils.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/dfxinfo_manager/trace_utils.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/dfxinfo_manager/dfxinfo_manager.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/binary/binary_manager.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/binary/fusion_binary_info.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/binary/fusion_build_binary.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/binary/fusion_fuzzy_build.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/binary/fusion_reuse_binary_check.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/binary/fusion_reuse_single_op_binary.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/binary/generate_simple_key.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/binary/shape_generalization.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/compile/fusion_manager.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/compile/prebuild_manager.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/compile/superkernel_task.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/compile/te_compile_task_cache.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/cache/te_cache_manager.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/cache/te_cache_space_manager.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/cache/te_cache_utils.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/assemble_json/te_attr_utils.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/assemble_json/te_json_assemble.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/assemble_json/te_json_utils.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/assemble_json/te_op_custom_utils.cc
+ 	    ${OP_COMPILE_ADAPTER_ROOT_PATH}/source/file_handle/te_file_handle.cc)
+
+set(FFTS_SRC_CC_LIST
+        ${FFTS_ROOT_PATH}/common/ffts_configuration.cc
+        ${FFTS_ROOT_PATH}/common/ffts_constants.cc
+        ${FFTS_ROOT_PATH}/engine/engine_manager.cc
+        ${FFTS_ROOT_PATH}/utils/ffts_utils.cc
+        ${FFTS_ROOT_PATH}/utils/param_calculate/ffts_param_calculator.cc
+        ${FFTS_ROOT_PATH}/task_builder/fftsplus_ops_kernel_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/fftsplus_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/mode/data_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/mode/memory_slice.cc
+        ${FFTS_ROOT_PATH}/task_builder/mode/thread_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/mode/auto/auto_thread_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/mode/manual/manual_thread_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/mode/mixl2/mixl2_mode_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/data_ctx/cache_persistent_manual_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/data_ctx/out_auto_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/data_ctx/out_dynamic_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/data_ctx/out_manual_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/data_ctx/prefetch_auto_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/data_ctx/prefetch_dynamic_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/data_ctx/prefetch_manual_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/thread_ctx/dsa_manual_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/thread_ctx/aic_aiv_auto_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/thread_ctx/aic_aiv_dynamic_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/thread_ctx/aic_aiv_manual_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/thread_ctx/aicpu_auto_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/thread_ctx/aicpu_manual_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/thread_ctx/collection_ops_manual_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/thread_ctx/mix_aic_aiv_auto_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/thread_ctx/mix_aic_aiv_manual_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/thread_ctx/mix_aic_aiv_dynamic_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/thread_ctx/runtime_ops_manual_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/thread_ctx/runtime_ops_auto_task_builder.cc
+        ${FFTS_ROOT_PATH}/task_builder/mixl2_ctx/mix_l2_task_builder.cc)
+
+include(ut/testcase/op_compile_adapter/cmake/third_party/boost.cmake)
+include(ut/testcase/op_compile_adapter/cmake/third_party/mockcpp.cmake)
+
+add_subdirectory(depends/slog)
+add_subdirectory(depends/mmpa)
+add_subdirectory(depends/runtime)
+add_subdirectory(depends/te_fusion)
+add_subdirectory(depends/graph_tuner)
+add_subdirectory(depends/cann_kb)
+add_subdirectory(depends/op_tiling)
+add_subdirectory(depends/trace)
+
+if (ENABLE_FE_BENCHMARK)
+    add_subdirectory(benchmark)
+else()
+    add_subdirectory(framework/fe_running_env)
+    add_subdirectory(ut)
+    add_subdirectory(st)
+    add_subdirectory(st_whole_process)
+endif()

@@ -1,0 +1,56 @@
+diff --git a/re2/re2.cc b/re2/re2.cc
+index 61d9d1f..7118f1a 100644
+--- a/re2/re2.cc
++++ b/re2/re2.cc
+@@ -459,6 +459,12 @@ bool RE2::Replace(std::string* str,
+   return true;
+ }
+ 
++bool RE2::Replace(std::string* str,
++                  const RE2& re,
++                  const std::string& rewrite) {
++  return RE2::Replace(str, re, absl::string_view(rewrite));
++}
++
+ int RE2::GlobalReplace(std::string* str,
+                        const RE2& re,
+                        absl::string_view rewrite) {
+@@ -529,6 +535,12 @@ int RE2::GlobalReplace(std::string* str,
+   return count;
+ }
+ 
++int RE2::GlobalReplace(std::string* str,
++                       const RE2& re,
++                       const std::string& rewrite) {
++  return RE2::GlobalReplace(str, re, absl::string_view(rewrite));
++}
++
+ bool RE2::Extract(absl::string_view text,
+                   const RE2& re,
+                   absl::string_view rewrite,
+diff --git a/re2/re2.h b/re2/re2.h
+index 68fbed1..26de5e8 100644
+--- a/re2/re2.h
++++ b/re2/re2.h
+@@ -479,6 +479,10 @@ class RE2 {
+                       const RE2& re,
+                       absl::string_view rewrite);
+ 
++  static bool Replace(std::string* str,
++                      const RE2& re,
++                      const std::string& rewrite);
++
+   // Like Replace(), except replaces successive non-overlapping occurrences
+   // of the pattern in the string with the rewrite. E.g.
+   //
+@@ -496,6 +500,10 @@ class RE2 {
+                            const RE2& re,
+                            absl::string_view rewrite);
+ 
++  static int GlobalReplace(std::string* str,
++                           const RE2& re,
++                           const std::string& rewrite);
++
+   // Like Replace, except that if the pattern matches, "rewrite"
+   // is copied into "out" with substitutions.  The non-matching
+   // portions of "text" are ignored.

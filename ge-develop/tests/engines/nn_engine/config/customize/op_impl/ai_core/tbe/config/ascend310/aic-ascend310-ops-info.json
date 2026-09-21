@@ -1,0 +1,22 @@
+{
+	"Customize_Abs": {
+		"input0": {
+			"dtype": "float16,float,int32",
+			"name": "x",
+			"paramType": "required"
+		},
+		"op": {
+			"pattern": "formatAgnostic"
+		},
+		"output0": {
+			"dtype": "float16,float,int32",
+			"name": "y",
+			"needCompile": "true",
+			"paramType": "required",
+			"shape": "all"
+		},
+		"slicePattern": {
+			"value": "elemwise"
+		}
+	}
+}

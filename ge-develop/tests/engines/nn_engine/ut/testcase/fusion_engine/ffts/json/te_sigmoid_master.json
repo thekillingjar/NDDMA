@@ -1,0 +1,26 @@
+{
+    "blockDim":1,
+    "coreType":"MixAiCore",
+    "taskRation":"1:1",
+    "intercoreSync":1,
+    "jsonList" :[
+      {
+        "coreType":"CubeCore",
+        "jsonFileName": "te_sigmoid_mix_aic.json"
+      },
+      {
+        "coreType":"VectorCore",
+        "jsonFileName" : "te_sigmoid_mix_aiv.json"
+      }
+    ],
+    "workspace":{
+        "num":4,
+        "size":[
+            423300,
+            423300,
+            423300,
+            423300
+        ],
+        "type":[1,1,1,1]
+    }
+}

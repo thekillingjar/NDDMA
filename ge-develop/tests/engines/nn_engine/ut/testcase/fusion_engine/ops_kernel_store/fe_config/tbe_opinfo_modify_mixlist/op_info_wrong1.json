@@ -1,0 +1,25 @@
+{
+  "black-list":{
+    "to-remove":[
+      "Yolo"
+    ],
+    "to-add":[
+      "Matmul",
+      "Conv2D",
+      "Cast"
+    ]
+  },
+  "white1-list":{
+    "to-remove":[
+      "Conv2D",
+      "Add"
+    ],
+    "to-add":[
+      "Bias","Yolo"
+    ]
+  },
+  "gray-list":{
+    "to-remove":["Matmul"],
+    "to-add":["Abs","Add"]
+  }
+}

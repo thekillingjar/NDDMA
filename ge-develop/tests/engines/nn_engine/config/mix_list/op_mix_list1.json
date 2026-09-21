@@ -1,0 +1,14 @@
+{
+  "gray-list":{
+    "to-add":["A", "B", "C"],
+    "to-remove":["F", "K"]
+  },
+  "black-list":{
+    "to-add":["E","F","G"],
+    "to-remove":["B","D","J"]
+  },
+  "white-list":{
+    "to-add":["I","J","K"],
+    "to-remove":["C", "G", "H"]
+  }
+}

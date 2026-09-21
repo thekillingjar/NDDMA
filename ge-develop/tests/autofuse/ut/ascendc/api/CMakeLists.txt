@@ -1,0 +1,41 @@
+add_library(test_ascendc OBJECT
+    ./test_utils.cpp
+    ./test_transpose.cpp
+    ./test_broadcast.cpp
+    ./test_cast.cpp
+    ./test_clipbyvalue.cpp
+    ./test_pow.cpp
+    ./test_reduceprod.cpp
+    ./test_concat.cpp
+    ./test_scalardiv.cpp
+    ./test_where.cpp
+    ./test_rsqrt.cpp
+    ./test_logical.cpp
+    ./test_logicalnot.cpp
+    ./test_compare.cpp
+    ./test_compare_v2.cpp
+    ./test_duplicate.cpp
+    ./test_isnan.cpp
+    ./test_isfinite.cpp
+    ./test_sign.cpp
+    ./test_reduce.cpp
+    ./test_reduce_init.cpp
+    ./test_reduce_any.cpp
+    ./test_reciprocal.cpp
+    ./test_sigmoid.cpp
+    ./test_bitwiseand.cpp
+    ./test_transpose.cpp
+    ./test_gather.cpp
+    ./test_subs.cpp
+    ./test_floor_div.cpp
+    ./test_brc_inline_api.cpp
+    ./test_abs_extend.cpp)
+target_link_libraries(test_ascendc
+    ascendc_api_extend
+    tikicpulib_ascend910B1
+    depends
+    GTest::gtest)
+
+target_include_directories(test_ascendc PUBLIC
+        ${ASCEND_INSTALL_PATH}/include/toolchain
+)

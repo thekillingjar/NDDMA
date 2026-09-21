@@ -1,0 +1,12 @@
+{
+  "kernel_config": {
+      "graph_name": "fused_graph_0_arar",
+      "input_num": "1",
+      "output_num": "1",
+      "input_shapes": "2,1000,50,63",
+      "output_shapes": "2,50",
+      "input_data_types": "float32",
+      "output_data_types": "float32",
+      "soc_version": "Ascend910B1"
+  }
+}

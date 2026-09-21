@@ -1,0 +1,12 @@
+{
+  "Switch": {
+    "GraphFusion": {
+      "MulFusionOptimizeFusionPass": "on",
+      "SplitConvFusionPass": "off"
+    },
+    "UBFusion": {
+      "TbeMatmulFixPipeFusionPass": "off",
+      "TbeDwFixpipeFusionPass": "on"
+    }
+  }
+}

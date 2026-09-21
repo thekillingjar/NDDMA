@@ -1,0 +1,8 @@
+{
+    "Add": {
+        "dynamicRankSupport": "true"
+    },
+    "BatchNorm": {
+        "dynamicRankSupport": "true"
+    }
+}

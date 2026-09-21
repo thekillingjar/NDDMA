@@ -1,0 +1,20 @@
+{
+    "kernelName": "tbe_model_binary_test_kernel0",
+    "binFileName": "tbe_model_binary",
+    "binFileSuffix": ".om",
+    "magic": "RT_DEV_BINARY_MAGIC_ELF",
+    "KBHit" : 1,
+    "workspace":{
+        "num":4,
+        "size":[
+            423300,
+            423300,
+            423300,
+            423300
+        ],
+        "type":[1,1,1,1]
+    },
+    "globalworkspace_spec_workspace":{
+        "size": 32
+    }
+}

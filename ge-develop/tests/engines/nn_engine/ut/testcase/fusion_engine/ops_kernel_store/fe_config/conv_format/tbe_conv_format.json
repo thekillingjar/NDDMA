@@ -1,0 +1,62 @@
+{
+    "Conv2D":{
+        "compute":{
+            "cost":"10"
+        },
+        "dynamicRankSupport":{
+            "flag":"true"
+        },
+        "dynamicShapeSupport":{
+            "flag":"true"
+        },
+        "heavyOp":{
+            "flag":"true"
+        },
+        "coreType":{
+            "value":"AiCore"
+        },
+        "input0":{
+            "name":"x",
+            "dtype":"float16, float16, float, float",
+            "format":"NC1HWC0, ND, NC1HWC0, ND",
+            "needCompile":"false",
+            "paramType":"required",
+            "shape":"all"
+        },
+        "input1":{
+            "name":"filter",
+            "dtype":"float16, float16, float, float",
+            "format":"FRACTAL_Z, FRACTAL_Z, FRACTAL_Z, FRACTAL_Z",
+            "needCompile":"false",
+            "paramType":"required",
+            "shape":"all"
+        },
+        "input2":{
+            "name":"bias",
+            "dtype":"float16, float16, float, float",
+            "format":"ND, ND, ND, ND",
+            "needCompile":"false",
+            "paramType":"optional",
+            "shape":"all"
+        },
+        "input3":{
+            "name":"offset_w",
+            "dtype":"float16, float16, float, float",
+            "format":"ND, ND, ND, ND",
+            "needCompile":"false",
+            "paramType":"optional",
+            "shape":"all"
+        },
+        "jitCompile":{
+            "flag":"false"
+        },
+        "output0":{
+            "name":"y",
+            "dtype":"float16, float16, float, float",
+            "format":"NC1HWC0, NC1HWC0, NC1HWC0, NC1HWC0",
+            "needCompile":"true",
+            "paramType":"required",
+            "shape":"all"
+        }
+    }
+}

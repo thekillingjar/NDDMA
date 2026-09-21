@@ -1,0 +1,12 @@
+{
+  "func_list": [
+    {
+      "func_name": "control_func"
+    }
+  ],
+  "input_num": 1,
+  "output_num": 4,
+  "target_bin": "libcontrol.so",
+  "workspace": "../../udf_workspace",
+  "cmakelist_path": "04_control_func/CMakeLists.txt"
+}

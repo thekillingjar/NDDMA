@@ -1,0 +1,73 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of 
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+syntax = "proto2";
+package aicpu.proto;
+
+message OpInfo{
+                required string engine       =1;       //enging name
+                required string opKernelLib  =2;       //lib name that a particular op belongs to
+                required float computeCost   =3;       //execution time that the op cost
+                optional bool flagAsync      =4;       //whether to support asynchronous
+                optional bool flagPartial    =5;       //whether to support conditionally
+}
+
+
+message InOutputDesc{
+                enum DataType{
+                    DT_UNDEFINED = 0;  // Used to indicate a DataType field has not been set.
+                    DT_FLOAT     = 1;  // float type
+                    DT_FLOAT16   = 2;  // fp16 type
+                    DT_INT8      = 3;  // int8 type
+                    DT_UINT8     = 4;  // uint8 type
+                    DT_INT16     = 5;  // int16 type
+                    DT_UINT16    = 6;  // uint16 type
+                    DT_INT32     = 7;  //
+                    DT_INT64     = 8;  // int64 type
+                    DT_UINT32    = 9;  // unsigned int32
+                    DT_UINT64    = 10;  // unsigned int64
+                    DT_BOOL      = 11;  // bool type
+                    DT_DOUBLE    = 12; // double type
+                    DT_QINT8     = 13;
+                    DT_QINT16    = 14;
+                    DT_QINT32    = 15;
+                    DT_QUINT8    = 16;
+                    DT_QUINT16   = 17;
+                    DT_COMPLEX64 = 18;
+                    DT_COMPLEX128 = 19;
+                    DT_UINT1      = 30;
+                    DT_HIFLOAT8   = 34;
+                }
+
+                enum Format {
+                        FORMAT_NCHW = 0;         // NCHW
+                        FORMAT_NHWC = 1;         // NHWC
+                }
+
+                required string name                        =3;    //tensor's name
+                repeated DataType supportDataType  =4;    //datatype that the tensor support
+                repeated Format   supportFormat    =5;    //format that the tensor support
+}
+
+message OpInfoDesc{
+                required string opName                  =1;                 //op name
+                required OpInfo opInfo                  =2;                 // engine information that the op belongs to
+                optional bool isSupportedAll            =3;                 //whether to support in all conditions
+                repeated InOutputDesc input    =4;                 //op's input tensor description
+                repeated InOutputDesc output   =5;                 //op's output tensor description
+}
+
+message KernelInfoLib{
+                required string version      =1;      // verion tag. Defined for future use
+                repeated OpInfoDesc opinfo   =2;      // op info
+                required string libName          =3;      // kernel lib name
+}
+
+

@@ -1,0 +1,21 @@
+{
+    "batchBindOnly": 1,
+    "kernelName": "te_sigmoid_9a43f1_mix_aic",
+    "binFileName": "te_sigmoid_9a43f1_mix_aic",
+    "binFileSuffix": ".o",
+    "schedule_mode": 1,
+    "localMemorySize": 2334,
+    "blockDim": 1,
+    "magic": "RT_DEV_BINARY_MAGIC_ELF",
+    "KBHit" : true,
+    "runInfo":{
+      "block_dim":4,
+      "clear_atomic": false,
+      "local_memory_size": 4294967296,
+      "schedule_mode": "a",
+      "tiling_cond": 0,
+      "tiling_key": 1,
+      "tiling_data": "10",
+      "type":[1,1,1,1]
+    }
+  }

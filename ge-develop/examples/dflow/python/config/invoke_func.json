@@ -1,0 +1,12 @@
+{
+  "func_list": [
+    {
+      "func_name": "call_nn"
+    }
+  ],
+  "input_num": 2,
+  "output_num": 1,
+  "target_bin": "libudf.so",
+  "workspace": "../udf_workspace",
+  "cmakelist_path": "02_udf_call_add_nn/CMakeLists.txt"
+}

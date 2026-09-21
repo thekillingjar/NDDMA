@@ -1,0 +1,4 @@
+optimizer:["aicpu_tf_optimizer", "aicpu_tf_ffts_plus_optimizer", "aicpu_ascend_optimizer", "aicpu_ascend_ffts_plus_optimizer",
+"dvpp_graph_optimizer", "hccl_alltoallvc_fusion_optimizer", "AIcoreEngine", "VectorEngine", "DSAEngine", "hccl_graph_optimizer",
+"hvd_graph_optimizer", "DNN_VM_RTS_GRAPH_OPTIMIZER_STORE", "DNN_VM_RTS_FFTS_PLUS_GRAPH_OPTIMIZER_STORE", "DNN_VM_HOST_CPU_OPTIMIZER",
+"ge_local_graph_optimizer", "custom_graph_optimizer"]

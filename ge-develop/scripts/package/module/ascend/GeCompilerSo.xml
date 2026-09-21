@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<block name="GeCompilerSo" copy_type="delivery" src_path="" dst_path="" install_path="" install_own="$username:$usergroup" install_mod="550" install_type="all">
+    <dir_info value="GeCompilerSo">
+        <path value="$(TARGET_ENV)/lib64"/>
+        <path value="$(TARGET_ENV)/lib64/plugin" install_mod="555"/>
+        <path value="$(TARGET_ENV)/lib64/plugin/nnengine" install_mod="555"/>
+        <path value="$(TARGET_ENV)/lib64/plugin/opskernel" install_mod="555"/>
+        <path value="$(TARGET_ENV)/lib64/plugin/pnecompiler" install_mod="555"/>
+        <path value="python" install_mod="555"/>
+        <path value="python/site-packages" install_mod="555"/>
+        <path value="python/site-packages/autofuse" install_mod="555"/>
+        <path value="fwkacllib" install_mod="555"/>
+        <path value="fwkacllib/lib64" install_mod="555"/>
+    </dir_info>
+    <file_info value="lib64" copy_type="delivery" dst_path="lib64" install_path="$(TARGET_ENV)/lib64" install_type="all" install_mod="440" optional="true">
+        <file value="libdflow_runner.so" file_type="shared"/>
+        <file value="libflow_graph.so" file_type="shared"/>
+        <file value="libaihac_autofusion.so" file_type="shared"/>
+        <file value="libaihac_codegen.so" file_type="shared"/>
+        <file value="libaihac_ir.so" file_type="shared"/>
+        <file value="libaihac_ir_register.so" file_type="shared"/>
+        <file value="libaihac_symbolizer.so" file_type="shared"/>
+        <file value="lib_caffe_parser.so" file_type="shared"/>
+        <file value="libjit_exe.a" file_type="static"/>
+        <file value="libparser_common.so" file_type="shared"/>
+        <file value="libaicore_utils.so" file_type="shared"/>
+        <file value="libfusion_pass.so" file_type="shared"/>
+        <file value="libop_compile_adapter.so" file_type="shared"/>
+        <file value="libaicpu_engine_common.so" file_type="shared"/>
+        <file value="libfmk_parser.so" file_type="shared"/>
+        <file value="libge_compiler.so" file_type="shared"/>
+        <file value="libfmk_onnx_parser.so" file_type="shared"/>
+        <file value="libhcom_graph_adaptor.so" file_type="shared"/>
+        <file value="libhcom_opskernel_builder.so" file_type="shared" dst_path="lib64/plugin/opskernel" install_path="$(TARGET_ENV)/lib64/plugin/opskernel"/>
+        <file value="libhcom_gradtune_opskernel_builder.so" file_type="shared" dst_path="lib64/plugin/opskernel" install_path="$(TARGET_ENV)/lib64/plugin/opskernel"/>
+        <file value="libhcom_gradient_split_tune.so" file_type="shared"/>
+        <file value="libopskernel.so" file_type="shared"/>
+        <file value="libge_runner.so" file_type="shared"/>
+        <file value="libge_runner_v2.so" file_type="shared"/>
+        <file value="libeager_style_graph_builder_base.so" file_type="shared"/>
+        <file value="libeager_style_graph_builder_base_static.a" file_type="static"/>
+        <file value="libllm_engine.so" file_type="shared"/>
+        <file value="libslice.so" file_type="shared"/>
+        <file value="libaicpu_const_folding.so" file_type="shared"/>
+        <file value="libengine.so" file_type="shared" dst_path="lib64/plugin/nnengine" install_path="$(TARGET_ENV)/lib64/plugin/nnengine"/>
+        <file value="libhost_cpu_engine.so" file_type="shared" dst_path="lib64/plugin/opskernel" install_path="$(TARGET_ENV)/lib64/plugin/opskernel"/>
+        <file value="libaicpu_tf_engine.so" file_type="shared" dst_path="lib64/plugin/opskernel" install_path="$(TARGET_ENV)/lib64/plugin/opskernel"/>
+        <file value="librts_engine.so" file_type="shared" dst_path="lib64/plugin/opskernel" install_path="$(TARGET_ENV)/lib64/plugin/opskernel"/>
+        <file value="libge_local_opskernel_builder.so" file_type="shared" dst_path="lib64/plugin/opskernel" install_path="$(TARGET_ENV)/lib64/plugin/opskernel"/>
+        <file value="libhost_cpu_opskernel_builder.so" file_type="shared" dst_path="lib64/plugin/opskernel" install_path="$(TARGET_ENV)/lib64/plugin/opskernel"/>
+        <file value="libge_local_engine.so" file_type="shared" dst_path="lib64/plugin/opskernel" install_path="$(TARGET_ENV)/lib64/plugin/opskernel"/>
+        <file value="libaicpu_ascend_engine.so" file_type="shared" dst_path="lib64/plugin/opskernel" install_path="$(TARGET_ENV)/lib64/plugin/opskernel"/>
+        <file value="libfe.so" file_type="shared" dst_path="lib64/plugin/opskernel" install_path="$(TARGET_ENV)/lib64/plugin/opskernel"/>
+        <file value="libffts.so" file_type="shared" dst_path="lib64/plugin/opskernel" install_path="$(TARGET_ENV)/lib64/plugin/opskernel"/>
+        <file value="libudf_compiler.so" file_type="shared" dst_path="lib64/plugin/pnecompiler" install_path="$(TARGET_ENV)/lib64/plugin/pnecompiler"/>
+        <file value="libcpu_compiler.so" file_type="shared" dst_path="lib64/plugin/pnecompiler" install_path="$(TARGET_ENV)/lib64/plugin/pnecompiler"/>
+        <file value="libdvpp_engine.so" file_type="shared" dst_path="lib64/plugin/opskernel" install_path="$(TARGET_ENV)/lib64/plugin/opskernel"/>
+        <file value="llm_datadist_v1-0.0.1-py3-none-any.whl" file_type="whl"/>
+        <file value="ge_py-0.0.1-py3-none-any.whl" file_type="whl"/>
+        <file value="dataflow-0.0.1-py3-none-any.whl" file_type="whl"/>
+        <file value="libcompress.so" file_type="shared"/>
+        <file value="libcompressweight.so" file_type="shared"/>
+        <file value="libacl_op_compiler.so" file_type="shared"/>
+    </file_info>
+    <file_info value="devlib" copy_type="delivery" dst_path="lib64/stub/linux/x86_64" install_path="$(TARGET_ENV)/devlib/linux/x86_64" install_mod="440" optional="true">
+        <file value="libfmk_parser.so" file_type="shared" install_type="devel"/>
+        <file value="libge_compiler.so" file_type="shared" install_type="devel"/>
+        <file value="libfmk_onnx_parser.so" file_type="shared" install_type="devel"/>
+        <file value="libge_runner.so" file_type="shared" install_type="devel"/>
+        <file value="libge_runner_v2.so" file_type="shared" install_type="devel"/>
+        <file value="libacl_op_compiler.so" file_type="shared"/>
+    </file_info>
+    <file_info value="devlib" copy_type="delivery" dst_path="lib64/stub/linux/aarch64" install_path="$(TARGET_ENV)/devlib/linux/aarch64" install_mod="440" optional="true">
+        <file value="libfmk_parser.so" file_type="shared" install_type="devel"/>
+        <file value="libge_compiler.so" file_type="shared" install_type="devel"/>
+        <file value="libfmk_onnx_parser.so" file_type="shared" install_type="devel"/>
+        <file value="libge_runner.so" file_type="shared" install_type="devel"/>
+        <file value="libge_runner_v2.so" file_type="shared" install_type="devel"/>
+        <file value="libacl_op_compiler.so" file_type="shared"/>
+    </file_info>
+    <file_info value="autofuse" copy_type="delivery" dst_path="python/site-packages/autofuse" install_path="python/site-packages/autofuse" install_type="devel" install_mod="440" optional="true">
+        <file value="pyautofuse.so" file_type="shared"/>
+    </file_info>
+    <file_info value="switch_by_index" copy_type="delivery" dst_path="fwkacllib/lib64" install_path="fwkacllib/lib64" install_type="devel" install_mod="550" optional="true">
+        <file value="switch_by_index.o" file_type="shared"/>
+    </file_info>
+</block>

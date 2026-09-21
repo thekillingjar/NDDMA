@@ -1,0 +1,7 @@
+{
+    "ops_parallel_rule":{
+        "ops_name_list":{
+            "list":"CombinedNonMaxSuppression"
+        }
+    }
+}        

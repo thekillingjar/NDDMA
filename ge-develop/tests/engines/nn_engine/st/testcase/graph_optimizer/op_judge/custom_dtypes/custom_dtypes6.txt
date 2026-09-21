@@ -1,0 +1,1 @@
+OpType::CustomOpA:InputDtype:float16,float16,OutputDtype:float16

@@ -1,0 +1,7 @@
+{
+	"profiler1": {
+		"switch": "on",
+		"output": "output",
+		"task_trace": "on"
+	}
+}

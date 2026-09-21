@@ -1,0 +1,31 @@
+{
+  "Switch":{
+    "GraphFusion":{
+      "FeOptimizeOriginalGraphOpJudgeAndFormatDtypeSetter": "off",
+      "FeOpJudge": "off",
+      "FeDistHeavyFormat": "off",
+      "FeUpdateAxis": "off"
+    },
+    "UBFusion":{
+      "AutomaticUbFusion": "on"
+    }
+  },
+  "Priority":{
+    "GraphFusion":{
+      "Top":{
+      },
+      "Main":{
+      },
+      "Down":{
+      }
+    },
+    "UBFusion":{
+      "Top":{
+      },
+      "Main":{
+      },
+      "Down":{
+      }
+    }
+  }
+}

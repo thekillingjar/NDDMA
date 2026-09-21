@@ -1,0 +1,383 @@
+name: "FusedComputeGraph_0"
+input: "data_1:0"
+op {
+  name: "Abs_5_out0_asc"
+  type: "AscGraph"
+  input: "data_1:0"
+  attr {
+    key: "_input_name_key"
+    value {
+      list {
+        s: "__input0"
+      }
+    }
+  }
+  attr {
+    key: "_input_name_value"
+    value {
+      list {
+        i: 0
+      }
+    }
+  }
+  attr {
+    key: "_output_name_key"
+    value {
+      list {
+        s: "__output0"
+      }
+    }
+  }
+  attr {
+    key: "_output_name_value"
+    value {
+      list {
+        i: 0
+      }
+    }
+  }
+  attr {
+    key: "ascgraph"
+    value {
+      s: "asc_graph_attr {\n  tiling_key: -1\n  axis {\n    name: \"z0\"\n    size: \"1024\"\n    align: 1\n    allow_unaligned_tail: true\n  }\n  axis {\n    id: 1\n    name: \"z1\"\n    size: \"1025\"\n    align: 1\n    allow_unaligned_tail: true\n  }\n  axis {\n    id: 2\n    name: \"z2\"\n    size: \"10\"\n    align: 1\n    allow_unaligned_tail: true\n  }\n}\nasc_node {\n  outputs {\n    attr {\n      axis_ids: 0\n      axis_ids: 1\n      axis_ids: 2\n      repeats: \"1024\"\n      repeats: \"1025\"\n      repeats: \"10\"\n      strides: \"10250\"\n      strides: \"10\"\n      strides: \"1\"\n      mem {\n        tensor_id: -1\n      }\n      que {\n        id: -1\n        depth: -1\n        buf_num: -1\n      }\n      buf {\n        id: -1\n      }\n      opt {\n        reuse_id: -1\n        ref_tensor: -1\n        merge_scope: -1\n      }\n    }\n  }\n  attr {\n    name: \"Abs_5_out0_graph/Data_0\"\n    type: \"Data\"\n    sched {\n      axis: 0\n      axis: 1\n      axis: 2\n      loop_axis: -1\n    }\n    api {\n      type: 2\n      compute_type: 8\n      unit: 7\n    }\n    ir_attr_def {\n      attr {\n        key: \"index\"\n        value {\n          i: 0\n        }\n      }\n    }\n  }\n  ir_def {\n    output_names: \"y\"\n    output_ir_type: 0\n    type: \"Data\"\n  }\n}\nasc_node {\n  input_src {\n    src_node_name: \"Abs_5_out0_graph/Data_0\"\n  }\n  outputs {\n    attr {\n      axis_ids: 0\n      axis_ids: 1\n      axis_ids: 2\n      repeats: \"1024\"\n      repeats: \"1025\"\n      repeats: \"10\"\n      strides: \"10250\"\n      strides: \"10\"\n      strides: \"1\"\n      mem {\n        tensor_id: -1\n      }\n      que {\n        id: -1\n        depth: -1\n        buf_num: -1\n      }\n      buf {\n        id: -1\n      }\n      opt {\n        reuse_id: -1\n        ref_tensor: -1\n        merge_scope: -1\n      }\n    }\n  }\n  attr {\n    name: \"Abs_5_out0_graph/Load_0\"\n    type: \"Load\"\n    sched {\n      exec_order: 1\n      axis: 0\n      axis: 1\n      axis: 2\n      loop_axis: -1\n    }\n    api {\n      type: 2\n      compute_type: 8\n      unit: 7\n    }\n    ir_attr_def {\n    }\n  }\n  ir_def {\n    input_names: \"x\"\n    output_names: \"y\"\n    input_ir_type: 0\n    output_ir_type: 0\n    type: \"Load\"\n    input_nums: 1\n  }\n}\nasc_node {\n  input_src {\n    src_node_name: \"Abs_5_out0_graph/Load_0\"\n  }\n  outputs {\n    attr {\n      axis_ids: 0\n      axis_ids: 1\n      axis_ids: 2\n      repeats: \"1024\"\n      repeats: \"1025\"\n      repeats: \"10\"\n      strides: \"10250\"\n      strides: \"10\"\n      strides: \"1\"\n      mem {\n        tensor_id: -1\n      }\n      que {\n        id: -1\n        depth: -1\n        buf_num: -1\n      }\n      buf {\n        id: -1\n      }\n      opt {\n        reuse_id: -1\n        ref_tensor: -1\n        merge_scope: -1\n      }\n    }\n  }\n  attr {\n    name: \"Abs_5_out0_graph/Abs_0\"\n    type: \"Abs\"\n    sched {\n      exec_order: 2\n      axis: 0\n      axis: 1\n      axis: 2\n      loop_axis: -1\n    }\n    api {\n      type: 2\n      compute_type: 8\n      unit: 7\n    }\n  }\n  ir_def {\n    input_names: \"x\"\n    output_names: \"y\"\n    input_ir_type: 0\n    output_ir_type: 0\n    type: \"Abs\"\n    input_nums: 1\n  }\n}\nasc_node {\n  input_src {\n    src_node_name: \"Abs_5_out0_graph/Abs_0\"\n  }\n  outputs {\n    attr {\n      axis_ids: 0\n      axis_ids: 1\n      axis_ids: 2\n      repeats: \"1024\"\n      repeats: \"1025\"\n      repeats: \"10\"\n      strides: \"10250\"\n      strides: \"10\"\n      strides: \"1\"\n      mem {\n        tensor_id: -1\n      }\n      que {\n        id: -1\n        depth: -1\n        buf_num: -1\n      }\n      buf {\n        id: -1\n      }\n      opt {\n        reuse_id: -1\n        ref_tensor: -1\n        merge_scope: -1\n      }\n    }\n  }\n  attr {\n    name: \"Abs_5_out0_graph/Abs_1\"\n    type: \"Abs\"\n    sched {\n      exec_order: 3\n      axis: 0\n      axis: 1\n      axis: 2\n      loop_axis: -1\n    }\n    api {\n      type: 2\n      compute_type: 8\n      unit: 7\n    }\n  }\n  ir_def {\n    input_names: \"x\"\n    output_names: \"y\"\n    input_ir_type: 0\n    output_ir_type: 0\n    type: \"Abs\"\n    input_nums: 1\n  }\n}\nasc_node {\n  input_src {\n    src_node_name: \"Abs_5_out0_graph/Abs_1\"\n  }\n  outputs {\n    attr {\n      axis_ids: 0\n      axis_ids: 1\n      axis_ids: 2\n      repeats: \"1024\"\n      repeats: \"1025\"\n      repeats: \"10\"\n      strides: \"10250\"\n      strides: \"10\"\n      strides: \"1\"\n      mem {\n        tensor_id: -1\n      }\n      que {\n        id: -1\n        depth: -1\n        buf_num: -1\n      }\n      buf {\n        id: -1\n      }\n      opt {\n        reuse_id: -1\n        ref_tensor: -1\n        merge_scope: -1\n      }\n    }\n  }\n  attr {\n    name: \"Abs_5_out0_graph/Abs_2\"\n    type: \"Abs\"\n    sched {\n      exec_order: 4\n      axis: 0\n      axis: 1\n      axis: 2\n      loop_axis: -1\n    }\n    api {\n      type: 2\n      compute_type: 8\n      unit: 7\n    }\n  }\n  ir_def {\n    input_names: \"x\"\n    output_names: \"y\"\n    input_ir_type: 0\n    output_ir_type: 0\n    type: \"Abs\"\n    input_nums: 1\n  }\n}\nasc_node {\n  input_src {\n    src_node_name: \"Abs_5_out0_graph/Abs_2\"\n  }\n  outputs {\n    attr {\n      axis_ids: 0\n      axis_ids: 1\n      axis_ids: 2\n      repeats: \"1024\"\n      repeats: \"1025\"\n      repeats: \"10\"\n      strides: \"10250\"\n      strides: \"10\"\n      strides: \"1\"\n      mem {\n        tensor_id: -1\n      }\n      que {\n        id: -1\n        depth: -1\n        buf_num: -1\n      }\n      buf {\n        id: -1\n      }\n      opt {\n        reuse_id: -1\n        ref_tensor: -1\n        merge_scope: -1\n      }\n    }\n  }\n  attr {\n    name: \"Abs_5_out0_graph/Abs_3\"\n    type: \"Abs\"\n    sched {\n      exec_order: 5\n      axis: 0\n      axis: 1\n      axis: 2\n      loop_axis: -1\n    }\n    api {\n      type: 2\n      compute_type: 8\n      unit: 7\n    }\n  }\n  ir_def {\n    input_names: \"x\"\n    output_names: \"y\"\n    input_ir_type: 0\n    output_ir_type: 0\n    type: \"Abs\"\n    input_nums: 1\n  }\n}\nasc_node {\n  input_src {\n    src_node_name: \"Abs_5_out0_graph/Abs_3\"\n  }\n  outputs {\n    attr {\n      axis_ids: 0\n      axis_ids: 1\n      axis_ids: 2\n      repeats: \"1024\"\n      repeats: \"1025\"\n      repeats: \"10\"\n      strides: \"10250\"\n      strides: \"10\"\n      strides: \"1\"\n      mem {\n        tensor_id: -1\n      }\n      que {\n        id: -1\n        depth: -1\n        buf_num: -1\n      }\n      buf {\n        id: -1\n      }\n      opt {\n        reuse_id: -1\n        ref_tensor: -1\n        merge_scope: -1\n      }\n    }\n  }\n  attr {\n    name: \"Abs_5_out0_graph/Abs_4\"\n    type: \"Abs\"\n    sched {\n      exec_order: 6\n      axis: 0\n      axis: 1\n      axis: 2\n      loop_axis: -1\n    }\n    api {\n      type: 2\n      compute_type: 8\n      unit: 7\n    }\n  }\n  ir_def {\n    input_names: \"x\"\n    output_names: \"y\"\n    input_ir_type: 0\n    output_ir_type: 0\n    type: \"Abs\"\n    input_nums: 1\n  }\n}\nasc_node {\n  input_src {\n    src_node_name: \"Abs_5_out0_graph/Abs_4\"\n  }\n  outputs {\n    attr {\n      axis_ids: 0\n      axis_ids: 1\n      axis_ids: 2\n      repeats: \"1024\"\n      repeats: \"1025\"\n      repeats: \"10\"\n      strides: \"10250\"\n      strides: \"10\"\n      strides: \"1\"\n      mem {\n        tensor_id: -1\n      }\n      que {\n        id: -1\n        depth: -1\n        buf_num: -1\n      }\n      buf {\n        id: -1\n      }\n      opt {\n        reuse_id: -1\n        ref_tensor: -1\n        merge_scope: -1\n      }\n    }\n  }\n  attr {\n    name: \"Abs_5_out0_graph/Abs_5\"\n    type: \"Abs\"\n    sched {\n      exec_order: 7\n      axis: 0\n      axis: 1\n      axis: 2\n      loop_axis: -1\n    }\n    api {\n      type: 2\n      compute_type: 8\n      unit: 7\n    }\n  }\n  ir_def {\n    input_names: \"x\"\n    output_names: \"y\"\n    input_ir_type: 0\n    output_ir_type: 0\n    type: \"Abs\"\n    input_nums: 1\n  }\n}\nasc_node {\n  input_src {\n    src_node_name: \"Abs_5_out0_graph/Abs_5\"\n  }\n  outputs {\n    attr {\n      axis_ids: 0\n      axis_ids: 1\n      axis_ids: 2\n      repeats: \"1024\"\n      repeats: \"1025\"\n      repeats: \"10\"\n      strides: \"10250\"\n      strides: \"10\"\n      strides: \"1\"\n      mem {\n        tensor_id: -1\n      }\n      que {\n        id: -1\n        depth: -1\n        buf_num: -1\n      }\n      buf {\n        id: -1\n      }\n      opt {\n        reuse_id: -1\n        ref_tensor: -1\n        merge_scope: -1\n      }\n    }\n  }\n  attr {\n    name: \"Abs_5_out0_graph/Store_0\"\n    type: \"Store\"\n    sched {\n      exec_order: 8\n      axis: 0\n      axis: 1\n      axis: 2\n      loop_axis: -1\n    }\n    api {\n      type: 2\n      compute_type: 8\n      unit: 7\n    }\n    ir_attr_def {\n    }\n  }\n  ir_def {\n    input_names: \"x\"\n    output_names: \"y\"\n    input_ir_type: 0\n    output_ir_type: 0\n    type: \"Store\"\n    input_nums: 1\n  }\n}\nasc_node {\n  input_src {\n    src_node_name: \"Abs_5_out0_graph/Store_0\"\n  }\n  outputs {\n    attr {\n      mem {\n        tensor_id: -1\n      }\n      que {\n        id: -1\n        depth: -1\n        buf_num: -1\n      }\n      buf {\n        id: -1\n      }\n      opt {\n        reuse_id: -1\n        ref_tensor: -1\n        merge_scope: -1\n      }\n    }\n  }\n  attr {\n    name: \"Abs_5_out0_graph/Output_0\"\n    type: \"Output\"\n    sched {\n      exec_order: 9\n      axis: 0\n      axis: 1\n      axis: 2\n      loop_axis: -1\n    }\n    api {\n      type: 2\n      compute_type: 8\n      unit: 7\n    }\n    ir_attr_def {\n      attr {\n        key: \"index\"\n        value {\n          i: 0\n        }\n      }\n    }\n  }\n  ir_def {\n    input_names: \"x\"\n    output_names: \"y\"\n    input_ir_type: 0\n    output_ir_type: 0\n    type: \"Output\"\n    input_nums: 1\n  }\n}\ngraph_name: \"Abs_5_out0_graph\"\n"
+    }
+  }
+  has_out_attr: true
+  input_desc {
+    dtype: DT_FLOAT
+    shape {
+      dim: 1024
+      dim: 1025
+      dim: 10
+    }
+    layout: "ND"
+    attr {
+      key: "format_for_int"
+      value {
+        i: 2
+      }
+    }
+    attr {
+      key: "origin_data_type"
+      value {
+        s: "DT_FLOAT"
+      }
+    }
+    attr {
+      key: "origin_format"
+      value {
+        s: "ND"
+      }
+    }
+    attr {
+      key: "origin_format_for_int"
+      value {
+        i: 2
+      }
+    }
+    attr {
+      key: "origin_shape"
+      value {
+        list {
+          i: 1024
+          i: 1025
+          i: 10
+          val_type: VT_LIST_INT
+        }
+      }
+    }
+    attr {
+      key: "origin_shape_initialized"
+      value {
+        b: true
+      }
+    }
+    attr_groups {
+      attr_group_def {
+        tensor_attr_group {
+          origin_symbol_shape: "1024"
+          origin_symbol_shape: "1025"
+          origin_symbol_shape: "10"
+        }
+      }
+    }
+    device_type: "NPU"
+  }
+  output_desc {
+    dtype: DT_FLOAT
+    shape {
+      dim: 1024
+      dim: 1025
+      dim: 10
+    }
+    layout: "ND"
+    attr {
+      key: "format_for_int"
+      value {
+        i: 2
+      }
+    }
+    attr {
+      key: "origin_data_type"
+      value {
+        s: "DT_FLOAT"
+      }
+    }
+    attr {
+      key: "origin_format"
+      value {
+        s: "ND"
+      }
+    }
+    attr {
+      key: "origin_format_for_int"
+      value {
+        i: 2
+      }
+    }
+    attr {
+      key: "origin_shape"
+      value {
+        list {
+          i: 1024
+          i: 1025
+          i: 10
+          val_type: VT_LIST_INT
+        }
+      }
+    }
+    attr {
+      key: "origin_shape_initialized"
+      value {
+        b: true
+      }
+    }
+    attr_groups {
+      attr_group_def {
+        tensor_attr_group {
+          origin_symbol_shape: "1024"
+          origin_symbol_shape: "1025"
+          origin_symbol_shape: "10"
+        }
+      }
+    }
+    device_type: "NPU"
+  }
+}
+op {
+  name: "data_1"
+  type: "Data"
+  input: ""
+  attr {
+    key: "_input_name_key"
+    value {
+      list {
+        s: "x"
+      }
+    }
+  }
+  attr {
+    key: "_input_name_value"
+    value {
+      list {
+        i: 0
+      }
+    }
+  }
+  attr {
+    key: "_output_name_key"
+    value {
+      list {
+        s: "y"
+      }
+    }
+  }
+  attr {
+    key: "_output_name_value"
+    value {
+      list {
+        i: 0
+      }
+    }
+  }
+  has_out_attr: true
+  id: 1
+  input_desc {
+    dtype: DT_FLOAT
+    shape {
+    }
+    layout: "ND"
+    attr {
+      key: "format_for_int"
+      value {
+        i: 2
+      }
+    }
+    attr {
+      key: "origin_format"
+      value {
+        s: "ND"
+      }
+    }
+    attr {
+      key: "origin_format_for_int"
+      value {
+        i: 2
+      }
+    }
+    attr {
+      key: "origin_shape_initialized"
+      value {
+        b: false
+      }
+    }
+    device_type: "NPU"
+  }
+  output_desc {
+    dtype: DT_FLOAT
+    shape {
+    }
+    layout: "ND"
+    attr {
+      key: "format_for_int"
+      value {
+        i: 2
+      }
+    }
+    attr {
+      key: "origin_format"
+      value {
+        s: "ND"
+      }
+    }
+    attr {
+      key: "origin_format_for_int"
+      value {
+        i: 2
+      }
+    }
+    attr {
+      key: "origin_shape_initialized"
+      value {
+        b: false
+      }
+    }
+    device_type: "NPU"
+  }
+}
+op {
+  name: "netoutput_2"
+  type: "NetOutput"
+  input: "Abs_5_out0_asc:0"
+  attr {
+    key: "_input_name_key"
+    value {
+      list {
+        s: "x_0"
+      }
+    }
+  }
+  attr {
+    key: "_input_name_value"
+    value {
+      list {
+        i: 0
+      }
+    }
+  }
+  attr {
+    key: "_output_name_key"
+    value {
+      list {
+        s: "y_0"
+      }
+    }
+  }
+  attr {
+    key: "_output_name_value"
+    value {
+      list {
+        i: 0
+      }
+    }
+  }
+  has_out_attr: true
+  id: 2
+  input_desc {
+    dtype: DT_FLOAT
+    shape {
+    }
+    layout: "ND"
+    attr {
+      key: "format_for_int"
+      value {
+        i: 2
+      }
+    }
+    attr {
+      key: "origin_format"
+      value {
+        s: "ND"
+      }
+    }
+    attr {
+      key: "origin_format_for_int"
+      value {
+        i: 2
+      }
+    }
+    attr {
+      key: "origin_shape_initialized"
+      value {
+        b: false
+      }
+    }
+    attr_groups {
+      attr_group_def {
+        tensor_attr_group {
+          origin_symbol_shape: "1024"
+          origin_symbol_shape: "1025"
+          origin_symbol_shape: "10"
+        }
+      }
+    }
+    device_type: "NPU"
+  }
+  output_desc {
+    dtype: DT_FLOAT
+    shape {
+    }
+    layout: "ND"
+    attr {
+      key: "format_for_int"
+      value {
+        i: 2
+      }
+    }
+    attr {
+      key: "origin_format"
+      value {
+        s: "ND"
+      }
+    }
+    attr {
+      key: "origin_format_for_int"
+      value {
+        i: 2
+      }
+    }
+    attr {
+      key: "origin_shape_initialized"
+      value {
+        b: false
+      }
+    }
+    attr_groups {
+      attr_group_def {
+        tensor_attr_group {
+        }
+      }
+    }
+    device_type: "NPU"
+  }
+}

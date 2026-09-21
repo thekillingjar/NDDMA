@@ -1,0 +1,308 @@
+{
+    "Neg":{
+        "input0":{
+            "dtype":"float16, float16",
+            "format":"NC1HWC0, ND",
+            "name":"x1",
+            "paramType":"required",
+            "shape":"all",
+            "reshapeType":"NC"
+        },
+        "input1":{
+            "dtype":"float16, float16",
+            "format":"NC1HWC0, ND",
+            "name":"x2",
+            "paramType":"required",
+            "shape":"all",
+            "reshapeType":"NC"
+        },
+        "output0":{
+            "dtype":"float16, float16",
+            "format":"NC1HWC0, ND",
+            "name":"y",
+            "paramType":"required",
+            "shape":"all",
+            "reshapeType":"NC"
+        },
+        "partial":{
+            "flag":"true"
+        }
+    },
+    "Mul":{
+        "attr":{
+            "list":"test"
+        },
+        "attr_test":{
+            "paramType":"optional",
+            "type":"int",
+            "value":"all"
+        },
+        "input0":{
+            "dtype":"float16, float16",
+            "format":"NC1HWC0, ND",
+            "name":"x",
+            "paramType":"required",
+            "shape":"all",
+            "reshapeType":"NC"
+        },
+        "input1":{
+            "dtype":"float16, float16",
+            "format":"NC1HWC0, ND",
+            "name":"y",
+            "paramType":"required",
+            "shape":"all",
+            "reshapeType":"NC"
+        },
+        "output0":{
+            "dtype":"float16, float16",
+            "format":"NC1HWC0, ND",
+            "name":"z",
+            "paramType":"required",
+            "shape":"all",
+            "reshapeType":"NC"
+        },
+        "partial":{
+            "flag":"true"
+        }
+    },
+    "Add":{
+        "input0":{
+            "dtype":"float16, float16",
+            "format":"NC1HWC0, ND",
+            "name":"x",
+            "paramType":"required",
+            "shape":"all",
+            "reshapeType":"NC"
+        },
+        "input1":{
+            "dtype":"float16, float16",
+            "format":"NC1HWC0, ND",
+            "name":"y",
+            "paramType":"required",
+            "shape":"all",
+            "reshapeType":"NC"
+        },
+        "output0":{
+            "dtype":"float16, float16",
+            "format":"NC1HWC0, ND",
+            "name":"z",
+            "paramType":"required",
+            "shape":"all",
+            "reshapeType":"NC"
+        },
+        "partial":{
+            "flag":"true"
+        }
+    },
+    "LayerNormGrad":{
+        "input0":{
+            "dtype":"float16, float16",
+            "format":"NC1HWC0, ND",
+            "name":"dy",
+            "paramType":"required",
+            "shape":"all",
+            "reshapeType":"NC"
+        },
+        "input1":{
+            "dtype":"float16, float16",
+            "format":"NC1HWC0, ND",
+            "name":"x",
+            "paramType":"required",
+            "shape":"all",
+            "reshapeType":"NC"
+        },
+        "input2":{
+            "dtype":"float16, float16",
+            "format":"NC1HWC0, ND",
+            "name":"variance",
+            "paramType":"required",
+            "shape":"all",
+            "reshapeType":"NC"
+        },
+        "input3":{
+            "dtype":"float16, float16",
+            "format":"NC1HWC0, ND",
+            "name":"mean",
+            "paramType":"required",
+            "shape":"all",
+            "reshapeType":"NC"
+        },
+        "input4":{
+            "dtype":"float16, float16",
+            "format":"NC1HWC0, ND",
+            "name":"gamma",
+            "paramType":"required",
+            "shape":"all",
+            "reshapeType":"NC"
+        },
+        "output0":{
+            "dtype":"float16, float16",
+            "format":"NC1HWC0, ND",
+            "name":"pd_x",
+            "paramType":"required",
+            "shape":"all",
+            "reshapeType":"NC"
+        },
+        "output1":{
+            "dtype":"float16, float16",
+            "format":"NC1HWC0, ND",
+            "name":"pd_gamma",
+            "paramType":"required",
+            "shape":"all",
+            "reshapeType":"NC"
+        },
+        "output2":{
+            "dtype":"float16, float16",
+            "format":"NC1HWC0, ND",
+            "name":"pd_beta",
+            "paramType":"optional",
+            "shape":"all",
+            "reshapeType":"NC"
+        },
+        "partial":{
+            "flag":"true"
+        },
+        "attr":{
+            "list":"test"
+        },
+        "attr_test":{
+            "paramType":"optional",
+            "type":"int",
+            "value":"all"
+        }
+    },
+    "Conv2D": {
+        "async": {
+            "flag": "false"
+        },
+        "attr": {
+            "list": "strides,pads,dilations,groups,data_format,offset_x"
+        },
+        "attr_data_format": {
+            "defaultValue": "NHWC",
+            "paramType": "optional",
+            "type": "str",
+            "value": "all"
+        },
+        "attr_dilations": {
+            "paramType": "optional",
+            "type": "listInt",
+            "value": "all"
+        },
+        "attr_groups": {
+            "defaultValue": "1",
+            "paramType": "optional",
+            "type": "int",
+            "value": "all"
+        },
+        "attr_offset_x": {
+            "defaultValue": "0",
+            "paramType": "optional",
+            "type": "int",
+            "value": "all"
+        },
+        "attr_pads": {
+            "paramType": "required",
+            "type": "listInt",
+            "value": "all"
+        },
+        "attr_strides": {
+            "paramType": "required",
+            "type": "listInt",
+            "value": "all"
+        },
+        "binfile": {
+            "name": "conv2d.so"
+        },
+        "compute": {
+            "cost": "10"
+        },
+        "dynamicFormat": {
+            "flag": "true"
+        },
+        "dynamicRankSupport": {
+            "flag": "true"
+        },
+        "dynamicShapeSupport": {
+            "flag": "true"
+        },
+        "heavyOp": {
+            "flag": "true"
+        },
+        "input0": {
+            "name": "x",
+            "needCompile": "false",
+            "paramType": "required",
+            "shape": "all"
+        },
+        "input1": {
+            "name": "filter",
+            "needCompile": "false",
+            "paramType": "required",
+            "shape": "all"
+        },
+        "input2": {
+            "name": "bias",
+            "needCompile": "false",
+            "paramType": "optional",
+            "shape": "all"
+        },
+        "input3": {
+            "name": "offset_w",
+            "needCompile": "false",
+            "paramType": "optional",
+            "shape": "all"
+        },
+        "kernel": {
+            "name": "conv2d"
+        },
+        "output0": {
+            "name": "y",
+            "needCompile": "true",
+            "paramType": "required",
+            "shape": "all"
+        },
+        "partial": {
+            "flag": "true"
+        },
+        "sgatKeyAttr": {
+            "list": "strides,pads,dilations,groups,offset_x"
+        }
+    },
+    "ReduceMean":{
+        "attr":{
+            "list":"keep_dims"
+        },
+        "attr_keep_dims":{
+            "defaultValue":"false",
+            "paramType":"optional",
+            "type":"bool",
+            "value":"all"
+        },
+        "dynamicRankSupport":{
+            "flag":"true"
+        },
+        "dynamicShapeSupport":{
+            "flag":"true"
+        },
+        "input0":{
+            "dtype":"float32,float32",
+            "name":"x",
+            "paramType":"required",
+            "format":"ND,ND"
+        },
+        "input1":{
+            "dtype":"float32,float32",
+            "name":"axes",
+            "paramType":"required",
+            "format":"ND,ND",
+            "valueDepend":"optional"
+        },
+        "output0":{
+            "dtype":"float32,float32",
+            "name":"y",
+            "paramType":"required",
+            "format":"ND,ND"
+        }
+    }
+}

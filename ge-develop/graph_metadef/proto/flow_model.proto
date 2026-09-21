@@ -1,0 +1,116 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of 
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+syntax = "proto3";
+package ge.flow_model.proto;
+
+import "ge_ir.proto";
+
+message ModelRelationDef {
+  message QueueDef {
+    string name = 1;
+    uint32 depth = 2;
+    string enqueue_policy = 3;
+    bool is_control = 4;
+  }
+  message AttrValue {
+    oneof value {
+      bytes s = 1;           //"string"
+      int64 i = 2;           //"int"
+      bool b = 3;            //"bool"
+    }
+  }
+  message Endpoint {
+    string name = 1;
+    int32 endpoint_type = 2;
+    map<string, AttrValue> attrs = 3;
+  }
+  message InvokedModelQueueInfo {
+    repeated string input_queue_name = 1;
+    repeated string output_queue_name = 2;
+  }
+  message ModelQueueInfo {
+    string model_name = 1;
+    repeated string input_queue_name = 2;
+    repeated string output_queue_name = 3;
+    repeated string external_input_queue_name = 4;
+    repeated string external_output_queue_name = 5;
+    repeated string invoke_model_key = 6;
+  }
+  message ModelEndpointInfo {
+    string model_name = 1;
+    repeated string input_endpoint_name = 2;
+    repeated string output_endpoint_name = 3;
+    repeated string external_input_queue_name = 4;
+    repeated string external_output_queue_name = 5;
+    repeated string invoke_model_key = 8;
+  }
+
+  repeated QueueDef queue_def = 1;
+  map<string, ModelQueueInfo> submodel_queue_info = 2;
+  map<string, InvokedModelQueueInfo> invoked_model_queue_info = 3;
+  ModelQueueInfo root_model_queue_info = 4;
+
+  repeated Endpoint endpoint = 5;
+  map<string, ModelEndpointInfo> submodel_endpoint_info = 6;
+  ModelEndpointInfo root_model_endpoint_info = 7;
+}
+
+message RunningResource {
+  string type = 1;
+  int64 value = 2;
+}
+
+message ModelDeployResource {
+  string resource_type = 1;
+  repeated RunningResource running_resource = 2;
+  bool is_heavy_load = 3;
+}
+
+message ModelDeployInfo {
+  string logic_device_id = 1;
+}
+
+message ModelRedundantDeployInfo {
+  string redundant_logic_device_id = 1;
+}
+
+message SubmodelDef {
+  string model_name = 1;
+  string model_type = 2;
+  bytes om_data = 3;
+  ge.proto.GraphDef graph = 4;
+  ModelDeployResource deploy_resource = 5;
+  ModelDeployInfo deploy_info = 6;
+  map<string, string> ext_attrs = 7;
+  ModelRedundantDeployInfo redundant_deploy_info = 8;
+  string om_data_file_path = 9;
+  bool is_builtin_udf = 10;
+}
+
+message CompileResource {
+  string host_resource_type = 1;
+  map<string, string> logic_device_id_to_resource_type = 2;
+  message RunningResourceList {
+    repeated RunningResource running_resource = 1;
+  }
+  map<string, RunningResourceList> dev_to_resource_list = 3; // key is logic device id
+}
+
+message FlowModelDef {
+  message EschedPriority {
+    map<string, int32> esched_priority = 1;
+  }
+  string model_name = 1;
+  ModelRelationDef relation = 2;
+  repeated string submodel_name = 3;
+  map<string, EschedPriority> models_esched_priority = 4;
+  CompileResource compile_resource = 8;
+}

@@ -1,0 +1,35 @@
+{
+    "kernelName": "cce_reductionLayer_1_10_float16__1_SUMSQ_1_0__kernel0",
+    "binFileName": "cce_reductionLayer_1_10_float16__1_SUMSQ_1_0",
+    "binFileSuffix": ".o",
+    "magic": "RT_DEV_BINARY_MAGIC_ELF",
+    "workspace":{
+        "num":2,
+        "size":[
+            423300,
+            423300
+        ],
+        "type":[1,1]
+    },
+    "wspMode": true,
+    "parameters": [
+        null,
+        {
+            "init_value": 18446744073709551615,
+            "dtype": "uint64"
+        },
+        {
+            "init_value": 3.40282e+38,
+            "dtype": "float32"
+        },
+        {
+            "init_value": -9223372036854775807,
+            "dtype": "int64"
+        },
+        {
+            "init_value": 4294967295,
+            "dtype": "uint32"
+        }
+    ]
+
+}

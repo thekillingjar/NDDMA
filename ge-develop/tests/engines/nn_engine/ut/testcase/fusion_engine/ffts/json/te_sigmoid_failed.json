@@ -1,0 +1,12 @@
+{
+  "KBHit" : "1",
+  "opParaSize" : "1",
+  "blockDim" : "1",
+  "batchBindOnly": "0",
+  "taskRation": "0",
+  "modeInArgsFirstField": "0",
+  "workspace": "1",
+  "parameters": "1",
+  "compress_parameters": "1",
+  "weight_repeat": "0"
+}

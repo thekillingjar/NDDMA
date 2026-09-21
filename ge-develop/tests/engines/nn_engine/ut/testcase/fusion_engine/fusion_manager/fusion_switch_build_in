@@ -1,0 +1,29 @@
+{
+    "Switch":{
+        "GraphFusion":{
+            "eee":"off",
+            "uuu":"on"
+        },
+        "UBFusion":{
+            "eee":"off",
+            "uuu":"on"
+        }
+    },
+    "Priority":{
+        "GraphFusion":{
+            "Top":{
+                "graphPass1":"3000",
+                "graphPass2":"3010"
+            },
+            "Main":{
+
+            },
+            "Down":{
+
+            }
+        },
+        "UBFusion":{
+
+        }
+    }
+}

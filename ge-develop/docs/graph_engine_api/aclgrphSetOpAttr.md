@@ -1,0 +1,110 @@
+# aclgrphSetOpAttr<a name="ZH-CN_TOPIC_0000001312404869"></a>
+
+## 产品支持情况<a name="section789110355111"></a>
+
+<a name="zh-cn_topic_0000001312404881_table38301303189"></a>
+<table><thead align="left"><tr id="zh-cn_topic_0000001312404881_row20831180131817"><th class="cellrowborder" valign="top" width="57.99999999999999%" id="mcps1.1.3.1.1"><p id="zh-cn_topic_0000001312404881_p1883113061818"><a name="zh-cn_topic_0000001312404881_p1883113061818"></a><a name="zh-cn_topic_0000001312404881_p1883113061818"></a><span id="zh-cn_topic_0000001312404881_ph20833205312295"><a name="zh-cn_topic_0000001312404881_ph20833205312295"></a><a name="zh-cn_topic_0000001312404881_ph20833205312295"></a>产品</span></p>
+</th>
+<th class="cellrowborder" align="center" valign="top" width="42%" id="mcps1.1.3.1.2"><p id="zh-cn_topic_0000001312404881_p783113012187"><a name="zh-cn_topic_0000001312404881_p783113012187"></a><a name="zh-cn_topic_0000001312404881_p783113012187"></a>是否支持</p>
+</th>
+</tr>
+</thead>
+<tbody><tr id="zh-cn_topic_0000001312404881_row220181016240"><td class="cellrowborder" valign="top" width="57.99999999999999%" headers="mcps1.1.3.1.1 "><p id="zh-cn_topic_0000001312404881_p48327011813"><a name="zh-cn_topic_0000001312404881_p48327011813"></a><a name="zh-cn_topic_0000001312404881_p48327011813"></a><span id="zh-cn_topic_0000001312404881_ph583230201815"><a name="zh-cn_topic_0000001312404881_ph583230201815"></a><a name="zh-cn_topic_0000001312404881_ph583230201815"></a><term id="zh-cn_topic_0000001312404881_zh-cn_topic_0000001312391781_term1253731311225"><a name="zh-cn_topic_0000001312404881_zh-cn_topic_0000001312391781_term1253731311225"></a><a name="zh-cn_topic_0000001312404881_zh-cn_topic_0000001312391781_term1253731311225"></a>Atlas A3 训练系列产品</term>/<term id="zh-cn_topic_0000001312404881_zh-cn_topic_0000001312391781_term131434243115"><a name="zh-cn_topic_0000001312404881_zh-cn_topic_0000001312391781_term131434243115"></a><a name="zh-cn_topic_0000001312404881_zh-cn_topic_0000001312391781_term131434243115"></a>Atlas A3 推理系列产品</term></span></p>
+</td>
+<td class="cellrowborder" align="center" valign="top" width="42%" headers="mcps1.1.3.1.2 "><p id="zh-cn_topic_0000001312404881_p108715341013"><a name="zh-cn_topic_0000001312404881_p108715341013"></a><a name="zh-cn_topic_0000001312404881_p108715341013"></a>√</p>
+</td>
+</tr>
+<tr id="zh-cn_topic_0000001312404881_row173226882415"><td class="cellrowborder" valign="top" width="57.99999999999999%" headers="mcps1.1.3.1.1 "><p id="zh-cn_topic_0000001312404881_p14832120181815"><a name="zh-cn_topic_0000001312404881_p14832120181815"></a><a name="zh-cn_topic_0000001312404881_p14832120181815"></a><span id="zh-cn_topic_0000001312404881_ph1483216010188"><a name="zh-cn_topic_0000001312404881_ph1483216010188"></a><a name="zh-cn_topic_0000001312404881_ph1483216010188"></a><term id="zh-cn_topic_0000001312404881_zh-cn_topic_0000001312391781_term11962195213215"><a name="zh-cn_topic_0000001312404881_zh-cn_topic_0000001312391781_term11962195213215"></a><a name="zh-cn_topic_0000001312404881_zh-cn_topic_0000001312391781_term11962195213215"></a>Atlas A2 训练系列产品</term>/<term id="zh-cn_topic_0000001312404881_zh-cn_topic_0000001312391781_term184716139811"><a name="zh-cn_topic_0000001312404881_zh-cn_topic_0000001312391781_term184716139811"></a><a name="zh-cn_topic_0000001312404881_zh-cn_topic_0000001312391781_term184716139811"></a>Atlas A2 推理系列产品</term></span></p>
+</td>
+<td class="cellrowborder" align="center" valign="top" width="42%" headers="mcps1.1.3.1.2 "><p id="zh-cn_topic_0000001312404881_p19948143911820"><a name="zh-cn_topic_0000001312404881_p19948143911820"></a><a name="zh-cn_topic_0000001312404881_p19948143911820"></a>√</p>
+</td>
+</tr>
+</tbody>
+</table>
+
+## 头文件/库文件<a name="section710017525388"></a>
+
+-   头文件：\#include <ge/ge\_ir\_build.h\>
+-   库文件：libge\_compiler.so
+
+## 功能说明<a name="zh-cn_topic_0235751031_section15686020"></a>
+
+用于支持设置node属性方式的改图。
+
+## 函数原型<a name="zh-cn_topic_0235751031_section1610715016501"></a>
+
+```
+graphStatus aclgrphSetOpAttr(Graph &graph, aclgrphAttrType attr_type, const char_t *cfg_path)
+```
+
+## 参数说明<a name="zh-cn_topic_0235751031_section6956456"></a>
+
+<a name="zh-cn_topic_0235751031_table33761356"></a>
+<table><thead align="left"><tr id="zh-cn_topic_0235751031_row27598891"><th class="cellrowborder" valign="top" width="8.66%" id="mcps1.1.4.1.1"><p id="zh-cn_topic_0235751031_p20917673"><a name="zh-cn_topic_0235751031_p20917673"></a><a name="zh-cn_topic_0235751031_p20917673"></a>参数名</p>
+</th>
+<th class="cellrowborder" valign="top" width="9.379999999999999%" id="mcps1.1.4.1.2"><p id="zh-cn_topic_0235751031_p16609919"><a name="zh-cn_topic_0235751031_p16609919"></a><a name="zh-cn_topic_0235751031_p16609919"></a>输入/输出</p>
+</th>
+<th class="cellrowborder" valign="top" width="81.96%" id="mcps1.1.4.1.3"><p id="zh-cn_topic_0235751031_p59995477"><a name="zh-cn_topic_0235751031_p59995477"></a><a name="zh-cn_topic_0235751031_p59995477"></a>说明</p>
+</th>
+</tr>
+</thead>
+<tbody><tr id="zh-cn_topic_0235751031_row27795493"><td class="cellrowborder" valign="top" width="8.66%" headers="mcps1.1.4.1.1 "><p id="p1281016448343"><a name="p1281016448343"></a><a name="p1281016448343"></a>graph</p>
+</td>
+<td class="cellrowborder" valign="top" width="9.379999999999999%" headers="mcps1.1.4.1.2 "><p id="zh-cn_topic_0235751031_p31450711"><a name="zh-cn_topic_0235751031_p31450711"></a><a name="zh-cn_topic_0235751031_p31450711"></a>输入/输出</p>
+</td>
+<td class="cellrowborder" valign="top" width="81.96%" headers="mcps1.1.4.1.3 "><p id="p158871032300"><a name="p158871032300"></a><a name="p158871032300"></a>作为输入时，代表要通过属性方式修改的图；</p>
+<p id="zh-cn_topic_0235751031_p737611715492"><a name="zh-cn_topic_0235751031_p737611715492"></a><a name="zh-cn_topic_0235751031_p737611715492"></a>作为输出时表示已经修改后的图。</p>
+</td>
+</tr>
+<tr id="row33671332203412"><td class="cellrowborder" valign="top" width="8.66%" headers="mcps1.1.4.1.1 "><p id="p142534551002"><a name="p142534551002"></a><a name="p142534551002"></a>attr_type</p>
+</td>
+<td class="cellrowborder" valign="top" width="9.379999999999999%" headers="mcps1.1.4.1.2 "><p id="p33675320343"><a name="p33675320343"></a><a name="p33675320343"></a>输入</p>
+</td>
+<td class="cellrowborder" valign="top" width="81.96%" headers="mcps1.1.4.1.3 "><p id="p1776311018303"><a name="p1776311018303"></a><a name="p1776311018303"></a>attr_type的枚举类型定义：</p>
+<pre class="screen" id="screen175521367314"><a name="screen175521367314"></a><a name="screen175521367314"></a>enum aclgrphAttrType { ATTR_TYPE_KEEP_DTYPE = 0, ATTR_TYPE_WEIGHT_COMPRESS };</pre>
+<p id="p2036713253420"><a name="p2036713253420"></a><a name="p2036713253420"></a>ATTR_TYPE_KEEP_DTYPE：保持模型编译时个别算子的计算精度不变。</p>
+<p id="p16459554143115"><a name="p16459554143115"></a><a name="p16459554143115"></a>ATTR_TYPE_WEIGHT_COMPRESS ：模型编译时对个别算子进行weight压缩。</p>
+</td>
+</tr>
+<tr id="row15846111914516"><td class="cellrowborder" valign="top" width="8.66%" headers="mcps1.1.4.1.1 "><p id="p384671934511"><a name="p384671934511"></a><a name="p384671934511"></a>cfg_path</p>
+</td>
+<td class="cellrowborder" valign="top" width="9.379999999999999%" headers="mcps1.1.4.1.2 "><p id="p4846161916455"><a name="p4846161916455"></a><a name="p4846161916455"></a>输出</p>
+</td>
+<td class="cellrowborder" valign="top" width="81.96%" headers="mcps1.1.4.1.3 "><p id="p1084617197452"><a name="p1084617197452"></a><a name="p1084617197452"></a>配置文件路径。配置文件举例：</p>
+<p id="p16210132583514"><a name="p16210132583514"></a><a name="p16210132583514"></a>计算精度不变的文件格式为：</p>
+<pre class="screen" id="screen1111811011710"><a name="screen1111811011710"></a><a name="screen1111811011710"></a>Opname1
+Opname2
+…</pre>
+<p id="p144438521349"><a name="p144438521349"></a><a name="p144438521349"></a>weight压缩文件格式为：</p>
+<pre class="screen" id="screen6911147123517"><a name="screen6911147123517"></a><a name="screen6911147123517"></a>Opname1;Opname2</pre>
+</td>
+</tr>
+</tbody>
+</table>
+
+## 返回值说明<a name="zh-cn_topic_0235751031_section62608109"></a>
+
+<a name="zh-cn_topic_0235751031_table2601186"></a>
+<table><thead align="left"><tr id="zh-cn_topic_0235751031_row1832323"><th class="cellrowborder" valign="top" width="8.25%" id="mcps1.1.4.1.1"><p id="zh-cn_topic_0235751031_p14200498"><a name="zh-cn_topic_0235751031_p14200498"></a><a name="zh-cn_topic_0235751031_p14200498"></a>参数名</p>
+</th>
+<th class="cellrowborder" valign="top" width="10.48%" id="mcps1.1.4.1.2"><p id="zh-cn_topic_0235751031_p9389685"><a name="zh-cn_topic_0235751031_p9389685"></a><a name="zh-cn_topic_0235751031_p9389685"></a>类型</p>
+</th>
+<th class="cellrowborder" valign="top" width="81.27%" id="mcps1.1.4.1.3"><p id="zh-cn_topic_0235751031_p22367029"><a name="zh-cn_topic_0235751031_p22367029"></a><a name="zh-cn_topic_0235751031_p22367029"></a>说明</p>
+</th>
+</tr>
+</thead>
+<tbody><tr id="zh-cn_topic_0235751031_row66898905"><td class="cellrowborder" valign="top" width="8.25%" headers="mcps1.1.4.1.1 "><p id="zh-cn_topic_0235751031_p50102218"><a name="zh-cn_topic_0235751031_p50102218"></a><a name="zh-cn_topic_0235751031_p50102218"></a>-</p>
+</td>
+<td class="cellrowborder" valign="top" width="10.48%" headers="mcps1.1.4.1.2 "><p id="p158855407451"><a name="p158855407451"></a><a name="p158855407451"></a>graphStatus</p>
+</td>
+<td class="cellrowborder" valign="top" width="81.27%" headers="mcps1.1.4.1.3 "><p id="zh-cn_topic_0235751031_p918814449444"><a name="zh-cn_topic_0235751031_p918814449444"></a><a name="zh-cn_topic_0235751031_p918814449444"></a>GRAPH_SUCCESS(0)：成功。</p>
+<p id="zh-cn_topic_0235751031_p91883446443"><a name="zh-cn_topic_0235751031_p91883446443"></a><a name="zh-cn_topic_0235751031_p91883446443"></a>其他值：失败。</p>
+</td>
+</tr>
+</tbody>
+</table>
+
+## 约束说明<a name="zh-cn_topic_0235751031_section38092103"></a>
+
+无
+

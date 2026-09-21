@@ -1,0 +1,46 @@
+asc_graph_attr {
+  tiling_key: 23130
+}
+asc_node {
+  outputs {
+    attr {
+      mem {
+        tensor_id: -1
+      }
+      que {
+        id: -1
+        depth: -1
+        buf_num: -1
+      }
+      buf {
+        id: -1
+      }
+      opt {
+        reuse_id: -1
+        ref_tensor: -1
+        merge_scope: -1
+      }
+    }
+  }
+  attr {
+    name: "x"
+    type: "Data"
+    sched {
+      exec_order: -1
+      loop_axis: -1
+    }
+    api {
+      type: 2
+      compute_type: 8
+      unit: 7
+    }
+    ir_attr_def {
+    }
+  }
+  ir_def {
+    output_names: "y"
+    output_ir_type: 0
+    type: "Data"
+  }
+}
+graph_name: "fused_graph"

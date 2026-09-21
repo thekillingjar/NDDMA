@@ -1,0 +1,4 @@
+<bios_check_cfg>
+    <item input="cann-udf-compat.tar.gz" output="cann-udf-compat.tar.gz" type="cms" sign_alg="PSS" tag="ascend_aicpu"
+          nvcnt="0"/>
+</bios_check_cfg>

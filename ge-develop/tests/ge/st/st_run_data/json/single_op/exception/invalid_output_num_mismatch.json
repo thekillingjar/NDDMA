@@ -1,0 +1,34 @@
+[
+  {
+    "compile_flag":1
+  },
+  {
+    "op": "FakeOpForSingleOp",
+    "input_desc": [
+      {
+        "format": "ND",
+        "shape": [32,16],
+        "type": "float16"
+      },
+      {
+        "format": "ND",
+        "shape": [32,16],
+        "type": "float16"
+      }
+    ],
+    "output_desc": [
+    ],
+    "attr" : [
+      {
+        "name" : "transpose_x1",
+        "type" : "bool",
+        "value": true
+      },
+      {
+        "name" : "offset_x",
+        "type" : "int",
+        "value": 0
+      }
+    ]
+  }
+]

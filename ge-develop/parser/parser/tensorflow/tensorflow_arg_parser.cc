@@ -1,0 +1,62 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of 
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+#include "parser/common/op_def/arg_op_operator.h"
+#include "framework/common/debug/ge_log.h"
+#include "framework/omg/parser/parser_inner_ctx.h"
+#include "graph/compute_graph.h"
+#include "graph/ge_tensor.h"
+#include "parser/common/op_parser_factory.h"
+#include "parser/tensorflow/tensorflow_op_parser.h"
+#include "parser/tensorflow/tensorflow_parser_register.h"
+
+using domi::tensorflow::AttrValue;
+
+namespace ge {
+namespace {
+const char *const kSerializeFormat = "serialize_format";
+}  // namespace
+Status ParseParams(const Message *op_src, ArgOpOperator *const op) {
+  GE_CHECK_NOTNULL(op_src);
+  GE_CHECK_NOTNULL(op);
+  const domi::tensorflow::NodeDef *node = reinterpret_cast<const domi::tensorflow::NodeDef *>(op_src);
+  GELOGD("TF op node name = %s, op type= %s, parse params", node->name().c_str(), node->op().c_str());
+  domi::tensorflow::AttrValue output_attr_value;
+  if (TensorFlowUtil::FindAttrValue(node, ge::ATTR_NAME_OUTPUT_TENSOR_DESC, output_attr_value)) {
+    GE_CHK_STATUS_RET(
+        TensorFlowUtil::TransTensorDescriptor(output_attr_value, op, TENSORFLOW_NORMAL_OUTPUT_TENSOR_FLAG),
+        "trans output_attr_value failed, op: %s", node->name().c_str());
+    // For the needs of the Data operator, copy the output description to the input description
+    GE_CHK_STATUS_RET(TensorFlowUtil::TransTensorDescriptor(output_attr_value, op, TENSORFLOW_NORMAL_INPUT_TENSOR_FLAG),
+                      "trans output_attr_value failed, op: %s", node->name().c_str());
+
+    domi::tensorflow::AttrValue_ListValue attr_list = output_attr_value.list();
+    GetParserContext().format =
+      static_cast<domi::tagDomiTensorFormat>(attr_list.func(0).attr().at(kSerializeFormat).i());
+  } else {
+    /// _Arg constructed from inference function do not has input_tensor_dec
+    /// set input & output tensor desc for adding input & output tensor desc for op desc
+    ge::GeTensorDesc tensor_desc;
+    op->InputTensorDesc(tensor_desc);
+    op->OutputTensorDesc(tensor_desc);
+  }
+
+  domi::tensorflow::AttrValue index_attr_value;
+  if (TensorFlowUtil::FindAttrValue(node, ATTR_NAME_INDEX, index_attr_value)) {
+    op->Index(index_attr_value.i());
+  }
+
+  GELOGI("In _ArgOp trans success.op name : %s.", node->name().c_str());
+
+  return SUCCESS;
+}
+
+DOMI_REGISTER_TENSORFLOW_PARSER(ge::parser::ARG, ArgOpOperator, ParseParams);
+}  // namespace ge

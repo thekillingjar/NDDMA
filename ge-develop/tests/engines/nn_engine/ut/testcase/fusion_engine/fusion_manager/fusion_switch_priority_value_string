@@ -1,0 +1,26 @@
+{
+    "Switch":{
+        "GraphFusion":{
+
+        },
+        "UBFusion":{
+
+        }
+    },
+    "Priority":{
+        "GraphFusion":{
+            "Top":{
+                "graphPass1":"thisisstring"
+            },
+            "Main":{
+
+            },
+            "Down":{
+
+            }
+        },
+        "UBFusion":{
+
+        }
+    }
+}

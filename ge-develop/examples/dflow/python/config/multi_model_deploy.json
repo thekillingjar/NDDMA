@@ -1,0 +1,36 @@
+{
+  "dynamic_schedule_enable": true,
+  "batch_deploy_info": [
+    {
+      "flow_node_list": [
+        "onnx_node"
+      ],
+      "logic_device_list": "0:0:0:0"
+    },
+    {
+      "flow_node_list": [
+        "conv_model"
+      ],
+      "logic_device_list": "0:0:2:0"
+    },
+    {
+      "flow_node_list": [
+        "matmul_model"
+      ],
+      "logic_device_list": "0:0:3:0"
+    },
+    {
+      "flow_node_list": [
+        "pb_node"
+      ],
+      "logic_device_list": "0:0:3:0"
+    },
+    {
+      "flow_node_list": [
+        "convert_data0",
+        "convert_data1"
+      ],
+      "logic_device_list": "0:0:4:0"
+    }
+  ]
+}

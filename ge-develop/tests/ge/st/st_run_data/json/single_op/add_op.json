@@ -1,0 +1,203 @@
+[
+  {
+    "compile_flag":1
+  },
+  {
+    "op": "Add",
+    "input_desc": [
+      {
+        "format": "ND",
+        "shape": [3,3],
+        "type": "float16"
+      },
+      {
+        "format": "ND",
+        "shape": [3,3],
+        "type": "float16",
+        "is_const": true,
+        "const_value": [1,2,3,4,5,6,7,8,9]
+      }
+    ],
+    "output_desc": [
+      {
+        "format": "ND",
+        "shape": [3,3],
+        "type": "float16"
+      },
+      {
+        "format": "ND",
+        "shape": [3,3],
+        "type": "int32",
+        "name": "fake"
+      }
+    ]
+  },
+  {
+    "op": "Add",
+    "input_desc": [
+      {
+        "format": "NCHW",
+        "shape": [3,3],
+        "type": "float"
+      },
+      {
+        "format": "NCHW",
+        "shape": [3,3],
+        "type": "float",
+        "is_const": true,
+        "const_value": [1,2,3,4,5,6,7,8,9]
+      }
+    ],
+    "output_desc": [
+      {
+        "format": "NCHW",
+        "shape": [3,3],
+        "type": "float"
+      }
+    ]
+  },
+  {
+    "op": "Add",
+    "input_desc": [
+      {
+        "format": "NHWC",
+        "shape": [3,3],
+        "type": "int32"
+      },
+      {
+        "format": "NHWC",
+        "shape": [3,3],
+        "type": "int32",
+        "is_const": true,
+        "const_value": [1,2,3,4,5,6,7,8,9]
+      }
+    ],
+    "output_desc": [
+      {
+        "format": "NHWC",
+        "shape": [3,3],
+        "type": "int32"
+      }
+    ]
+  },
+  {
+    "op": "Add",
+    "input_desc": [
+      {
+        "format": "ND",
+        "shape": [3,3],
+        "type": "int16"
+      },
+      {
+        "format": "ND",
+        "shape": [3,3],
+        "type": "int16",
+        "is_const": true,
+        "const_value": [1,2,3,4,5,6,7,8,9]
+      }
+    ],
+    "output_desc": [
+      {
+        "format": "ND",
+        "shape": [3,3],
+        "type": "int16"
+      }
+    ]
+  },
+  {
+    "op": "Add",
+    "input_desc": [
+      {
+        "format": "ND",
+        "shape": [3,3],
+        "type": "uint32"
+      },
+      {
+        "format": "ND",
+        "shape": [3,3],
+        "type": "uint32",
+        "is_const": true,
+        "const_value": [1,2,3,4,5,6,7,8,9]
+      }
+    ],
+    "output_desc": [
+      {
+        "format": "ND",
+        "shape": [3,3],
+        "type": "uint32"
+      }
+    ]
+  },
+  {
+    "op": "Add",
+    "input_desc": [
+      {
+        "format": "ND",
+        "shape": [3,3],
+        "type": "uint16"
+      },
+      {
+        "format": "ND",
+        "shape": [3,3],
+        "type": "uint16",
+        "is_const": true,
+        "const_value": [1,2,3,4,5,6,7,8,9]
+      }
+    ],
+    "output_desc": [
+      {
+        "format": "ND",
+        "shape": [3,3],
+        "type": "uint16"
+      }
+    ]
+  },
+  {
+    "op": "Add",
+    "input_desc": [
+      {
+        "format": "ND",
+        "shape": [3,3],
+        "type": "int8"
+      },
+      {
+        "format": "ND",
+        "shape": [3,3],
+        "type": "int8",
+        "is_const": true,
+        "const_value": [1,2,3,4,5,6,7,8,9]
+      }
+    ],
+    "output_desc": [
+      {
+        "format": "ND",
+        "shape": [3,3],
+        "type": "int8"
+      }
+    ]
+  },
+  {
+    "op": "Add",
+    "input_desc": [
+      {
+        "format": "ND",
+        "shape": [3,3],
+        "type": "uint8"
+      },
+      {
+        "format": "ND",
+        "shape": [3,3],
+        "type": "uint8",
+        "is_const": true,
+        "const_value": [1,2,3,4,5,6,7,8,9]
+      }
+    ],
+    "output_desc": [
+      {
+        "format": "ND",
+        "shape": [3,3],
+        "type": "uint8"
+      }
+    ]
+  }
+]

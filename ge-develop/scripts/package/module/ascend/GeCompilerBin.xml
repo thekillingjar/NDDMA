@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<block name="GeCompilerBin" copy_type="delivery" src_path="" dst_path="" install_path="" install_own="$username:$usergroup" install_mod="550" install_type="all">
+    <file_info value="bin" copy_type="delivery" dst_path="bin" install_path="$(TARGET_ENV)/bin" install_type="devel" install_mod="550" optional="true">
+        <file value="atc.bin" file_type="executable"/>
+        <file value="gen_esb" file_type="executable"/>
+    </file_info>
+    <file_info value="script" copy_type="source" dst_path="bin" install_path="$(TARGET_ENV)/bin" install_type="devel" install_mod="550" optional="true">
+        <file value="atc"/>
+    </file_info>
+</block>

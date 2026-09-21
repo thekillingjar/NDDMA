@@ -1,0 +1,45 @@
+{
+  "cluster":[
+    {
+      "cluster_nodes" : [
+        {
+          "node_id" : 0,
+          "node_type" : "TestNodeType1",
+          "ipaddr" : "127.0.0.1",
+          "port" : 2509,
+          "is_local" : true,
+          "item_list" : [
+            {
+              "item_id" : 0,
+              "device_id" : 0,
+              "ipaddr" : "192.168.5.199"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "node_def":[
+    {
+      "node_type":"TestNodeType1",
+      "resource_type":"X86",
+      "support_links":"[HCCS, PCIE, ROCE]",
+      "item_type":"TestSocType1",
+      "inter_item_memory_access_mode": "[NUMA]",
+      "item_topology": [
+        {
+          "links_mode": "HCCS",
+          "links": [[0, 1]]
+        }
+      ]
+    }
+  ],
+  "item_def":[
+    {
+      "item_type":"TestSocType1",
+      "resource_type":"Ascend",
+      "memory":"[DDR:64GB]",
+      "aic_type":"[DAVINCI_V100:32]"
+    }
+  ]
+}

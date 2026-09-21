@@ -1,0 +1,14 @@
+[
+  {
+    "compile_flag": 1
+  {
+    "op": "",
+    "input_desc": [
+      {
+        "format": "ND",
+        "shape": [
+          16,
+          32
+        ],
+        "type": "float16"
+      }

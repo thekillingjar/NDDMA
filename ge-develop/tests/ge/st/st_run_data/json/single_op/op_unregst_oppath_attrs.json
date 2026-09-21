@@ -1,0 +1,105 @@
+[
+  {
+    "compile_flag": 1
+  },
+  {
+    "op": "MatMulV2",
+    "input_desc": [
+      {
+        "format": "ND",
+        "shape": [
+          16,
+          32
+        ],
+        "type": "float16"
+      },
+      {
+        "format": "ND",
+        "shape": [
+          32,
+          16
+        ],
+        "type": "float16"
+      }
+    ],
+    "output_desc": [
+      {
+        "format": "ND",
+        "shape": [
+          16,
+          16
+        ],
+        "type": "float16"
+      }
+    ],
+    "attr": [
+      {
+        "name": "_unregst_oppath",
+        "type": "bool",
+        "value": true
+      },
+      {
+        "name": "transpose_x1",
+        "type": "bool",
+        "value": true
+      },
+      {
+        "name": "offset_x",
+        "type": "int",
+        "value": 0
+      },
+      {
+        "name": "_float",
+        "type": "float",
+        "value": 0.0
+      },
+      {
+        "name": "_string",
+        "type": "string",
+        "value": "v"
+      },
+      {
+        "name": "_data_type",
+        "type": "data_type",
+        "value": 0
+      },
+      {
+        "name": "_list_bool",
+        "type": "list_bool",
+        "value": [
+          true
+        ]
+      },
+      {
+        "name": "_list_int",
+        "type": "list_int",
+        "value": [
+          0
+        ]
+      },
+      {
+        "name": "_list_float",
+        "type": "list_float",
+        "value": [
+          0.0
+        ]
+      },
+      {
+        "name": "_list_string",
+        "type": "list_string",
+        "value": [
+          "v"
+        ]
+      },
+      {
+        "name": "_list_list_int",
+        "type": "list_list_int",
+        "value": [
+          [
+            0
+          ]
+        ]
+      }
+    ]
+  }
+]

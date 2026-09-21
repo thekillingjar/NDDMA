@@ -1,0 +1,27 @@
+[
+    {
+        "op": "Add",
+        "input_desc": [
+            {
+                "format": "ND",
+                "shape": [1],
+                "type": "int32",
+                "name": "x1"
+            },
+            {
+                "format": "ND",
+                "shape": [1],
+                "type": "int32",
+                "is_const": true,
+                "const_calue":[-1]
+            }
+        ],
+        "output_desc": [
+            {
+                "format": "ND",
+                "shape": [1],
+                "type": "int32"
+            }
+        ]
+    }
+]

@@ -1,0 +1,35 @@
+{
+    "test_001":"abc",
+    "test_002":{
+        "src":"node1"
+    },
+    "test_003":{
+        "src":123,
+        "dst":"node2"
+    },
+    "test_004":{
+        "src":"node1",
+        "dst":123
+    },
+    "test_005":{
+        "src":"node1",
+        "dst":"node2",
+        "other":"node3"
+    },
+    "test_006":{
+        "src":"node1",
+        "dst":"node2"
+    },
+    "test_007":{
+        "src":"node1:1",
+        "dst":"node2:2"
+    },
+    "test_008":{
+        "src":"node1:1.2",
+        "dst":"node2:2"
+    },
+    "test_009":{
+        "src":"node1:1",
+        "dst":"node2:abc"
+    }
+}

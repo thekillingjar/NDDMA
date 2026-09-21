@@ -1,0 +1,17 @@
+{
+  "build_options": {},
+  "inputs_tensor_desc": [
+    {
+      "data_type": "DT_INT32",
+      "shape": [
+        3
+      ]
+    },
+    {
+      "data_type": "DT_INT32",
+      "shape": [
+        3
+      ]
+    }
+  ]
+}

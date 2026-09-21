@@ -1,0 +1,33 @@
+{
+    "blockDim":-2,
+    "kernelName":"Test",
+    "batchBindOnly":"0",
+    "magic":"FFTS_BINARY_MAGIC_ELF_MIX_AIV",
+    "core_type":"AIV",
+    "modeInArgsFirstField":"1",
+    "workspace":{
+      "num":4,
+      "size":"423300, 423300, 423300, 423300",
+      "type":[1,1,1,1]
+  },
+  "wspMode": false,
+  "parameters": [
+    null,
+    {
+        "init_value": 18446744073709551615,
+        "dtype": "uint64"
+    },
+    {
+        "init_value": 3.40282e+38,
+        "dtype": "float32"
+    },
+    {
+        "init_value": -9223372036854775807,
+        "dtype": "int64"
+    },
+    {
+        "init_value": 4294967295,
+        "dtype": "uint32"
+    }
+]
+}

@@ -1,0 +1,13 @@
+{
+    "blockDim":"1",
+    "taskRation":"1",
+    "compress_parameters":1,
+    "weight_repeat":"1",
+    "workspace":{
+      "num":4
+    },
+    "kernelName":"123",
+    "binFileSuffix":".so",
+    "binFileName":"dsa",
+    "sha256":"sha256"
+}

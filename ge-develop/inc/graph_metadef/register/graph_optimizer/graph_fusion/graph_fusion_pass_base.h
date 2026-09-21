@@ -1,0 +1,119 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of 
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+#ifndef INC_REGISTER_GRAPH_OPTIMIZER_GRAPH_FUSION_PASS_BASE_H_
+#define INC_REGISTER_GRAPH_OPTIMIZER_GRAPH_FUSION_PASS_BASE_H_
+
+#include <iostream>
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "register/graph_optimizer/graph_fusion/fusion_pattern.h"
+#include "register/graph_optimizer/graph_fusion/graph_pass.h"
+
+namespace fe {
+using std::initializer_list;
+using std::map;
+using std::string;
+using std::vector;
+using namespace std;
+
+enum GraphFusionPassType {
+  BUILT_IN_GRAPH_PASS = 0,
+  BUILT_IN_VECTOR_CORE_GRAPH_PASS,
+  CUSTOM_AI_CORE_GRAPH_PASS,
+  CUSTOM_VECTOR_CORE_GRAPH_PASS,
+  SECOND_ROUND_BUILT_IN_GRAPH_PASS,
+  BUILT_IN_BEFORE_TRANSNODE_INSERTION_GRAPH_PASS,
+  BUILT_IN_PREPARE_GRAPH_PASS,
+  BUILT_IN_BEFORE_QUANT_OPTIMIZATION_GRAPH_PASS,
+  BUILT_IN_TF_TAG_NO_CONST_FODING_GRAPH_PASS,
+  BUILT_IN_TF_MERGE_SUB_GRAPH_PASS,
+  BUILT_IN_QUANT_OPTIMIZATION_GRAPH_PASS,
+  BUILT_IN_EN_ISA_ARCH_EXC_V300_AND_V220_GRAPH_PASS,
+  BUILT_IN_EN_ISA_ARCH_V100_GRAPH_PASS,
+  BUILT_IN_EN_ISA_ARCH_V200_GRAPH_PASS,
+  BUILT_IN_DELETE_NO_CONST_FOLDING_GRAPH_PASS,
+  BUILT_IN_AFTER_MULTI_DIMS_PASS,
+  BUILT_IN_AFTER_OPTIMIZE_STAGE1,
+  BUILT_IN_AFTER_OP_JUDGE,
+  BUILT_IN_AFTER_BUFFER_OPTIMIZE,
+  GRAPH_FUSION_PASS_TYPE_RESERVED
+};
+class PatternFusionBasePassImpl;
+using PatternFusionBasePassImplPtr = std::shared_ptr<PatternFusionBasePassImpl>;
+
+/** Pass based on pattern
+ * @ingroup FUSION_PASS_GROUP
+ * @note New virtual methods should be append at the end of this class
+ */
+class GraphFusionPassBase : public GraphPass {
+ public:
+  using OpDesc = FusionPattern::OpDesc;
+  using Mapping = std::map<const std::shared_ptr<OpDesc>, std::vector<ge::NodePtr>, CmpKey>;
+  using Mappings = std::vector<Mapping>;
+
+  GraphFusionPassBase();
+  virtual ~GraphFusionPassBase() override;
+
+  /** execute pass
+   *
+   * @param [in] graph, the graph waiting for pass level optimization
+   * @return SUCCESS, successfully optimized the graph by the pass
+   * @return NOT_CHANGED, the graph did not change
+   * @return FAILED, fail to modify graph
+   */
+  virtual Status Run(ge::ComputeGraph &graph) override;
+
+ protected:
+  /** define pattern
+   *
+   * @return NA
+   */
+  virtual std::vector<FusionPattern *> DefinePatterns() = 0;
+
+  /** do fusion according to nodes matched
+   *
+   * @param graph the graph waiting for pass level optimization
+   * @param new_nodes fusion result node(s)
+   * @return SUCCESS, successfully optimized the graph by the pass
+   * @return NOT_CHANGED, the graph did not change
+   * @return FAILED, fail to modify graph
+   */
+  virtual Status Fusion(ge::ComputeGraph &graph, Mapping &mapping, std::vector<ge::NodePtr> &new_nodes) = 0;
+
+  /** get nodes from matched result
+   *
+   * @param mapping match result
+   * @return nodes result
+   */
+  static ge::NodePtr GetNodeFromMapping(const std::string &id, const Mapping &mapping);
+
+ private:
+  /** match all nodes in graph according to pattern
+   *
+   * @param pattern fusion pattern defined
+   * @param mappings match result
+   * @return SUCCESS, successfully add edge
+   * @return FAILED, fail
+   */
+  bool MatchAll(const ge::ComputeGraph &graph, const FusionPattern &pattern, Mappings &mappings) const;
+
+  Status RunOnePattern(ge::ComputeGraph &graph, const FusionPattern &pattern, bool &changed);
+
+  /** Internal implement class ptr */
+  std::shared_ptr<PatternFusionBasePassImpl> pattern_fusion_base_pass_impl_ptr_;
+};
+
+}  // namespace fe
+
+#endif  // INC_REGISTER_GRAPH_OPTIMIZER_GRAPH_FUSION_PASS_BASE_H_

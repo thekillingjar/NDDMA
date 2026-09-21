@@ -1,0 +1,26 @@
+{
+    "binFileName":"te_sigmoid_9a43f1_non_tail_mix_aiv",
+    "binFileSuffix":".o",
+    "blockDim":1,
+    "kernelName":"te_sigmoid_mix_aiv_kernel0",
+    "magic":"RT_DEV_BINARY_MAGIC_ELF",
+    "KBHit" : false,
+    "parameters":[
+        0,
+        0,
+        0,
+        0,
+        0
+    ],
+    "sha256":"948c3218f23edb189e86872f016cb59dbf39b4b6b060d9f1f5d19ce520a3e7fa",
+    "workspace":{
+        "num":4,
+        "size":[
+            423300,
+            423300,
+            423300,
+            423300
+        ],
+        "type":[1,1,1,1]
+    }
+}

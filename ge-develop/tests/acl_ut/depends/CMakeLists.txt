@@ -1,0 +1,7 @@
+add_subdirectory(ge)
+add_subdirectory(slog)
+add_subdirectory(mmpa)
+add_subdirectory(runtime)
+add_subdirectory(profiling)
+add_subdirectory(toolchain)
+add_subdirectory(acl)

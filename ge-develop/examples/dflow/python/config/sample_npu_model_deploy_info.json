@@ -1,0 +1,13 @@
+{
+  "batch_deploy_info": [
+    {
+      "flow_node_list": [
+        "preprocess_fnode",
+        "FakeModel1_fnode",
+        "FakeModel2_fnode",
+        "postprocess_fnode"
+      ],
+      "logic_device_list": "0:0:0:0"
+    }
+  ]
+}

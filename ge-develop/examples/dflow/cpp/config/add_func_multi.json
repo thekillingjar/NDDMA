@@ -1,0 +1,29 @@
+{
+  "func_list": [
+    {
+      "func_name": "Proc1",
+      "inputs_index": [
+        0,
+        1
+      ],
+      "outputs_index": [
+        0
+      ]
+    },
+    {
+      "func_name": "Proc2",
+      "inputs_index": [
+        2,
+        3
+      ],
+      "outputs_index": [
+        1
+      ]
+    }
+  ],
+  "input_num": 4,
+  "output_num": 2,
+  "target_bin": "libadd_multi.so",
+  "workspace": "../../udf_workspace",
+  "cmakelist_path": "03_udf_add_multi_func/CMakeLists.txt"
+}

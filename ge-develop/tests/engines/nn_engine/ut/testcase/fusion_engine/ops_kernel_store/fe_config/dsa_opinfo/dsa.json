@@ -1,0 +1,46 @@
+{
+  "DSAGenBitMask": {
+    "attr": {
+      "list": "seed_0,seed_1,random_algorithm"
+    },
+    "attr_seed_0": {
+      "paramType": "optional",
+      "type": "int",
+      "value": "all",
+      "default_value": "0"
+    },
+    "attr_seed_1": {
+      "paramType": "optional",
+      "type": "int",
+      "value": "all",
+      "default_value": "0"
+    },
+    "attr_random_algorithm": {
+      "paramType": "optional",
+      "type": "str",
+      "value": "all",
+      "default_value": "Philox"
+    },
+    "input0": {
+      "dtype": "int32,int32,int32,int64,int64,int64",
+      "format": "ND,ND,ND,ND,ND,ND",
+      "name": "count",
+      "paramType": "required",
+      "shape": "all"
+    },
+    "input1": {
+      "dtype": "float16,float,double,float16,float,double",
+      "format": "ND,ND,ND,ND,ND,ND",
+      "name": "dropout",
+      "paramType": "required",
+      "shape": "all"
+    },
+    "output0": {
+      "dtype": "float16,float,double,float16,float,double",
+      "format": "ND,ND,ND,ND,ND,ND",
+      "name": "out",
+      "paramType": "required",
+      "shape": "all"
+    }
+  }
+}

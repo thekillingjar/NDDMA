@@ -1,0 +1,563 @@
+graph {
+  name: "partition0_rank31_new_sub_graph102"
+  op {
+    name: "generator/resblock_7/res1/conv_0/reflect"
+    type: "MirrorPad"
+    input: "new_sub_graph102_PlaceHolder122:0"
+    input: "new_sub_graph102_PlaceHolder123:0"
+    attr {
+      key: "OwnerGraphIsUnknown"
+      value {
+        b: false
+      }
+    }
+    attr {
+      key: "T"
+      value {
+        dt: 0
+      }
+    }
+    attr {
+      key: "Tpaddings"
+      value {
+        dt: 3
+      }
+    }
+    attr {
+      key: "_coretype"
+      value {
+        s: "AIcoreEngine"
+      }
+    }
+    attr {
+      key: "_cust_aicpu_flag"
+      value {
+        b: false
+      }
+    }
+    attr {
+      key: "_ge_attr_op_kernel_lib_name"
+      value {
+        s: "aicpu_ascend_kernel"
+      }
+    }
+    attr {
+      key: "_input_name_key"
+      value {
+        list {
+          s: "paddings"
+          s: "x"
+        }
+      }
+    }
+    attr {
+      key: "_input_name_value"
+      value {
+        list {
+          i: 1
+          i: 0
+        }
+      }
+    }
+    attr {
+      key: "_lxfusion_engine_name"
+      value {
+        s: "DNN_VM_AICPU_ASCEND"
+      }
+    }
+    attr {
+      key: "_lxfusion_op_kernel_lib_name"
+      value {
+        s: "aicpu_ascend_kernel"
+      }
+    }
+    attr {
+      key: "_op_infer_depends"
+      value {
+        list {
+          s: "paddings"
+          val_type: VT_LIST_STRING
+        }
+      }
+    }
+    attr {
+      key: "_output_name_key"
+      value {
+        list {
+          s: "y"
+        }
+      }
+    }
+    attr {
+      key: "_output_name_value"
+      value {
+        list {
+          i: 0
+        }
+      }
+    }
+    attr {
+      key: "_unknown_shape_type"
+      value {
+        i: 2
+      }
+    }
+    attr {
+      key: "customized_op_def"
+      value {
+        bt: "\022\tMirrorPad\032\016\n\010paramLen\022\002(\000\032\031\n\023_unknown_shape_type\022\002\030\002\032!\n\021_op_infer_depends\022\014\n\n\022\010paddings\032\007\n\001T\022\0020\000\032.\n\025_lxfusion_engine_name\022\025\022\023DNN_VM_AICPU_ASCEND\0325\n\034_lxfusion_op_kernel_lib_name\022\025\022\023aicpu_ascend_kernel\032\027\n\010funcName\022\013\022\tMirrorPad\032\017\n\tTpaddings\022\0020\003\032\023\n\rworkspaceSize\022\002\030\000\032\033\n\t_coretype\022\016\022\014AIcoreEngine\032\034\n\013opKernelLib\022\r\022\013AICPUKernel\032\026\n\020_cust_aicpu_flag\022\002(\000\032\021\n\004mode\022\t\022\007REFLECT\0324\n\033_ge_attr_op_kernel_lib_name\022\025\022\023aicpu_ascend_kernel\032!\n\010kernelSo\022\025\022\023libaicpu_kernels.so\"\027\n\025\022\002\010\001\022\002\010@\022\002\010@\022\003\010\200\002\030\001 \001\"\020\n\014\022\002\010\004\022\002\010\002\030\001 \001\020\003*\027\n\025\022\002\010\001\022\002\010B\022\002\010B\022\003\010\200\002\030\001 \001"
+      }
+    }
+    attr {
+      key: "funcName"
+      value {
+        s: "MirrorPad"
+      }
+    }
+    attr {
+      key: "kernelSo"
+      value {
+        s: "libaicpu_kernels.so"
+      }
+    }
+    attr {
+      key: "mode"
+      value {
+        s: "REFLECT"
+      }
+    }
+    attr {
+      key: "opKernelLib"
+      value {
+        s: "AICPUKernel"
+      }
+    }
+    attr {
+      key: "paramLen"
+      value {
+        b: false
+      }
+    }
+    attr {
+      key: "workspaceSize"
+      value {
+        i: 0
+      }
+    }
+    has_out_attr: true
+    input_name: "new_sub_graph102_PlaceHolder122"
+    input_name: "new_sub_graph102_PlaceHolder123"
+    src_name: "new_sub_graph102_PlaceHolder122"
+    src_name: "new_sub_graph102_PlaceHolder123"
+    src_index: 0
+    src_index: 0
+    input_desc {
+      dtype: DT_FLOAT
+      shape {
+        dim: 1
+        dim: 64
+        dim: 64
+        dim: 256
+      }
+      layout: "NHWC"
+      attr {
+        key: "origin_data_type"
+        value {
+          s: "DT_FLOAT"
+        }
+      }
+      attr {
+        key: "origin_format"
+        value {
+          s: "NHWC"
+        }
+      }
+      attr {
+        key: "origin_shape"
+        value {
+          list {
+            i: 1
+            i: 64
+            i: 64
+            i: 256
+            val_type: VT_LIST_INT
+          }
+        }
+      }
+      attr {
+        key: "origin_shape_range"
+        value {
+          list_list_int {
+          }
+        }
+      }
+      attr {
+        key: "shape_range"
+        value {
+          list_list_int {
+          }
+        }
+      }
+      has_out_attr: true
+      device_type: "NPU"
+      real_dim_cnt: 4
+    }
+    input_desc {
+      dtype: DT_INT32
+      shape {
+        dim: 4
+        dim: 2
+      }
+      layout: "NHWC"
+      attr {
+        key: "origin_data_type"
+        value {
+          s: "DT_INT32"
+        }
+      }
+      attr {
+        key: "origin_format"
+        value {
+          s: "NHWC"
+        }
+      }
+      attr {
+        key: "origin_shape"
+        value {
+          list {
+            i: 4
+            i: 2
+            val_type: VT_LIST_INT
+          }
+        }
+      }
+      attr {
+        key: "origin_shape_range"
+        value {
+          list_list_int {
+          }
+        }
+      }
+      attr {
+        key: "shape_range"
+        value {
+          list_list_int {
+          }
+        }
+      }
+      has_out_attr: true
+      device_type: "NPU"
+      real_dim_cnt: 2
+    }
+    output_desc {
+      dtype: DT_FLOAT
+      shape {
+        dim: 1
+        dim: 66
+        dim: 66
+        dim: 256
+      }
+      layout: "NHWC"
+      attr {
+        key: "origin_data_type"
+        value {
+          s: "DT_FLOAT"
+        }
+      }
+      attr {
+        key: "origin_format"
+        value {
+          s: "NHWC"
+        }
+      }
+      attr {
+        key: "origin_shape"
+        value {
+          list {
+            i: 1
+            i: 66
+            i: 66
+            i: 256
+            val_type: VT_LIST_INT
+          }
+        }
+      }
+      attr {
+        key: "origin_shape_range"
+        value {
+          list_list_int {
+          }
+        }
+      }
+      attr {
+        key: "placement"
+        value {
+          i: 0
+        }
+      }
+      attr {
+        key: "shape_range"
+        value {
+          list_list_int {
+          }
+        }
+      }
+      has_out_attr: true
+      device_type: "NPU"
+      real_dim_cnt: 4
+    }
+  }
+  op {
+    name: "new_sub_graph102_PlaceHolder122"
+    type: "PlaceHolder"
+    attr {
+      key: "_output_name_key"
+      value {
+        list {
+          s: "__output0"
+        }
+      }
+    }
+    attr {
+      key: "_output_name_value"
+      value {
+        list {
+          i: 0
+        }
+      }
+    }
+    attr {
+      key: "_parentNodeName"
+      value {
+        s: "trans_TransData_390"
+      }
+    }
+    attr {
+      key: "_peerNodeName"
+      value {
+        s: "new_sub_graph101_End122"
+      }
+    }
+    attr {
+      key: "anchorIndex"
+      value {
+        i: 0
+      }
+    }
+    attr {
+      key: "parentId"
+      value {
+        s: "new_sub_graph101:17"
+      }
+    }
+    attr {
+      key: "parentOpType"
+      value {
+        s: "TransData"
+      }
+    }
+    attr {
+      key: "peerIndex"
+      value {
+        i: 122
+      }
+    }
+    attr {
+      key: "pld_front_node_engine_name"
+      value {
+        s: "AIcoreEngine"
+      }
+    }
+    has_out_attr: true
+    id: 1
+    output_desc {
+      dtype: DT_FLOAT
+      layout: "ND"
+      attr {
+        key: "origin_format"
+        value {
+          s: "ND"
+        }
+      }
+      has_out_attr: true
+      device_type: "NPU"
+    }
+  }
+  op {
+    name: "new_sub_graph102_PlaceHolder123"
+    type: "PlaceHolder"
+    attr {
+      key: "_output_name_key"
+      value {
+        list {
+          s: "__output0"
+        }
+      }
+    }
+    attr {
+      key: "_output_name_value"
+      value {
+        list {
+          i: 0
+        }
+      }
+    }
+    attr {
+      key: "_parentNodeName"
+      value {
+        s: "generator/resblock_0/res1/conv_0/reflect/paddings"
+      }
+    }
+    attr {
+      key: "_peerNodeName"
+      value {
+        s: "new_sub_graph73_End123"
+      }
+    }
+    attr {
+      key: "anchorIndex"
+      value {
+        i: 0
+      }
+    }
+    attr {
+      key: "parentId"
+      value {
+        s: "new_sub_graph73:0"
+      }
+    }
+    attr {
+      key: "parentOpType"
+      value {
+        s: "Const"
+      }
+    }
+    attr {
+      key: "peerIndex"
+      value {
+        i: 123
+      }
+    }
+    attr {
+      key: "pld_front_node_engine_name"
+      value {
+        s: "DNN_VM_GE_LOCAL"
+      }
+    }
+    has_out_attr: true
+    id: 2
+    output_desc {
+      dtype: DT_FLOAT
+      layout: "ND"
+      attr {
+        key: "origin_format"
+        value {
+          s: "ND"
+        }
+      }
+      has_out_attr: true
+      device_type: "NPU"
+    }
+  }
+  op {
+    name: "new_sub_graph102_End124"
+    type: "End"
+    input: "generator/resblock_7/res1/conv_0/reflect:0"
+    attr {
+      key: "_input_name_key"
+      value {
+        list {
+          s: "__input0"
+        }
+      }
+    }
+    attr {
+      key: "_input_name_value"
+      value {
+        list {
+          i: 0
+        }
+      }
+    }
+    attr {
+      key: "end_rear_node_engine_name"
+      value {
+        s: "AIcoreEngine"
+      }
+    }
+    attr {
+      key: "parentOpType"
+      value {
+        s: "Cast"
+      }
+    }
+    attr {
+      key: "peerIndex"
+      value {
+        i: 124
+      }
+    }
+    has_out_attr: true
+    id: 3
+    input_desc {
+      dtype: DT_FLOAT
+      layout: "ND"
+      attr {
+        key: "origin_format"
+        value {
+          s: "ND"
+        }
+      }
+      has_out_attr: true
+      device_type: "NPU"
+    }
+  }
+  attr {
+    key: "_parent_graph_name"
+    value {
+      s: "cartoonization_0"
+    }
+  }
+}
+attr {
+  key: "event_num"
+  value {
+    i: 0
+  }
+}
+attr {
+  key: "label_num"
+  value {
+    i: 0
+  }
+}
+attr {
+  key: "memory_size"
+  value {
+    i: 0
+  }
+}
+attr {
+  key: "p2p_memory_size"
+  value {
+    i: 0
+  }
+}
+attr {
+  key: "stream_num"
+  value {
+    i: 0
+  }
+}
+attr {
+  key: "target_type"
+  value {
+    s: "MINI"
+  }
+}
+attr {
+  key: "weight_size"
+  value {
+    i: 0
+  }
+}

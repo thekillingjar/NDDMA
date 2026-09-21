@@ -1,0 +1,9 @@
+{
+  "batchBindOnly": 1,
+  "kernelName": "te_sigmoid_9a43f1_mix_aic",
+  "binFileName": "te_sigmoid_9a43f1_mix_aic",
+  "binFileSuffix": ".o",
+  "blockDim": 1,
+  "magic": "RT_DEV_BINARY_MAGIC_ELF",
+  "KBHit" : true
+}

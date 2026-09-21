@@ -1,0 +1,687 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of 
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+#include "mmpa_stub.h"
+#include <dirent.h>
+#include "mmpa/mmpa_api.h"
+#include "framework/common/taskdown_common.h"
+#include "graph/ge_error_codes.h"
+#include "graph/any_value.h"
+#include "register/op_impl_kernel_registry.h"
+#include <string>
+#include "framework/common/debug/ge_log.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef int mmErrorMSg;
+class ComputeGraph;
+#define MMPA_MAX_SLEEP_MILLSECOND_USING_USLEEP 1000
+#define MMPA_MSEC_TO_USEC 1000
+#define MMPA_MAX_SLEEP_MICROSECOND_USING_USLEEP 1000000
+
+INT32 mmOpen(const CHAR *path_name, INT32 flags) {
+  INT32 fd = HANDLE_INVALID_VALUE;
+
+  if (NULL == path_name) {
+    GELOGE(LOG_ERR, "The path name pointer is null.\r\n");
+    return EN_INVALID_PARAM;
+  }
+  if ((flags != O_RDONLY) && (0 == (flags & (O_WRONLY | O_RDWR | O_CREAT)))) {
+    GELOGE(LOG_ERR, "The file open mode is error.\r\n");
+    return EN_INVALID_PARAM;
+  }
+
+  fd = ge::MmpaStub::GetInstance().GetImpl()->Open2(path_name, flags, S_IRWXU | S_IRWXG);
+  if (fd < MMPA_ZERO) {
+    GELOGE(LOG_ERR, "Open file failed, errno is %s.\r\n", strerror(errno));
+    return EN_ERROR;
+  }
+  GELOGI("mmOpen %s", path_name);
+  return fd;
+}
+
+INT32 mmOpen2(const CHAR *path_name, INT32 flags, MODE mode) {
+  INT32 fd = HANDLE_INVALID_VALUE;
+
+  if (NULL == path_name) {
+    syslog(LOG_ERR, "The path name pointer is null.\r\n");
+    return EN_INVALID_PARAM;
+  }
+  if (MMPA_ZERO == (flags & (O_RDONLY | O_WRONLY | O_RDWR | O_CREAT))) {
+    syslog(LOG_ERR, "The file open mode is error.\r\n");
+    return EN_INVALID_PARAM;
+  }
+  if ((MMPA_ZERO == (mode & (S_IRUSR | S_IREAD))) && (MMPA_ZERO == (mode & (S_IWUSR | S_IWRITE)))) {
+    syslog(LOG_ERR, "The permission mode of the file is error.\r\n");
+    return EN_INVALID_PARAM;
+  }
+
+  fd = ge::MmpaStub::GetInstance().GetImpl()->Open2(path_name, flags, mode);
+  if (fd < MMPA_ZERO) {
+    syslog(LOG_ERR, "Open file failed, errno is %s.\r\n", strerror(errno));
+    return EN_ERROR;
+  }
+  return fd;
+}
+
+INT32 mmClose(INT32 fd) {
+  INT32 result = EN_OK;
+
+  if (fd < MMPA_ZERO) {
+    syslog(LOG_ERR, "The file fd is invalid.\r\n");
+    return EN_INVALID_PARAM;
+  }
+
+  result = close(fd);
+  if (EN_OK != result) {
+    syslog(LOG_ERR, "Close the file failed, errno is %s.\r\n", strerror(errno));
+    return EN_ERROR;
+  }
+  return EN_OK;
+}
+
+mmSsize_t mmWrite(INT32 fd, VOID *mm_buf, UINT32 mm_count) {
+  return ge::MmpaStub::GetInstance().GetImpl()->Write(fd, mm_buf, mm_count);
+}
+
+mmSsize_t mmRead(INT32 fd, VOID *mm_buf, UINT32 mm_count) {
+  mmSsize_t result = MMPA_ZERO;
+
+  if ((fd < MMPA_ZERO) || (NULL == mm_buf)) {
+    syslog(LOG_ERR, "Input parameter invalid.\r\n");
+    return EN_INVALID_PARAM;
+  }
+
+  result = read(fd, mm_buf, (size_t)mm_count);
+  if (result < MMPA_ZERO) {
+    syslog(LOG_ERR, "Read file to buf failed, errno is %s.\r\n", strerror(errno));
+    return EN_ERROR;
+  }
+  return result;
+}
+
+VOID *mmMmap(mmFd_t fd, mmSize_t size, mmOfft_t offset, mmFd_t *extra, INT32 prot, INT32 flags) {
+  return mmap(nullptr, size, prot, flags, fd, offset);
+}
+
+INT32 mmMunMap(VOID *data, mmSize_t size, mmFd_t *extra) {
+  return munmap(data, size);
+}
+
+INT32 mmFStatGet(INT32 fd, mmStat_t *buf) {
+  return ge::MmpaStub::GetInstance().GetImpl()->FStatGet(fd, buf);
+}
+
+INT32 mmMkdir(const CHAR *lp_path_name, mmMode_t mode) {
+  return ge::MmpaStub::GetInstance().GetImpl()->mmMkdir(lp_path_name, mode);
+}
+
+INT32 mmRmdir(const CHAR *lp_path_name) {
+  INT32 ret;
+  DIR *childDir = NULL;
+
+  if (lp_path_name == NULL) {
+    return EN_INVALID_PARAM;
+  }
+  DIR *dir = opendir(lp_path_name);
+  if (dir == NULL) {
+    return EN_INVALID_PARAM;
+  }
+
+  const struct dirent *entry = NULL;
+  size_t bufSize = strlen(lp_path_name) + (size_t)(PATH_SIZE + 2); // make sure the length is large enough
+  while ((entry = readdir(dir)) != NULL) {
+    if ((strcmp(".", entry->d_name) == MMPA_ZERO) || (strcmp("..", entry->d_name) == MMPA_ZERO)) {
+      continue;
+    }
+    CHAR *buf = (CHAR *)malloc(bufSize);
+    if (buf == NULL) {
+      break;
+    }
+    ret = memset_s(buf, bufSize, 0, bufSize);
+    if (ret == EN_ERROR) {
+      free(buf);
+      buf = NULL;
+      break;
+    }
+    ret = snprintf_s(buf, bufSize, bufSize - 1U, "%s/%s", lp_path_name, entry->d_name);
+    if (ret == EN_ERROR) {
+      free(buf);
+      buf = NULL;
+      break;
+    }
+
+    childDir = opendir(buf);
+    if (childDir != NULL) {
+      (VOID)closedir(childDir);
+      (VOID)mmRmdir(buf);
+      free(buf);
+      buf = NULL;
+      continue;
+    } else {
+      ret = unlink(buf);
+      if (ret == EN_OK) {
+        free(buf);
+        continue;
+      }
+    }
+    free(buf);
+    buf = NULL;
+  }
+  (VOID)closedir(dir);
+
+  ret = rmdir(lp_path_name);
+  if (ret == EN_ERROR) {
+    return EN_ERROR;
+  }
+  return EN_OK;
+}
+
+INT32 mmChmod(const CHAR *filename, INT32 mode) {
+  return chmod(filename, mode);
+}
+
+mmTimespec mmGetTickCount() {
+  mmTimespec rts;
+  struct timespec ts = {0};
+  (void)clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
+  rts.tv_sec = ts.tv_sec;
+  rts.tv_nsec = ts.tv_nsec;
+  return rts;
+}
+
+INT32 mmGetTid() {
+  INT32 ret = (INT32)syscall(SYS_gettid);
+
+  if (ret < MMPA_ZERO) {
+    return EN_ERROR;
+  }
+
+  return ret;
+}
+
+INT32 mmGetSystemTime(mmSystemTime_t *sysTime) {
+  return ge::MmpaStub::GetInstance().GetImpl()->mmGetSystemTime(sysTime);
+}
+
+INT32 mmAccess(const CHAR *path_name) {
+  return ge::MmpaStub::GetInstance().GetImpl()->Access(path_name);
+}
+
+INT32 mmStatGet(const CHAR *path, mmStat_t *buffer) {
+  return ge::MmpaStub::GetInstance().GetImpl()->StatGet(path, buffer);
+}
+
+INT32 mmGetFileSize(const CHAR *file_name, ULONGLONG *length) {
+  if ((file_name == NULL) || (length == NULL)) {
+    return EN_INVALID_PARAM;
+  }
+  struct stat file_stat;
+  (void)memset_s(&file_stat, sizeof(file_stat), 0, sizeof(file_stat));  // unsafe_function_ignore: memset
+  INT32 ret = lstat(file_name, &file_stat);
+  if (ret < MMPA_ZERO) {
+    return EN_ERROR;
+  }
+  *length = (ULONGLONG)file_stat.st_size;
+  return EN_OK;
+}
+
+INT32 mmScandir(const CHAR *path, mmDirent ***entryList, mmFilter filterFunc,  mmSort sort)
+{
+  if ((path == NULL) || (entryList == NULL)) {
+    return EN_INVALID_PARAM;
+  }
+  INT32 count = scandir(path, entryList, filterFunc, sort);
+  if (count < MMPA_ZERO) {
+    return EN_ERROR;
+  }
+  return count;
+}
+
+VOID mmScandirFree(mmDirent **entryList, INT32 count)
+{
+  if (entryList == NULL) {
+    return;
+  }
+  INT32 j;
+  for (j = 0; j < count; j++) {
+    if (entryList[j] != NULL) {
+      free(entryList[j]);
+      entryList[j] = NULL;
+    }
+  }
+  free(entryList);
+}
+
+INT32 mmAccess2(const CHAR *pathName, INT32 mode)
+{
+  return ge::MmpaStub::GetInstance().GetImpl()->mmAccess2(pathName, mode);
+}
+
+INT32 mmGetTimeOfDay(mmTimeval *timeVal, mmTimezone *timeZone) {
+  return ge::MmpaStub::GetInstance().GetImpl()->mmGetTimeOfDay(timeVal, timeZone);
+}
+
+INT32 mmRealPath(const CHAR *path, CHAR *realPath, INT32 realPathLen)
+{
+  if (path == nullptr || realPath == nullptr || realPathLen < MMPA_MAX_PATH) {
+    return EN_INVALID_PARAM;
+  }
+
+  std::string str_path = path;
+  if (str_path.find("libcce.so") != std::string::npos) {
+    strncpy(realPath, path, realPathLen);
+    return EN_OK;
+  }
+
+  return ge::MmpaStub::GetInstance().GetImpl()->RealPath(path, realPath, realPathLen);
+}
+
+INT32 mmRWLockInit(mmRWLock_t *rwLock)
+{
+  if (rwLock == NULL) {
+    return EN_INVALID_PARAM;
+  }
+
+  INT32 ret = pthread_rwlock_init(rwLock, NULL);
+  if (ret != MMPA_ZERO) {
+    return EN_ERROR;
+  }
+
+  return EN_OK;
+}
+
+INT32 mmRWLockRDLock(mmRWLock_t *rwLock)
+{
+  if (rwLock == NULL) {
+    return EN_INVALID_PARAM;
+  }
+
+  INT32 ret = pthread_rwlock_rdlock(rwLock);
+  if (ret != MMPA_ZERO) {
+    return EN_ERROR;
+  }
+
+  return EN_OK;
+}
+
+INT32 mmRWLockWRLock(mmRWLock_t *rwLock)
+{
+  if (rwLock == NULL) {
+    return EN_INVALID_PARAM;
+  }
+
+  INT32 ret = pthread_rwlock_wrlock(rwLock);
+  if (ret != MMPA_ZERO) {
+    return EN_ERROR;
+  }
+
+  return EN_OK;
+}
+
+INT32 mmRDLockUnLock(mmRWLock_t *rwLock)
+{
+  if (rwLock == NULL) {
+    return EN_INVALID_PARAM;
+  }
+
+  INT32 ret = pthread_rwlock_unlock(rwLock);
+  if (ret != MMPA_ZERO) {
+    return EN_ERROR;
+  }
+
+  return EN_OK;
+}
+
+INT32 mmWRLockUnLock(mmRWLock_t *rwLock)
+{
+  if (rwLock == NULL) {
+    return EN_INVALID_PARAM;
+  }
+
+  INT32 ret = pthread_rwlock_unlock(rwLock);
+  if (ret != MMPA_ZERO) {
+    return EN_ERROR;
+  }
+
+  return EN_OK;
+}
+
+INT32 mmRWLockDestroy(mmRWLock_t *rwLock)
+{
+  if (rwLock == NULL) {
+    return EN_INVALID_PARAM;
+  }
+
+  INT32 ret = pthread_rwlock_destroy(rwLock);
+  if (ret != MMPA_ZERO) {
+    return EN_ERROR;
+  }
+
+  return EN_OK;
+}
+
+INT32 mmGetErrorCode()
+{
+  return errno;
+}
+
+INT32 mmIsDir(const CHAR *fileName)
+{
+  if (fileName == nullptr) {
+    return EN_ERR;
+  }
+
+  DIR *pDir = opendir (fileName);
+  if (pDir != nullptr) {
+    (void) closedir (pDir);
+    return EN_OK;
+  }
+  return EN_ERR;
+}
+
+INT32 mmGetEnv(const CHAR *name, CHAR *value, UINT32 len)
+{
+  const char *env = getenv(name);
+  if (env == nullptr) {
+    return EN_ERROR;
+  }
+
+  strncpy(value, env, len);
+  return EN_OK;
+}
+
+CHAR *mmDlerror() {
+  return dlerror();
+}
+
+INT32 mmDladdr(VOID *addr, mmDlInfo *info) {
+  int ret = dladdr(addr, (Dl_info *)info);
+  if (ret != -1){
+    return 0;
+  }
+  return -1;
+}
+
+const static std::string libcce_name("libcce.so");
+const static std::string libmdat_name("libmdat.so");
+ge::ccStatus_t ccUpdateKernelArgs(ge::ccOpContext &, uint64_t, uint64_t, uint64_t, void *, uint64_t, void *) {
+  return ge::ccStatus_t::CC_STATUS_SUCCESS;
+}
+
+const static std::string libopmaster_rt2_name("libopmaster_success_rt2.0.so");
+const static std::string libopmaster_error_rt2_name("libopmaster_error_rt2.0.so");
+
+using GetImplNum = size_t (*)();
+struct TypesToImpl {
+  const char *op_type;
+  gert::OpImplKernelRegistry::OpImplFunctions funcs;
+};
+
+size_t GetRegisteredOpNum1() {
+  return reinterpret_cast<GetImplNum>(dlsym(nullptr, "GetRegisteredOpNum"))();
+}
+ge::graphStatus GetOpImplFunctions1(TypesToImpl *imp, size_t impl_num) {
+  return ge::GRAPH_SUCCESS;
+}
+
+static uint32_t MockMdeTopoOptimizeGraph(std::shared_ptr<ComputeGraph> &) {
+  return ge::GRAPH_SUCCESS;
+}
+
+static bool MockIsEnableMdeTopoSort() {
+  return false;
+}
+
+VOID *mmDlopen(const CHAR *fileName, INT32 mode) {
+  const std::string so_name = fileName;
+  if (so_name.find("libcce.so") != std::string::npos) {
+    return (void *)(libcce_name.data());
+  };
+  if (so_name.find("libmdat.so") != std::string::npos) {
+    return (void *)(libmdat_name.data());
+  }
+
+ if (so_name.find("libopmaster_success_rt2.0.so") != std::string::npos) {
+   return (void *)(libopmaster_rt2_name.data());
+ }
+ if (so_name.find("libopmaster_error_rt2.0.so") != std::string::npos) {
+   return (void *)(libopmaster_error_rt2_name.data());
+ }
+
+  return ge::MmpaStub::GetInstance().GetImpl()->DlOpen(fileName, mode);
+}
+
+INT32 mmDlclose(VOID *handle) {
+  if (libcce_name.data() == handle) {
+    return 0;
+  }
+  if (libopmaster_rt2_name.data() == handle) {
+    return 0;
+  }
+  if (libopmaster_error_rt2_name.data() == handle) {
+    return 0;
+  }
+  if (libmdat_name.data() == handle) {
+    return 0;
+  }
+  if (handle == nullptr){
+    return 1;
+  }
+  if (handle == (void *)0x8888) {
+    return 0;
+  }
+
+  return ge::MmpaStub::GetInstance().GetImpl()->DlClose(handle);
+}
+
+VOID *mmDlsym(VOID *handle, const CHAR *funcName) {
+  if ((handle == libcce_name.data()) && (funcName == std::string("ccUpdateKernelArgs"))) {
+    return (void *)ccUpdateKernelArgs;  // for st: KernelTaskInfo::CceUpdateKernelArgs
+  }
+
+  if ((handle == libopmaster_rt2_name.data()) && (funcName == std::string("GetRegisteredOpNum"))) {
+    return (void *)GetRegisteredOpNum1;
+  }
+  if ((handle == libopmaster_rt2_name.data()) && (funcName == std::string("GetRegisteredOpCtNum"))) {
+    return (void *)GetRegisteredOpNum1;
+  }
+  if ((handle == libopmaster_rt2_name.data()) && (funcName == std::string("GetOpImplFunctions"))) {
+    return (void *)GetOpImplFunctions1;
+  }
+  if ((handle == libopmaster_error_rt2_name.data()) && (funcName == std::string("GetRegisteredOpNum"))) {
+    return nullptr;
+  }
+  if ((handle == libopmaster_error_rt2_name.data()) && (funcName == std::string("GetOpImplFunctions"))) {
+    return nullptr;
+  }
+  if ((handle == libmdat_name.data()) && (funcName == std::string("MdeTopoSort"))) {
+    return (void *) &MockMdeTopoOptimizeGraph;
+  }
+  if ((handle == libmdat_name.data()) && (funcName == std::string("IsEnableMdeTopoSortV2"))) {
+    return (void *) &MockIsEnableMdeTopoSort;
+  }
+
+  if (reinterpret_cast<uintptr_t>(handle) < 0x8000 && handle != nullptr) {
+    return nullptr;
+  }
+
+  return ge::MmpaStub::GetInstance().GetImpl()->DlSym(handle, funcName);
+}
+
+INT32 mmGetPid()
+{
+  return (INT32)getpid();
+}
+
+INT32 mmSetCurrentThreadName(const CHAR *name)
+{
+  return EN_OK;
+}
+
+INT32 mmGetCwd(CHAR *buffer, INT32 maxLen)
+{
+  return EN_OK;
+}
+
+CHAR *mmGetErrorFormatMessage(mmErrorMSg errnum, CHAR *buf, mmSize size)
+{
+  if ((buf == NULL) || (size <= 0)) {
+    return NULL;
+  }
+  return strerror_r(errnum, buf, size);
+}
+
+CHAR *mmDirName(CHAR *path) {
+  if (path == NULL) {
+    return NULL;
+  }
+#if (defined(_WIN32) || defined(_WIN64) || defined(_MSC_VER))
+  char separator = '\\';
+#else
+  char separator = '/';
+#endif
+  std::string path_str(path);
+  const size_t last_sep_pos = path_str.rfind(separator);
+  if (last_sep_pos == std::string::npos) {
+    return NULL;
+  }
+
+  path[last_sep_pos] = '\0';
+  return path;
+}
+
+INT32 mmCreateTask(mmThread *threadHandle, mmUserBlock_t *funcBlock) {
+  if ((threadHandle == NULL) || (funcBlock == NULL) || (funcBlock->procFunc == NULL)) {
+    return EN_INVALID_PARAM;
+  }
+
+  INT32 ret = pthread_create(threadHandle, NULL, funcBlock->procFunc, funcBlock->pulArg);
+  if (ret != EN_OK) {
+    ret = EN_ERROR;
+  }
+  return ret;
+}
+
+INT32 mmJoinTask(mmThread *threadHandle) {
+  if (threadHandle == NULL) {
+    return EN_INVALID_PARAM;
+  }
+
+  INT32 ret = pthread_join(*threadHandle, NULL);
+  if (ret != EN_OK) {
+    ret = EN_ERROR;
+  }
+  return ret;
+}
+
+INT32 mmSleep(UINT32 millSecond) {
+  if (millSecond == MMPA_ZERO) {
+    return EN_INVALID_PARAM;
+  }
+  UINT32 microSecond;
+
+  if (millSecond <= MMPA_MAX_SLEEP_MILLSECOND_USING_USLEEP) {
+    microSecond = millSecond * (UINT32)MMPA_MSEC_TO_USEC;
+  } else {
+    microSecond = MMPA_MAX_SLEEP_MICROSECOND_USING_USLEEP;
+  }
+  return ge::MmpaStub::GetInstance().GetImpl()->Sleep(microSecond);
+}
+
+INT32 mmUnlink(const CHAR *filename) {
+  if (filename == NULL) {
+    return EN_INVALID_PARAM;
+  }
+  return unlink(filename);
+}
+INT32 mmSysSetEnv(mmEnvId id, const CHAR *value, INT32 overwrite) {
+  (void)value;
+  (void)overwrite;
+  if (id == MM_ENV_AUTO_USE_UC_MEMORY) {
+    return EN_OK;
+  }
+  return EN_INVALID_PARAM;
+}
+
+INT32 mmSetEnv(const CHAR *name, const CHAR *value, INT32 overwrite) {
+  if ((name == nullptr) || (value == nullptr)) {
+    return EN_INVALID_PARAM;
+  }
+  const std::set<std::string> ignore_env_set = {"ASCEND_LOG_SAVE_MODE",
+                                                "ASCEND_HOSTPID",
+                                                "LD_LIBRARY_PATH"};
+  if (ignore_env_set.find(name) != ignore_env_set.end()) {
+    return EN_OK;
+  }
+  return setenv(name, value, overwrite);
+}
+
+INT32 mmWaitPid(mmProcess pid, INT32 *status, INT32 options) {
+  return ge::MmpaStub::GetInstance().GetImpl()->WaitPid(pid, status, options);
+}
+
+VOID mmSetOptErr(INT32 mmOptErr) {
+  opterr = mmOptErr;
+}
+
+INT32 mmGetOptLong(INT32 argc, CHAR * const * argv, const CHAR *opts, const mmStructOption *longOpts, INT32 *longIndex) {
+  return getopt_long(argc, argv, opts, longOpts, longIndex);
+}
+
+CHAR* mmGetOptArg(VOID) {
+  return optarg;
+}
+
+INT32 mmGetOptInd(VOID) {
+  return optind;
+}
+
+INT32 mmUmask(INT32 pmode) {
+  return 0;
+}
+
+mmSockHandle mmSocket(INT32 sockFamily, INT32 type, INT32 protocol) {
+  return EN_ERROR;
+}
+
+INT32 mmIoctl(mmProcess fd, INT32 ioctlCode, mmIoctlBuf *bufPtr) {
+  return 0;
+}
+
+INT32 mmDup2(INT32 oldFd, INT32 newFd) {
+  return 0;
+}
+
+INT32 mmDup(INT32 fd) {
+  return 0;
+}
+
+ge::MmpaStub& ge::MmpaStub::GetInstance() {
+  static ge::MmpaStub instance;
+  return instance;
+}
+
+void ge::MmpaStub::SetImpl(const std::shared_ptr<ge::MmpaStubApiGe> &impl) {
+  impl_ = impl;
+}
+
+ge::MmpaStubApiGe* ge::MmpaStub::GetImpl() {
+  return impl_.get();
+}
+
+void ge::MmpaStub::Reset() {
+  impl_ = std::make_shared<ge::MmpaStubApiGe>();
+}
+#ifdef __cplusplus
+}
+#endif

@@ -1,0 +1,35 @@
+# LLM-DataDist接口参考（C++）
+
+-   [LLM-DataDist接口列表](./cpp/LLM-DataDist接口列表.md)
+-   [LlmDataDist接口](./cpp/LlmDataDist接口.md)
+    -   [LlmDataDist构造函数](./cpp/LlmDataDist构造函数.md)
+    -   [\~LlmDataDist\(\)](./cpp/LlmDataDist().md)
+    -   [Initialize](./cpp/Initialize.md)
+    -   [Finalize](./cpp/Finalize.md)
+    -   [SetRole](./cpp/SetRole.md)
+    -   [LinkLlmClusters](./cpp/LinkLlmClusters.md)
+    -   [UnlinkLlmClusters](./cpp/UnlinkLlmClusters.md)
+    -   [PullKvBlocks](./cpp/PullKvBlocks.md)
+    -   [CopyKvCache](./cpp/CopyKvCache.md)
+    -   [CopyKvBlocks](./cpp/CopyKvBlocks.md)
+    -   [PushKvCache](./cpp/PushKvCache.md)
+    -   [PushKvBlocks](./cpp/PushKvBlocks.md)
+    -   [AllocateCache](./cpp/AllocateCache.md)
+    -   [DeallocateCache](./cpp/DeallocateCache.md)
+
+-   [数据结构](./cpp/数据结构.md)
+    -   [LlmRole](./cpp/LlmRole.md)
+    -   [CachePlacement](./cpp/CachePlacement.md)
+    -   [CacheDesc](./cpp/CacheDesc.md)
+    -   [CacheIndex](./cpp/CacheIndex.md)
+    -   [Cache](./cpp/Cache.md)
+    -   [ClusterInfo和IpInfo](./cpp/ClusterInfo和IpInfo.md)
+    -   [KvCacheExtParam](./cpp/KvCacheExtParam.md)
+
+-   [错误码](./cpp/错误码.md)
+-   [待废弃接口](./cpp/待废弃接口.md)
+    -   [ClusterInfo和IpInfo（待废弃）](./cpp/ClusterInfo和IpInfo（待废弃）.md)
+    -   [错误码（待废弃）](./cpp/错误码（待废弃）.md)
+
+-   [不支持的接口](./cpp/不支持的接口.md)
+

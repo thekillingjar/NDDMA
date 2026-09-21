@@ -1,0 +1,26 @@
+{
+  "Switch": {
+    "GraphFusion": {
+      "BUILT_IN_PASS1": "on",
+      "BUILT_IN_PASS2": "on",
+      "BUILT_IN_PASS3": "on",
+      "BUILT_IN_PASS4": "on",
+      "BUILT_IN_PASS5": "on"
+    }
+  },
+  "Priority":{
+    "GraphFusion": {
+      "Top": {
+      },
+      "Main": {
+        "BUILT_IN_PASS1": "4000",
+        "BUILT_IN_PASS2": "4010",
+        "BUILT_IN_PASS3": "4010"
+      },
+      "Down": {
+        "BUILT_IN_PASS4": "5000",
+        "BUILT_IN_PASS5": "5010"
+      }
+    }
+  }
+}

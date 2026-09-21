@@ -1,0 +1,16 @@
+{
+  "kernelList":{
+    "kernelName":"123"
+  },
+  "taskRation":"1:1",
+  "compress_parameters":[
+    2048,
+    2304,
+    1
+  ],
+  "workspace": {
+    "num":1,
+    "size": [34],
+    "type":[0]
+  }
+}

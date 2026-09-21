@@ -1,0 +1,33 @@
+{
+  "binFileSuffix": ".o",
+  "binFileName":"te_sigmoid_9a43f1_tail_mix_aic",
+  "kernelList":[
+    {
+      "kernelName":"te_sigmoid_mix_aiv_kernel1",
+      "tilingKey":1,
+      "kernelType":"MIX_VECTOR_CORE",
+      "taskRation":"1:0"
+    },
+    {
+      "kernelName":"te_sigmoid_mix_aiv_kernel2",
+      "tilingKey":2,
+      "kernelType":"MIX_VECTOR_CORE",
+      "taskRation":"1:1"
+    }
+  ],
+  "blockDim":-1,
+  "opParaSize":10,
+  "magic":"RT_DEV_BINARY_MAGIC_ELF",
+  "coreType":"MIX_VECTOR_CORE",
+  "taskRation":"tilingKey",
+  "compress_parameters":[
+    2048,
+    2304,
+    1
+  ],
+  "workspace": {
+    "num":1,
+    "size": [34],
+    "type":[1]
+  }
+}

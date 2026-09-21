@@ -1,0 +1,113 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of 
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+syntax = "proto3";
+package ff.deployer;
+
+enum ExecutorRequestType {
+  kExecutorPreDownload = 0;
+  kExecutorDownload = 1;
+  kExecutorLoad = 2;
+  kExecutorUnload = 3;
+  kExecutorFinalize = 4;
+  kExecutorClear = 5;
+  kExecutorExceptionNotify = 6;
+  kNotify = 7;
+}
+
+message ExecutorRequest {
+
+  message ModelQueueIds {
+    repeated uint32 input_queues = 1;
+    repeated uint32 output_queues = 2;
+  }
+
+  message QueueAttrs {
+    uint32 queue_id = 1;
+    int32 device_type = 2;
+    int32 device_id = 3;
+    uint32 global_logic_id = 4;
+  }
+
+  message InputAlignAttrs {
+    uint32 align_max_cache_num = 1;
+    int32 align_timeout = 2;
+    bool drop_when_not_align = 3;
+  }
+
+  message ModelQueuesAttrs {
+    repeated QueueAttrs input_queues_attrs = 1;
+    repeated QueueAttrs output_queues_attrs = 2;
+  }
+
+  message LoadModelRequest {
+    uint32 root_model_id = 1;
+    uint32 model_id = 2;
+    string model_path = 3;
+    bool is_dynamic = 4;
+    uint32 replica_num = 7;
+    uint32 replica_idx = 8;
+    map<string, string> attrs = 9;
+    ModelQueuesAttrs status_queues = 11;
+    uint32 model_uuid = 14;
+    bool is_dynamic_sched = 15;
+    bool need_report_status = 16;
+    int32 load_mode = 17;
+    int32 execute_times = 18;
+    repeated int32 input_fusion_offsets = 19;
+    int32 phy_device_id = 21;
+    bool is_dynamic_proxy_controlled = 22;
+    ModelQueuesAttrs model_queues_attrs = 23;
+    map<string, ModelQueuesAttrs> invoked_model_queues_attrs = 24;
+    bool is_head = 25;
+    InputAlignAttrs input_align_attrs = 26;
+    string model_instance_name = 27;
+    bool enable_exception_catch  = 30;
+    string scope = 31;
+  }
+
+  message BatchLoadModelMessage {
+    repeated LoadModelRequest models = 5;
+  }
+
+  message ClearModelRequest {
+    uint32 model_id = 1;
+    int32 clear_msg_type = 2;
+  }
+
+  message DataflowExceptionNotify {
+    uint32 type = 1;
+    int32 exception_code = 2;
+    uint64 trans_id = 3;
+    string scope = 4;
+    uint64 user_context_id = 5;
+    bytes exception_context = 6;  // userData +xxx + mbufHeadMsg = mbufHead
+  }
+
+  message DataflowExceptionNotifyRequest {
+    uint32 root_model_id = 1;
+    DataflowExceptionNotify exception_notify = 2;
+  }
+
+  oneof body {
+    BatchLoadModelMessage batch_load_model_message = 2;
+    ClearModelRequest clear_model_message = 6;
+    DataflowExceptionNotifyRequest exception_request = 7;
+  }
+
+  ExecutorRequestType type = 9;
+  uint64 message_id = 10;
+}
+
+message ExecutorResponse {
+  uint64 message_id = 1;
+  uint32 error_code = 2;
+  string error_message = 3;
+}

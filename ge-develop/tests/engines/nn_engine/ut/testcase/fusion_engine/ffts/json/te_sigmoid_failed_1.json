@@ -1,0 +1,12 @@
+{
+    "blockDim":-2,
+    "batchBindOnly":"0",
+    "magic":"123",
+    "core_type":"core_type",
+    "modeInArgsFirstField":"1",
+    "workspace":{
+      "num":4,
+      "size":"423300, 423300, 423300, 423300",
+      "type":[1,1,1,1]
+  }
+}

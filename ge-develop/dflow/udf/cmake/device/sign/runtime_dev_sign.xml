@@ -1,0 +1,4 @@
+<bios_check_cfg>
+    <item input="Ascend-runtime_device-minios.tar.gz" output="Ascend-runtime_device-minios.tar.gz" type="cms" sign_alg="PSS" tag="ascend_aicpu"
+          nvcnt="0"/>
+</bios_check_cfg>

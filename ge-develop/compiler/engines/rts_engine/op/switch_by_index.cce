@@ -1,0 +1,29 @@
+#ifdef __CCE_KT_TEST__
+#define __aicore__
+#else
+#define __aicore__ [aicore]
+#endif
+
+extern "C" __global__ __aicore__ void switch_by_index__kernel0(uint64_t input_index_gm_offset, uint64_t input_data_gm_offset) {
+__gm__ int32_t* input_index_gm = (__gm__ int32_t*)(get_workspace_base() + input_index_gm_offset);
+__gm__ uint64_t* input_data_gm = (__gm__ uint64_t*)(get_weight_base() + input_data_gm_offset);
+
+__ubuf__   int32_t* input_index_ub = (__ubuf__  int32_t *)get_imm(0);
+   int32_t index1[1] = {0};
+__ubuf__   uint64_t* input_data_ub = (__ubuf__  uint64_t *)get_imm(0);
+   uint64_t value2[1] = {0};
+// "aicore arch: Ascend035"
+  copy_gm_to_ubuf_align(((__ubuf__ int32_t *)input_index_ub), ((__gm__ int32_t *)input_index_gm), 1, 16, 0, 0, 16, 1, DI_t::DI_others);
+  set_flag(PIPE_MTE2, PIPE_S, EVENT_ID0);
+  wait_flag(PIPE_MTE2, PIPE_S, EVENT_ID0);
+  index1[0] = (int32_t) (*( __ubuf__ int32_t* ) (((__ubuf__ int32_t *)input_index_ub)));
+  set_flag(PIPE_S, PIPE_MTE2, EVENT_ID0);
+  wait_flag(PIPE_S, PIPE_MTE2, EVENT_ID0);
+  copy_gm_to_ubuf_align(((__ubuf__ uint32_t *)input_data_ub), ((__gm__ uint32_t *)input_data_gm + (index1[0] * 2)), 1, 16, 0, 0, 16, 1, DI_t::DI_others);
+  set_flag(PIPE_MTE2, PIPE_S, EVENT_ID0);
+  wait_flag(PIPE_MTE2, PIPE_S, EVENT_ID0);
+  value2[0] = (uint64_t) (*( __ubuf__ uint64_t* ) (((__ubuf__ uint64_t *)input_data_ub)));
+  pipe_barrier(PIPE_ALL);
+  set_cond_taskid(value2[0]);
+  pipe_barrier(PIPE_ALL);
+}

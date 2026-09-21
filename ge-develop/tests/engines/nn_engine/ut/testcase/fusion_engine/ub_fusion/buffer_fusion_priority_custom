@@ -1,0 +1,27 @@
+{
+    "Switch":{
+        "GraphFusion":{
+
+        },
+        "UBFusion":{
+
+        }
+    },
+    "Priority":{
+        "UBFusion":{
+            "Top":{
+                "builtInPass4":"100"
+            },
+            "Main":{
+                "builtInPass2":"1000",
+                "builtInPass0":"1010"
+            },
+            "Down":{
+                "builtInPass3":"2000"
+            }
+        },
+        "GraphFusion":{
+
+        }
+    }
+}

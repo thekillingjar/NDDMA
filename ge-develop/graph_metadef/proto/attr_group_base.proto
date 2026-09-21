@@ -1,0 +1,13 @@
+syntax = "proto3";
+import "ge_ir.proto";
+
+message OtherGroupDef {
+  map<string, ge.proto.AttrDef> attr = 1;
+}
+
+message AttrGroupsDef {
+  OtherGroupDef other_group_def = 1;
+  oneof attr_group {
+      ge.proto.AscendCIROpAttrGroupsDef op_attr_group = 2;
+  }
+}

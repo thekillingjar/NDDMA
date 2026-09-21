@@ -1,0 +1,32 @@
+{
+    "TestBlock":{
+        "input0":{
+            "format":"NHWC",
+            "name":"x1",
+            "type":"DT_INT32"
+        },
+        "input1":{
+            "format":"NHWC",
+            "name":"x2",
+            "type":"DT_INT32"
+        },
+        "opInfo":{
+            "computeCost":"100",
+            "engine":"DNN_VM_AICPU",
+            "flagAsync":"False",
+            "flagPartial":"False",
+            "functionName":"TestBlock",
+            "kernelSo":"custom_so.ini",
+            "opKernelLib":"CUSTAICPUKernel",
+            "workspaceSize":"500",
+            "flagSupportBlockDim":"True",
+            "blockDimByIndex":"-1",
+            "userDefined":"True"
+        },
+        "output0":{
+            "format":"NHWC",
+            "name":"y",
+            "type":"DT_INT32"
+        }
+    }
+}

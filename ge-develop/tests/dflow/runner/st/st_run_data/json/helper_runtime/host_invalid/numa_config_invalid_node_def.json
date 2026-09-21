@@ -1,0 +1,151 @@
+{
+  "cluster":[
+    {
+      "cluster_nodes":[
+        {
+          "node_id": 0,
+          "node_type": "TestNodeType1",
+          "ipaddr": "7.126.556.14",
+          "is_local": true,
+          "port": 2509,
+          "item_list": [
+            {
+              "item_id": 0,
+              "device_id" : 0,
+              "plane_id": 0,
+              "ipaddr": "192.168.5.199"
+            },
+            {
+              "item_id": 1,
+              "device_id" : 1,
+              "plane_id": 1,
+              "ipaddr": "192.168.5.198"
+            },
+            {
+              "item_id": 2,
+              "device_id" : 2,
+              "plane_id": 2,
+              "ipaddr": "192.168.5.197"
+            },
+            {
+              "item_id": 3,
+              "device_id" : 3,
+              "plane_id": 3,
+              "ipaddr": "192.168.5.196"
+            },
+            {
+              "item_id": 4,
+              "device_id" : 4,
+              "plane_id": 4,
+              "ipaddr": "192.168.5.195"
+            },
+            {
+              "item_id": 5,
+              "device_id" : 5,
+              "plane_id": 5,
+              "ipaddr": "192.168.5.194"
+            },
+            {
+              "item_id": 6,
+              "device_id" : 6,
+              "plane_id": 6,
+              "ipaddr": "192.168.5.193"
+            },
+            {
+              "item_id": 7,
+              "device_id" : 7,
+              "plane_id": 7,
+              "ipaddr": "192.168.5.192"
+            }
+          ]
+        },
+        {
+          "node_id": 1,
+          "node_type": "TestNodeType1",
+          "ipaddr": "7.126.556.15",
+          "port": 2509,
+          "item_list": [
+            {
+              "item_id": 0,
+              "device_id" : 0,
+              "ipaddr": "192.168.4.199"
+            },
+            {
+              "item_id": 1,
+              "device_id" : 1,
+              "ipaddr": "192.168.4.198"
+            },
+            {
+              "item_id": 2,
+              "device_id" : 2,
+              "ipaddr": "192.168.4.197"
+            },
+            {
+              "item_id": 3,
+              "device_id" : 3,
+              "ipaddr": "192.168.4.196"
+            },
+            {
+              "item_id": 4,
+              "device_id" : 4,
+              "ipaddr": "192.168.4.195"
+            },
+            {
+              "item_id": 5,
+              "device_id" : 5,
+              "ipaddr": "192.168.4.194"
+            },
+            {
+              "item_id": 6,
+              "device_id" : 6,
+              "ipaddr": "192.168.4.193"
+            },
+            {
+              "item_id": 7,
+              "device_id" : 7,
+              "ipaddr": "192.168.4.192"
+            }
+          ]
+        }
+      ],
+      "nodes_topology":
+        {
+          "type":"star",
+          "protocol":"RDMA",
+          "topos":[
+            {
+              "plane_id":0,
+              "devices":[0,1]
+            },
+            {
+              "plane_id":2,
+              "devices":[2,3]
+            }
+          ]
+        }
+    }
+  ],
+  "node_def":[
+    {
+      "node_type":123456,
+      "resource_type":"X86",
+      "support_links":"[HCCS, PCIE, ROCE]",
+      "item_type":"TestSocType1",
+      "inter_item_memory_access_mode": "[NUMA]",
+      "item_topology": [
+        {
+          "links_mode": "HCCS",
+          "links": [[0, 1]]
+        }
+      ]
+    }
+  ],
+  "item_def":[
+    {
+      "item_type":"TestSocType1",
+      "resource_type":"Ascend",
+      "memory":"[DDR:64GB]",
+      "aic_type":"[DAVINCI_V100:32]"
+    }
+  ]
+}

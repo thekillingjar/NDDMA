@@ -1,0 +1,26 @@
+{
+  "Switch": {
+    "GraphFusion": {
+      "CUSTOM_PASS1": "off",
+      "CUSTOM_PASS2": "on",
+      "CUSTOM_PASS3": "on",
+      "CUSTOM_PASS4": "on",
+      "CUSTOM_PASS5": "on"
+    }
+  },
+  "Priority":{
+    "GraphFusion": {
+      "Top": {
+      },
+      "Main": {
+        "CUSTOM_PASS1": "1000",
+        "CUSTOM_PASS2": "1010",
+        "CUSTOM_PASS3": "1020"
+      },
+      "Down": {
+        "CUSTOM_PASS4": "2000",
+        "CUSTOM_PASS5": "2010"
+      }
+    }
+  }
+}

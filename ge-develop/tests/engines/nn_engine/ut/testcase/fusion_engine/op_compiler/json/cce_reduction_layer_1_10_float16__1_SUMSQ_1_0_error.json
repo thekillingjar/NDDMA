@@ -1,0 +1,15 @@
+{
+    "kernelName": "cce_reductionLayer_1_10_float16__1_SUMSQ_1_0__kernel0",
+    "binFileName": "cce_reductionLayer_1_10_float16__1_SUMSQ_1_0",
+    "binFileSuffix": ".o",
+    "magic": "RT_DEV_BINARY_MAGIC_ELF",
+    "workspace":{
+        "num":4,
+        "size":[
+            423300,
+            423300,
+            423300
+        ],
+        "type":[1,1,1,1]
+    }
+}

@@ -1,0 +1,39 @@
+[
+  {
+    "compile_flag":1
+  },
+  {
+    "op": "MatMulV2",
+    "input_desc": [
+      {
+        "format": "ND",
+        "shape": [16,32],
+        "type": "float16"
+      },
+      {
+        "format": "ND",
+        "shape": [32,16],
+        "type": "float16"
+      }
+    ],
+    "output_desc": [
+      {
+        "format": "FORMAT_MAX",
+        "shape": [16,16],
+        "type": "float16"
+      }
+    ],
+    "attr" : [
+      {
+        "name" : "transpose_x1",
+        "type" : "bool",
+        "value": true
+      },
+      {
+        "name" : "offset_x",
+        "type" : "int",
+        "value": 0
+      }
+    ]
+  }
+]

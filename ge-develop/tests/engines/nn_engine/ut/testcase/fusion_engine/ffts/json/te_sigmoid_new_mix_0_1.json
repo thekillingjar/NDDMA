@@ -1,0 +1,35 @@
+{
+    "blockDim":1,
+    "coreType":"MIX",
+    "taskRation":"0:1",
+    "opParaSize":10,
+    "intercoreSync":1,
+    "magic":"RT_DEV_BINARY_MAGIC_ELF",
+    "kernelName":"te_sigmoid_mix_aiv_kernel0",
+    "kernelList":[
+      {
+          "deterministic":"ignore",
+          "kernelName":"te_sigmoid_mix_aiv_kernel0"
+      }
+    ],
+    "workspace":{
+        "num":4,
+        "size":[
+            423300,
+            423300,
+            423300,
+            423300
+        ],
+        "type":[1,1,1,1]
+    },
+    "binFileName":"te_sigmoid_9a43f1_mix_aic",
+    "binFileSuffix":".o",
+    "KBHit" : false,
+    "parameters":[
+        0,
+        0,
+        0,
+        0,
+        0
+    ]
+}

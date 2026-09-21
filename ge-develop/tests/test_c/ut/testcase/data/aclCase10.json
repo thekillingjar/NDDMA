@@ -1,0 +1,9 @@
+{
+    "dump":{
+        "dump_path":"./",
+        "dump_mode":"all",
+        "dump_data":"tensor",
+        "dump_op_switch":"off",
+        "dump_debug":"on"
+    }
+}

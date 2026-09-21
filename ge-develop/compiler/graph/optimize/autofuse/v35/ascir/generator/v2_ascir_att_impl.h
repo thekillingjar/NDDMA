@@ -1,0 +1,143 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of 
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+#ifndef __V2_ASCIR_ATT_IMPL__
+#define __V2_ASCIR_ATT_IMPL__
+
+#include "ascendc_ir.h"
+#include "ascir_registry.h"
+#include "graph/def_types.h"
+
+namespace ge {
+namespace ascir {
+#define JOIN(a, b) a##b
+#define IR_NAME_V2(ir_name) #ir_name"V2"
+#define REG_ASC_IR_ATT_V2_CLASS_DEFINE(ir_name)             \
+  class JOIN(ir_name, AscIrAttImplV2) : public AscIrAtt {   \
+   public:                                                  \
+    JOIN(ir_name, AscIrAttImplV2)() = default;              \
+    ~JOIN(ir_name, AscIrAttImplV2)() = default;             \
+    [[nodiscard]] void *GetApiPerf() const override {       \
+      static char_t api_perf_name[] = IR_NAME_V2(ir_name);  \
+      return PtrToPtr<void, char_t>(api_perf_name);         \
+    }                                                       \
+    virtual void *GetAscendCApiPerfTable() const override { \
+      static char_t api_perf_name[] = IR_NAME_V2(ir_name);  \
+      return PtrToPtr<void, char_t>(api_perf_name);         \
+    }                                                       \
+  }
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Add);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Gather);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Abs);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Broadcast);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Cast);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Div);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Erf);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Exp);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Exp2);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Floor);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Fma);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(LogicalAnd);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(LogicalOr);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(LogicalNot);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Maximum);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Minimum);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Min);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Mul);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Neg);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Reciprocal);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Relu);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(ReduceAll);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(ReduceAny);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(ReduceMax);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(ReduceMean);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(ReduceMin);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(ReduceSum);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(ReduceProd);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(RemovePad);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Rsqrt);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Select);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Sign);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Sqrt);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Sub);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Sum);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Tanh);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Where);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Ge);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Eq);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Ne);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Gt);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Le);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Lt);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Ub2ub);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Load);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Store);
+// 不需要建模的ASCIR
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Data);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Scalar);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(IndexExpr);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Output);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Workspace);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(MatMul);
+// 当前未完整做完芯片隔离
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(VectorFunc);
+// 目前无建模的ASCIR
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Nddma);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Pad);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Round);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Nop);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Ln);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Log2);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Expm);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(LShift);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Mod);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Isnan);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(IsFinite);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Max);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Mean);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Prod);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Any);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(All);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Sigmoid);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Sin);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(RShift);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(TrueDiv);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Pow);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(ClipByValue);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Concat);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(LeakyRelu);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(BitwiseAnd);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(BitwiseNot);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(BitwiseOr);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(BitwiseXor);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Transpose);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(FloorDiv);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Gelu);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Axpy);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Split);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Ceil);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Cos);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Acos);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Acosh);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Cosh);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Asin);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Asinh);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Atan);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Atanh);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Digamma);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Erfc);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Erfcx);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Atan2);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(CopySign);
+REG_ASC_IR_ATT_V2_CLASS_DEFINE(Ceil2Int);
+}  // namespace ascir
+}  // namespace ge
+
+#endif  //__ASCIR_ATT_IMPL__

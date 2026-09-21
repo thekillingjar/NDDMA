@@ -1,0 +1,27 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of 
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+#ifndef AIR_CXX_RUNTIME_V2_KERNEL_AUTOFUSE_OP_KERNEL_H_
+#define AIR_CXX_RUNTIME_V2_KERNEL_AUTOFUSE_OP_KERNEL_H_
+
+#include "graph/ge_error_codes.h"
+#include "graph/fast_graph/fast_node.h"
+#include "exe_graph/runtime/kernel_context.h"
+
+namespace gert {
+namespace kernel {
+ge::graphStatus DlcloseSoHandles(KernelContext *context);
+ge::graphStatus GetSymbolTilingCacheKeyKernel(KernelContext *context);
+ge::graphStatus BuildSymbolTilingCacheKeyOutputs(const ge::FastNode *node, KernelContext *context);
+ge::graphStatus SymbolTilingParseKernel(KernelContext *context);
+ge::graphStatus GetAutofuseFuncsKernel(KernelContext *context);
+}
+}
+#endif  // AIR_CXX_RUNTIME_V2_KERNEL_AUTOFUSE_OP_KERNEL_H_

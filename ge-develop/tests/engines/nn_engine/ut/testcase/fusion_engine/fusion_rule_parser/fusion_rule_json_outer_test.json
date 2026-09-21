@@ -1,0 +1,38 @@
+{
+    "test_001":{
+        "name": "input0"
+    },
+    "test_002":{
+        "name":"input0",
+        "src":"input_node"
+    },
+    "test_003":{
+        "name":"input0",
+        "src":"input_node: 1"
+    },
+    "test_004":{
+        "name":"input0",
+        "src":"input_node: 1.2"
+    },
+    "test_005":{
+        "name":"input0",
+        "src":"input_node: 1:2"
+    },
+    "test_006":{
+        "name":"input0",
+        "src":35
+    },
+    "test_007":{
+        "src":"input_node"
+    },
+    "test_008":{
+        "name": 123,
+        "src":"input_node:1"
+    },
+    "test_009":134,
+    "test_010":{
+        "name":"input0",
+        "src":"input_node:1",
+        "others":"input"
+    }
+}

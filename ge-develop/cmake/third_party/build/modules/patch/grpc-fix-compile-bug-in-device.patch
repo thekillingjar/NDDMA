@@ -1,0 +1,45 @@
+diff --git a/src/core/ext/filters/rbac/rbac_service_config_parser.cc b/src/core/ext/filters/rbac/rbac_service_config_parser.cc
+index f7264b3..4db886d 100644
+--- a/src/core/ext/filters/rbac/rbac_service_config_parser.cc
++++ b/src/core/ext/filters/rbac/rbac_service_config_parser.cc
+@@ -193,8 +193,8 @@ struct RbacConfig {
+         Json::Object config;
+ 
+         AuditLogger() = default;
+-        AuditLogger(const AuditLogger&) = delete;
+-        AuditLogger& operator=(const AuditLogger&) = delete;
++        AuditLogger(const AuditLogger&) = default;
++        AuditLogger& operator=(const AuditLogger&) = default;
+         AuditLogger(AuditLogger&&) = default;
+         AuditLogger& operator=(AuditLogger&&) = default;
+ 
+diff --git a/src/core/lib/gprpp/validation_errors.h b/src/core/lib/gprpp/validation_errors.h
+index 98017c7..b15a6c5 100644
+--- a/src/core/lib/gprpp/validation_errors.h
++++ b/src/core/lib/gprpp/validation_errors.h
+@@ -73,8 +73,8 @@ class ValidationErrors {
+     }
+ 
+     // Not copyable.
+-    ScopedField(const ScopedField& other) = delete;
+-    ScopedField& operator=(const ScopedField& other) = delete;
++    ScopedField(const ScopedField& other) = default;
++    ScopedField& operator=(const ScopedField& other) = default;
+ 
+     // Movable.
+     ScopedField(ScopedField&& other) noexcept
+diff --git a/src/core/lib/promise/pipe.h b/src/core/lib/promise/pipe.h
+index 973a46d..54dd53e 100644
+--- a/src/core/lib/promise/pipe.h
++++ b/src/core/lib/promise/pipe.h
+@@ -534,8 +534,8 @@ namespace pipe_detail {
+ template <typename T>
+ class Next {
+  public:
+-  Next(const Next&) = delete;
+-  Next& operator=(const Next&) = delete;
++  Next(const Next&) = default;
++  Next& operator=(const Next&) = default;
+   Next(Next&& other) noexcept = default;
+   Next& operator=(Next&& other) noexcept = default;
+ 

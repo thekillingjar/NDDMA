@@ -1,0 +1,10 @@
+{
+    "test_001": "input0",
+    "test_002": "input0:1",
+    "test_003": "input0:1.2",
+    "test_004": "input0.1.2",
+    "test_005": "input0.1:2",
+    "test_006": "input0:1:2",
+    "test_007": 123,
+    "test_008": true
+}

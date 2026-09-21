@@ -1,0 +1,467 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of 
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+syntax = "proto3";
+package deployer;
+import "var_manager.proto";
+import "ge_ir.proto";
+
+service DeployerService {
+  rpc DeployerProcess(DeployerRequest) returns (DeployerResponse) {}
+}
+
+enum DeployerRequestType {
+  kInitRequest = 0;
+  kDisconnect = 1;
+  kLoadModel = 4;
+  kUnloadModel = 5;
+  kDownloadVarManager = 7;
+  kDownloadSharedContent = 8;
+  kInitProcessResource = 9;
+  kDownloadConf = 10;
+  kUpdateDeployPlan = 11;
+  kTransferFile = 12;
+  kAddFlowRoutePlan = 13;
+  kDatagwSchedInfo = 14;
+  kClearModelData = 15;
+  kDataFlowExceptionNotify = 16;
+  kUpdateProfilingInfo = 17;
+  kHeartbeat = 127;
+}
+
+enum DeviceConfigType {
+  kLogConfig = 0;
+  kDumpConfig = 1;
+  kProfilingConfig = 2;
+  kCommonConfig = 127;
+}
+
+message Options {
+  map<string, string> global_options = 1;
+  map<string, string> session_options = 2;
+  map<string, string> graph_options = 3;
+}
+
+message DeployerRequest {
+  int64 client_id = 1;
+  uint64 message_id = 2;
+  DeployerRequestType type = 3;
+  oneof body {
+    InitRequest init_request = 4;
+    LoadModelRequest load_model_request = 6;
+    UnloadModelRequest unload_model_request = 7;
+    MultiVarManagerRequest multi_var_manager_request = 9;
+    SharedContentDescRequest shared_content_desc_request = 10;
+    InitProcessResourceRequest init_process_resource_request = 11;
+    DownloadConfigRequest download_config_request = 12;
+    UpdateDeployPlanRequest update_deploy_plan_request = 13;
+    TransferFileRequest transfer_file_request = 14;
+    AddFlowRoutePlanRequest add_flow_route_plan_request = 15;
+    DataGwSchedInfos datagw_sched_info = 16;
+    ClearModelDataRequest model_data_clear = 17;
+    DataFlowExceptionNotifyRequest exception_notify_request = 18;
+    SendProfInfoRequest prof_info = 19;
+  }
+}
+
+message DeployerResponse {
+  uint64 message_id = 1;
+  uint32 error_code = 2;
+  string error_message = 3;
+  oneof body {
+    InitResponse init_response = 4;
+    HeartbeatResponse heartbeat_response = 5;
+  }
+}
+
+message InitRequest {
+  int32 logic_device_id = 2;
+  string type = 3;
+  string sign_data = 4;
+  map<string, string> envs = 5;
+}
+
+message InitResponse {
+  int64 client_id = 1;
+  string dgw_host_ip = 2;
+  int32 dgw_port = 3;
+  int32 dev_count = 4;
+  int32 dgw_port_offset = 5;
+  bool support_flowgw_merged = 6;
+}
+
+message DeviceStatus {
+  int32 device_id = 1;
+  int32 device_type = 2;
+}
+
+message SubmodelInstanceName {
+  map<string, bool> submodel_instance_name  = 1;
+}
+
+message DeviceError {
+  repeated uint32 error_code = 1;
+}
+
+message HeartbeatResponse {
+  uint32 abnormal_type = 1;
+  repeated DeviceStatus device_status = 2;
+  map<uint32, SubmodelInstanceName> abnormal_submodel_instance_name = 3;
+  map<uint32, DeviceError> abnormal_device = 4;
+}
+
+message DataFlowExceptionNotify {
+  uint32 type = 1;
+  int32 exception_code = 2;
+  uint64 trans_id = 3;
+  string scope = 4;
+  uint64 user_context_id = 5;
+  bytes exception_context = 6;
+}
+
+message DataFlowExceptionNotifyRequest {
+  uint32 root_model_id = 1;
+  DataFlowExceptionNotify exception_notify = 2;
+}
+
+message DownloadConfigRequest {
+  DeviceConfigType sub_type = 1;
+  int32 device_id = 2;
+  bytes config_data = 3;
+}
+
+message ModelQueueIndices {
+  repeated int32 input_queue_indices = 1;
+  repeated int32 output_queue_indices = 2;
+}
+
+message InputAlignAttrs {
+  uint32 align_max_cache_num = 1;
+  int32 align_timeout = 2;
+  bool drop_when_not_align = 3;
+}
+
+message SubmodelDesc {
+  uint32 submodel_id = 1;
+  string model_name = 2;
+  string model_path = 3;
+  uint64 model_size = 4;
+  repeated int32 input_queue_indices = 5;
+  repeated int32 output_queue_indices = 6;
+  bool is_dynamic = 7;
+  string engine_name = 8;
+  uint32 replica_num = 9;
+  uint32 replica_idx = 10;
+  map<string, string> attrs = 11;
+  map<string, ModelQueueIndices> invoked_model_queues = 12;
+  repeated int32 status_input_queue_indices = 13;
+  repeated int32 status_output_queue_indices = 14;
+  string rank_id = 15;
+  int32 execute_times = 18;
+  int32 process_id = 19;
+  int32 phy_device_id = 21;
+  bool is_head = 23;
+  string model_instance_name = 24;
+  InputAlignAttrs input_align_attrs = 25;
+  string saved_model_file_path = 26;
+  bool is_remote_model = 27;
+  bool is_builtin_udf = 28;
+  uint32 replica_idx_on_node = 29;
+  bool enable_exception_catch  = 30;
+  string scope = 31;
+}
+
+message QueueDesc {
+  int32 type = 1;
+  string name = 2;
+  uint32 depth = 3;
+  string enqueue_policy = 4;
+  int32 fusion_offset = 5;
+  int32 ref_index = 6;
+}
+
+message TagDesc {
+  string name = 1;
+  uint32 tag_id = 2;
+  uint32 rank_id = 3;
+  uint32 peer_rank_id = 4;
+  uint32 depth = 5;
+  int32 peer_node_id = 6;
+  int32 peer_device_id = 7;
+  int32 peer_device_type = 8;
+}
+
+message GroupDesc {
+  repeated int32 endpoint_indices = 1;
+  bool keep_out_of_order = 2;
+}
+
+message EndpointDesc {
+  int32 type = 1;
+  string name = 2;
+  oneof endpoint {
+    QueueDesc queue_desc = 3;
+    TagDesc tag_desc = 4;
+    GroupDesc group_desc = 5;
+  }
+  uint32 instance_num = 6;
+  uint32 instance_idx = 7;
+  int32 device_id = 8;
+  int32 device_type = 9;
+  uint32 model_id = 10;
+  bool is_dynamic_sched = 11;
+  uint32 root_model_id = 12;
+  int32 node_id = 13;
+}
+
+message EndpointBinding {
+  int32 src_index = 1;
+  int32 dst_index = 2;
+}
+
+message FlowRoutePlan {
+  repeated EndpointDesc endpoints = 1;
+  repeated EndpointBinding bindings = 2;
+  int64 route_id = 3;
+  bool has_proxy_q = 4;
+  repeated EndpointBinding bindings_before_load = 5;
+}
+
+message MultiVarManagerRequest {
+  MultiVarManagerInfo multi_var_manager_info = 1;
+  repeated int32 device_ids = 3;
+}
+
+message SharedContentDescRequest {
+  SharedContentDescription shared_content_desc = 1;
+  repeated int32 device_ids = 2;
+  FlowRoutePlan flow_route = 3;
+}
+
+message InitProcessResourceRequest {
+  int32 device_id = 1;
+  string rank_table = 2;
+  int32 rank_table_type = 3;
+  int32 rank_id = 4;
+  repeated int32 res_ids = 5;
+  int32 device_type = 6;
+  bool profiling_on = 7;
+  string remote_group_cache_alloc_config = 8;
+}
+
+message TransferFileRequest {
+  string path = 1;
+  bytes content = 2;
+  bool eof = 3;
+}
+
+message ModelMemSize {
+    uint32 std_mem_size = 1;
+    uint32 shared_mem_size = 2;
+}
+
+message UpdateDeployPlanRequest {
+  int32 device_id = 1;
+  uint64 session_id = 2;
+  uint32 root_model_id = 3;
+  repeated SubmodelDesc submodel_descs = 6;
+  uint32 graph_id = 11;
+  int32 device_type = 12;
+  Options options = 14;
+  ModelMemSize model_mem_size = 15;
+}
+
+message AddFlowRoutePlanRequest {
+  int32 node_id = 1;
+  uint32 root_model_id = 2;
+  FlowRoutePlan flow_route_plan = 3;
+}
+
+message LoadModelRequest {
+  uint32 root_model_id = 1;
+}
+
+message UnloadModelRequest {
+  uint32 model_id = 1;
+  int32 device_id = 2;
+}
+
+enum ExecutorRequestType {
+  kExecutorPreDownload = 0;
+  kExecutorDownload = 1;
+  kExecutorLoad = 2;
+  kExecutorUnload = 3;
+  kExecutorFinalize = 4;
+  kExecutorClear = 5;
+  kExecutorExceptionNotify = 6;
+  kNotify = 7;
+}
+
+message FileConstantDesc {
+  string name = 1;
+  ge.proto.TensorDescriptor tensor_desc = 2;
+  string path = 3;
+  uint64 offset = 4;
+}
+
+message ExecutorRequest {
+  message PreDownloadModelRequest {
+    uint32 model_id = 1;
+    uint32 root_model_id = 2;
+    uint64 model_size = 3;
+  }
+
+  message DownloadModelRequest {
+    uint32 model_id = 1;
+    uint32 root_model_id = 2;
+    uint64 offset = 3;
+    bytes model_data = 4;
+  }
+
+  message SyncVarManageRequest {
+    uint64 var_mem_base = 1;
+    uint64 var_mem_size = 2;
+    VarManagerInfo var_manager_info = 3;
+    repeated SharedContentDescription shared_content_descs = 4;
+  }
+
+  message ModelQueueIds {
+    repeated uint32 input_queues = 1;
+    repeated uint32 output_queues = 2;
+  }
+
+  message QueueAttrs {
+    uint32 queue_id = 1;
+    int32 device_type = 2;
+    int32 device_id = 3;
+    uint32 global_logic_id = 4;
+  }
+
+  message ModelQueuesAttrs {
+    repeated QueueAttrs input_queues_attrs = 1;
+    repeated QueueAttrs output_queues_attrs = 2;
+  }
+
+  message LoadModelRequest {
+    uint32 root_model_id = 1;
+    uint32 model_id = 2;
+    string model_path = 3;
+    bool is_dynamic = 4;
+    uint32 replica_num = 7;
+    uint32 replica_idx = 8;
+    map<string, string> attrs = 9;
+    ModelQueuesAttrs status_queues = 11;
+    uint32 model_uuid = 14;
+    bool is_dynamic_sched = 15;
+    bool need_report_status = 16;
+    int32 execute_times = 18;
+    repeated int32 input_fusion_offsets = 19;
+    int32 phy_device_id = 21;
+    bool is_dynamic_proxy_controlled = 22;
+    ModelQueuesAttrs model_queues_attrs = 23;
+    map<string, ModelQueuesAttrs> invoked_model_queues_attrs = 24;
+    bool is_head = 25;
+    InputAlignAttrs input_align_attrs = 26;
+    string model_instance_name = 27;
+    string saved_model_file_path = 28;
+    bool is_builtin_udf = 29;
+    bool enable_exception_catch  = 30;
+    string scope = 31;
+  }
+
+  message BatchLoadModelMessage {
+    VarManagerInfo var_manager_info = 1;
+    repeated FileConstantDesc file_constant_descs = 2;
+    repeated LoadModelRequest models = 5;
+    uint32 root_model_id = 7;
+    uint32 graph_id = 10;
+    Options options = 12;
+  }
+
+  message UnloadModelMessage {
+    uint32 model_id = 1;
+  }
+
+  message ClearModelRequest {
+    uint32 model_id = 1;
+    int32 clear_msg_type = 2;
+  }
+
+  message UpdateProfRequest {
+    bool is_prof_start = 1;
+    string prof_data = 2;
+  }
+
+  oneof body {
+    SyncVarManageRequest sync_var_manager_message = 1;
+    BatchLoadModelMessage batch_load_model_message = 2;
+    LoadModelRequest load_model_message = 4;
+    UnloadModelMessage unload_model_message = 5;
+    ClearModelRequest clear_model_message = 6;
+    DataFlowExceptionNotifyRequest exception_notify_request = 7;
+    UpdateProfRequest update_prof_message = 8;
+  }
+
+  ExecutorRequestType type = 9;
+  uint64 message_id = 10;
+}
+
+message ExecutorResponse {
+  uint64 message_id = 1;
+  uint32 error_code = 2;
+  string error_message = 3;
+}
+
+message DataGwSchedInfos {
+  uint32 root_model_id = 1;
+  int32 device_id = 2;
+  int32 device_type = 3;
+  uint32 input_queue_indice = 4;
+  uint32 output_queue_indice = 5;
+  bool is_dynamic_sched = 6;
+  bool is_proxy = 7;
+}
+
+message QueueAttrs {
+  uint32 queue_id = 1;
+  int32 device_type = 2; // CPU NPU
+  int32 device_id = 3;
+  uint32 logic_id = 4; // 动态请求全局id
+}
+
+message QueueStatus {
+  QueueAttrs queue_attrs = 1;
+  uint32 queue_depth = 2;
+  uint32 input_consume_num = 3;
+}
+
+message SubmodelStatus {
+  uint32 model_uuid = 1;
+  repeated QueueStatus queue_statuses = 2;
+}
+
+message ExceptionDevInfo {
+  int32 device_id = 1;
+  int32 device_type = 2;
+  int32 node_id = 3;
+}
+
+message ClearModelDataRequest {
+  repeated uint32 root_model_ids = 1;
+  repeated ExceptionDevInfo exception_dev_info = 2; // 全量node异常设备信息
+  int32 clear_type = 3;
+  int32 node_id = 4; // 当前发送的node id
+}
+
+message SendProfInfoRequest {
+  bool is_prof_start = 1;
+  string prof_data = 2;
+  uint32 model_id = 3;
+}

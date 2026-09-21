@@ -1,0 +1,224 @@
+graphengine:
+  commiter:
+    "xxx"
+  team: "graphengine"
+  src:
+    release:
+      - base/common
+      - base/exec_runtime
+      - base/formats
+      - base/slice
+      - base/graph
+      - base/pne
+      - base/metadef
+      - compiler/analyzer/
+      - compiler/engines/manager/engine_manager/
+      - compiler/api/generator/
+      - compiler/graph/build/
+      - compiler/graph/common/
+      - compiler/graph/eager_style_graph_builder/
+      - compiler/graph/fusion/
+      - compiler/graph/fuzz_compile/
+      - compiler/graph/label/
+      - compiler/graph/manager/
+      - compiler/graph/partition/
+      - compiler/graph/passes/
+      - compiler/graph/preprocess/
+      - compiler/graph/optimize/mem_layout_conflict_optimize/
+      - compiler/graph/optimize/symbolic/
+      - compiler/host_kernels/
+      - compiler/inc/
+      - compiler/api/gelib/
+      - compiler/api/aclgrph/
+      - compiler/engines/local_engine/
+      - compiler/engines/custom_engine/
+      - api/atc/
+      - compiler/engines/manager/opskernel_manager/
+      - compiler/opt_info/
+      - compiler/plugin/
+      - compiler/pne/
+      - graph_metadef/
+      - inc/external/
+      - inc/framework/common/
+      - inc/framework/engine/
+      - inc/framework/executor/
+      - inc/framework/generator/
+      - inc/framework/memory/
+      - inc/framework/omg/
+      - inc/framework/pne/
+      - inc/framework/runtime/
+      - inc/graph_metadef/
+      - api/session/
+      - dflow/
+      - runtime/stub
+      - runtime/v1
+      - runtime/v2
+      - runtime/ops/update_model_param
+      - third_party/inc/qos/
+      - python/llm_datadist/llm_datadist
+      - parser/parser/
+    unrelease:
+      - dflow/llm_datadist/v1/llm_error_codes.cc
+      - python/llm_wrapper/CMakeLists.txt
+      - python/llm_wrapper/llm_wrapper.cc
+      - python/ge/ge_api_c_wrapper
+      - dflow/pydflow/wrapper
+      - compiler/CMakeLists.txt
+      - runtime/v2/CMakeLists.txt
+      - runtime/stub/tiny_stub.cc
+      - tests/benchmark
+      - tests/bin
+      - tests/depends
+      - tests/docs
+      - tests/framework
+      - tests/parser
+      - tests/python_tests
+      - tests/graph_metadef
+      - tests/ge/st
+      - tests/ge/ut
+      - tests/CMakeLists.txt
+      - tests/run_test.sh
+      - tests/dflow
+      - scripts/build
+      - scripts/clean
+      - scripts/config
+      - scripts/coverage
+      - scripts/docs
+      - scripts/env
+      - scripts/format
+      - scripts/test
+      - scripts/update
+      - .clang-format
+      - .gitmodule
+      - cmake
+      - scripts/build_fwk.sh
+      - base/CMakeLists.txt
+      - base/parser
+      - runtime/v2/engine/aicpu/kernel/rts_stub.cc
+      - dflow/deployer/daemon/deployer_daemon.cc
+      - dflow/deployer/common/utils/process_utils.cc
+      - compiler/pne/udf/system_utils.cc
+      - dflow/base/utils/process_utils.cc
+      - dflow/base/deploy/deploy_planner.cc
+      - dflow/base/model/flow_model_om_saver.cc
+      - dflow/base/exec_runtime/execution_runtime.cc
+      - dflow/base/model/pne_model.cc
+      - dflow/base/model/flow_model_om_loader.cc
+      - executor/hybrid/hybrid_davinci_model_stub.cc
+      - build.sh
+      - build_third_party.sh
+      - parser/stub
+      - parser/func_to_graph
+      - README.en.md
+      - base/common/types.cc
+      - base/common/option_register.cc
+      - parser/parser/common/parser_types.cc
+      - dflow/flow_graph/data_flow_attr_define.cc
+      - compiler/graph/eager_style/eager_style_generator/main.cc
+      - examples
+      - api/acl
+      - inc/external/acl
+      - graph_metadef/graph/attr/ge_attr_define.cc
+      - runtime/v2/engine/aicpu
+  llt:
+    ut_check:true
+    st_check:true
+ge_executor_c:
+  commiter:
+    "xxx"
+  team: "ge_executor"
+  src:
+    release:
+      - runtime/c/
+      - inc/framework/executor_c/
+    unrelease:
+      - api/acl_c/
+      - scripts/build_executor_c.sh
+      - tests/test_c
+  llt:
+    ut_check:true
+    st_check:true
+fe:
+  commiter:
+    "xxx"
+  team: "fusion_engine"
+  src:
+    release:
+      - compiler/engines/nn_engine
+      - compiler/graphcompiler/CMakeLists.txt
+      - compiler/graphcompiler/engines/CMakeLists.txt
+    unrelease:
+      - tests/engines/nn_engine
+      - tests/engines/CMakeLists.txt
+      - cmake
+      - scripts/build.sh
+      - scripts/build_fe.sh
+      - compiler/engines/nn_engine/utils/common/cann_kb_adapter.cc
+      - compiler/engines/nn_engine/op_compile_adapter
+  llt:
+    ut_check:true
+    st_check:true
+ffts:
+  commiter:
+    "xxx"
+  team: "fusion_engine"
+  src:
+    release:
+      - compiler/engines/ffts_engine
+    unrelease:
+      - tests/engines/ffts_engine
+      - scripts/build_ffts.sh
+      - compiler/engines/ffts_engine/common/ffts_constants.cc
+      - compiler/engines/ffts_engine/inc/ffts_log.h
+  llt:
+    ut_check:true
+    st_check:true
+aicpu:
+  commiter:
+    "xxx"
+  team: "cpu_engine"
+  src:
+    release:
+      - compiler/engines/cpu_engine
+    unrelease:
+      - tests/engines/cpueng
+  llt:
+    ut_check:true
+    st_check:true
+dvpp:
+  commiter:
+    "xxx"
+  team: "dvpp_engine"
+  src:
+    release:
+      - compiler/engines/dvpp_engine
+    unrelease:
+      - tests/engines/dvppeng
+      - compiler/engines/dvpp_engine/ascend910b/dvpp_optimizer_910b.cc
+  llt:
+    ut_check:true
+    st_check:true
+ge_autofuse:
+  commiter:
+    "xxx"
+  team: "ge_autofuse"
+  src:
+    release:
+      - compiler/graph/optimize/autofuse
+    unrelease:
+      - tests/autofuse
+  llt:
+    ut_check:true
+    st_check:true
+rts:
+  commiter:
+    "xxx"
+  team: "rts_engine"
+  src:
+    release:
+      - compiler/graphcompiler/engines/rts_engine
+    unrelease:
+      - tests/engines/rts_engine
+  llt:
+    ut_check:true
+    st_check:true

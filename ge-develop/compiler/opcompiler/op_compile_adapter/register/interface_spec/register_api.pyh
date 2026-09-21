@@ -1,0 +1,41 @@
+# source file:register_api.py
+
+def register_tune_param_check_supported(op_type):
+
+def get_tune_param_check_supported(op_type):
+
+def register_tune_space(op_type):
+
+def get_tune_space(op_type):
+
+def register_op_compute(op_type, op_mode="dynamic", support_fusion=True, **kwargs):
+
+def get_op_compute(op_type, op_mode="dynamic"):
+
+def register_operator(op_type, pattern=None, trans_bool_to_s8=True):
+
+def get_operator(op_type):
+
+def register_param_generalization(op_type):
+
+def get_param_generalization(op_type):
+
+def register_fusion_pass(stage=InvokeStage.STAGE_BUILD, priority=Priority.NORMAL):
+
+def register_pass_for_fusion(match_condition, stage=InvokeStage.STAGE_BUILD, priority=Priority.NORMAL):
+
+def register_op_param_pass(match_condition, stage=InvokeStage.STAGE_BUILD):
+
+def get_all_fusion_pass():
+
+def set_fusion_buildcfg(op_type, build_config):
+
+def get_fusion_buildcfg(op_type=None):
+
+def reset():
+
+def register_classify_processor(pattern=None, op_type=None, support_type="input"):
+
+def get_classify_processor(pattern=None, op_type=None):
+
+def get_op_register_pattern():

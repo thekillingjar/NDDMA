@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<block name="GeExecutorSo" copy_type="delivery" src_path="" dst_path="" install_path="" install_own="$username:$usergroup" install_mod="750" install_type="all">
+    <dir_info value="GeExecutorSo">
+        <path value="$(TARGET_ENV)/lib64"/>
+        <path value="$(TARGET_ENV)/devlib/minios" install_type="devel" install_mod="550"/>
+        <path value="$(TARGET_ENV)/devlib/minios/aarch64" install_type="devel" install_mod="550"/>
+    </dir_info>
+    <file_info value="lib64" copy_type="delivery" dst_path="lib64" install_path="$(TARGET_ENV)/lib64" install_type="all" install_mod="440" optional="true">
+        <file value="libdata_flow_base.so" file_type="shared"/>
+        <file value="libge_common.so" file_type="shared"/>
+        <file value="libmodel_deployer.so" file_type="shared"/>
+        <file value="libnpu_sched_model_loader.so" file_type="shared"/>
+        <file value="libgraph_base.so" file_type="shared"/>
+        <file value="libhcom_executor.so" file_type="shared"/>
+        <file value="liblowering.so" file_type="shared"/>
+        <file value="libge_executor.so" file_type="shared"/>
+        <file value="libge_common_base.so" file_type="shared"/>
+        <file value="libdavinci_executor.so" file_type="shared"/>
+        <file value="libhybrid_executor.so" file_type="shared"/>
+        <file value="libgert.so" file_type="shared"/>
+        <file value="libom2_executor.so" file_type="shared"/>
+        <file value="libgraph.so" file_type="shared"/>
+        <file value="libregister.so" file_type="shared"/>
+        <file value="libregister.a" file_type="static"/>
+        <file value="libacl_mdl.so" file_type="shared"/>
+        <file value="libacl_mdl_impl.so" file_type="shared"/>
+        <file value="libacl_op_executor.so" file_type="shared"/>
+        <file value="libacl_op_executor_impl.so" file_type="shared"/>
+        <file value="libacl_cblas.so" file_type="shared"/>
+        <file value="UpdateModelParam_dav_2201.o"/>
+    </file_info>
+    <file_info value="devlib" copy_type="delivery" dst_path="lib64/stub/linux/x86_64" install_path="$(TARGET_ENV)/devlib/linux/x86_64" install_type="devel" install_mod="440" optional="true">
+        <file value="libge_common.so" file_type="shared"/>
+        <file value="libhybrid_executor.so" file_type="shared"/>
+        <file value="libgert.so" file_type="shared"/>
+        <file value="libregister.so" file_type="shared"/>
+        <file value="liblowering.so" file_type="shared"/>
+        <file value="libgraph.so" file_type="shared"/>
+    </file_info>
+    <file_info value="devlib" copy_type="delivery" dst_path="lib64/stub/linux/aarch64" install_path="$(TARGET_ENV)/devlib/linux/aarch64" install_type="devel" install_mod="440" optional="true">
+        <file value="libge_common.so" file_type="shared"/>
+        <file value="libhybrid_executor.so" file_type="shared"/>
+        <file value="libgert.so" file_type="shared"/>
+        <file value="libregister.so" file_type="shared"/>
+        <file value="liblowering.so" file_type="shared"/>
+        <file value="libgraph.so" file_type="shared"/>
+    </file_info>
+    <file_info value="devlib" copy_type="delivery" dst_path="lib64/stub/minios/aarch64" install_path="$(TARGET_ENV)/devlib/minios/aarch64" install_type="devel" install_mod="440" optional="true">
+        <file value="libgraph.so" file_type="shared"/>
+        <file value="libregister.so" file_type="shared"/>
+        <file value="liblowering.so" file_type="shared"/>
+    </file_info>
+    <file_info value="devlib" copy_type="delivery" dst_path="lib64/stub/linux/x86_64" install_path="$(TARGET_ENV)/devlib/linux/x86_64" install_mod="440" optional="true">
+        <file value="libacl_mdl.so" file_type="shared"/>
+        <file value="libacl_op_executor.so" file_type="shared"/>
+        <file value="libacl_cblas.so" file_type="shared"/>
+    </file_info>
+    <file_info value="devlib" copy_type="delivery" dst_path="lib64/stub/linux/aarch64" install_path="$(TARGET_ENV)/devlib/linux/aarch64" install_mod="440" optional="true">
+        <file value="libacl_mdl.so" file_type="shared"/>
+        <file value="libacl_op_executor.so" file_type="shared"/>
+        <file value="libacl_cblas.so" file_type="shared"/>
+    </file_info>
+</block>

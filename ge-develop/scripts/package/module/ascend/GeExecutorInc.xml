@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<block name="GeExecutorInc" copy_type="delivery" src_path="" dst_path="" install_path="" install_own="$username:$usergroup" install_mod="550" install_type="all">
+    <dir_info value="GeExecutorInc">
+        <path value="$(TARGET_ENV)/include/ge"/>
+        <path value="$(TARGET_ENV)/include/graph" install_mod="555"/>
+        <path value="$(TARGET_ENV)/include/exe_graph" install_mod="555"/>
+        <path value="$(TARGET_ENV)/include/exe_graph/runtime" install_mod="555"/>
+        <path value="$(TARGET_ENV)/include/register" install_mod="555"/>
+        <path value="$(TARGET_ENV)/include/register/scope" install_mod="555"/>
+        <path value="$(TARGET_ENV)/include/acl" install_mod="555"/>
+        <path value="$(TARGET_ENV)/include/acl/ops" install_mod="555"/>
+        <path value="$(TARGET_ENV)/include/acl/error_codes" install_mod="555"/>
+        <path value="$(TARGET_ENV)/include/transformer" install_mod="555"/>
+        <path value="$(TARGET_ENV)/include/proto" install_mod="555"/>
+    </dir_info>
+    <file_info value="include" copy_type="source" src_path="include/external/exe_graph/runtime" dst_path="include/exe_graph/runtime" install_path="$(TARGET_ENV)/include/exe_graph/runtime" install_type="devel" install_mod="440">
+        <file value="eager_op_execution_context.h"/>
+    </file_info>
+    <file_info value="include" copy_type="source" dst_path="include/ge" install_path="$(TARGET_ENV)/include/ge" install_type="devel" install_mod="440">
+        <file value="ge_api_error_codes.h"/>
+        <file value="ge_api_types.h"/>
+        <file value="ge_external_weight_desc.h"/>
+    </file_info>
+    <file_info value="include" copy_type="source" dst_path="include/acl" install_path="$(TARGET_ENV)/include/acl" install_type="devel" install_mod="440">
+        <file value="acl_mdl.h"/>
+        <file value="acl_base_mdl.h"/>
+        <file value="acl_op.h"/>
+    </file_info>
+    <file_info value="include" copy_type="source" dst_path="include/acl/ops" install_path="$(TARGET_ENV)/include/acl/ops" install_type="devel" install_mod="440">
+        <file value="acl_cblas.h"/>
+    </file_info>
+    <file_info value="include" copy_type="source" dst_path="include/graph" install_path="$(TARGET_ENV)/include/graph" install_type="devel" install_mod="440">
+        <file value="graph.h"/>
+    </file_info>
+    <file_info value="include" copy_type="source" dst_path="include/graph" install_path="$(TARGET_ENV)/include/graph" install_type="devel" install_mod="440">
+        <file value="ct_infer_shape_range_context.h"/>
+        <file value="ct_infer_shape_context.h"/>
+        <file value="operator_reg.h"/>
+        <file value="gnode.h"/>
+        <file value="graph_buffer.h"/>
+        <file value="attr_value.h"/>
+        <file value="inference_context.h"/>
+        <file value="operator.h"/>
+        <file value="operator_factory.h"/>
+        <file value="custom_op.h"/>
+        <file value="resource_context.h"/>
+        <file value="kernel_launch_info.h"/>
+        <file value="arg_desc_info.h"/>
+        <file value="hcom_executor.h"/>
+    </file_info>
+    <file_info value="include" copy_type="source" dst_path="include/register" install_path="$(TARGET_ENV)/include/register" install_type="devel" install_mod="440">
+        <file value="register_base.h"/>
+        <file value="op_lib_register.h"/>
+    </file_info>
+    <file_info value="include" copy_type="source" dst_path="include/register" install_path="$(TARGET_ENV)/include/register" install_type="devel" install_mod="440">
+        <file value="register_custom_pass.h"/>
+        <file value="op_binary_resource_manager.h"/>
+        <file value="op_config_registry.h"/>
+        <file value="op_def.h"/>
+        <file value="op_def_registry.h"/>
+        <file value="op_def_factory.h"/>
+    </file_info>
+    <file_info value="include" copy_type="source" dst_path="include/register/scope" install_path="$(TARGET_ENV)/include/register/scope" install_type="devel" install_mod="440">
+        <file value="scope_fusion_pass_register.h"/>
+    </file_info>
+    <file_info value="include" copy_type="source" dst_path="include/transformer" install_path="$(TARGET_ENV)/include/transformer" install_type="devel" install_mod="440">
+        <file value="transfer_def.h"/>
+        <file value="transfer_shape_according_to_format_ext.h"/>
+    </file_info>
+    <file_info value="include" copy_type="source" dst_path="include/proto" install_path="$(TARGET_ENV)/include/proto" install_type="devel" install_mod="440">
+        <file value="caffe.proto"/>
+    </file_info>
+    <file_info value="include" copy_type="source" dst_path="include/proto" install_path="$(TARGET_ENV)/include/proto" install_type="devel" install_mod="440">
+        <file value="ge_onnx.proto"/>
+    </file_info>
+    <file_info value="include" copy_type="source" dst_path="include/proto" install_path="$(TARGET_ENV)/include/proto" install_type="devel" install_mod="440">
+        <file value="ge_ir.proto"/>
+    </file_info>
+</block>

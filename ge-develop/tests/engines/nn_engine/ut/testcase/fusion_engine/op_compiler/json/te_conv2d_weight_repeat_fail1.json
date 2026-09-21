@@ -1,0 +1,17 @@
+{
+    "binFileName":"te_conv2d",
+    "binFileSuffix":".o",
+    "blockDim":1,
+    "cache_read_mode":1,
+    "kernelName":"te_conv2d__kernel0",
+    "magic":"RT_DEV_BINARY_MAGIC_ELF",
+    "parameters":[
+        0,
+        0,
+        0,
+        0,
+        0
+    ],
+    "pattern":"Convolution",
+    "sha256":"948c3218f23edb189e86872f016cb59dbf39b4b6b060d9f1f5d19ce520a3e7fa"
+}

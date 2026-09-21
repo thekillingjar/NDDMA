@@ -1,0 +1,30 @@
+{
+  "func_list": [
+    {
+      "func_name": "Add1",
+      "inputs_index": [
+        0,
+        2
+      ],
+      "outputs_index": [
+        0
+      ]
+    },
+    {
+      "func_name": "Add2",
+      "inputs_index": [
+        1,
+        3
+      ],
+      "outputs_index": [
+        1
+      ]
+    }
+  ],
+  "input_num": 4,
+  "output_num": 2,
+  "target_bin": "libfunc_add.so",
+  "workspace": "./udf_py_ws_sample/udf_add",
+  "cmakelist_path": "../CMakeLists.txt",
+  "heavy_load": true
+}

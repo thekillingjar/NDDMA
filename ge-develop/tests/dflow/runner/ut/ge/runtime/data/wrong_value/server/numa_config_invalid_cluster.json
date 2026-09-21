@@ -1,0 +1,57 @@
+{
+  "cluster_xxx":[
+    {
+      "cluster_nodes" : [
+        {
+          "node_id" : 0,
+          "node_type" : "TestNodeType1",
+          "ipaddr" : "10.216.56.14",
+          "port" : 2509,
+          "is_local" : true,
+          "item_list" : [
+            {
+              "item_id" : 0,
+              "device_id" : 0,
+              "ipaddr" : "192.168.5.199"
+            },
+            {
+              "item_id" : 1,
+              "device_id" : 1,
+              "ipaddr" : "192.168.4.198"
+            },
+            {
+              "item_id" : 2,
+              "device_id" : 2,
+              "ipaddr" : "192.168.3.197"
+            },
+            {
+              "item_id" : 3,
+              "device_id" : 3,
+              "ipaddr" : "192.168.2.196"
+            },
+            {
+              "item_id" : 4,
+              "device_id" : 4,
+              "ipaddr" : "192.168.5.195"
+            },
+            {
+              "item_id" : 5,
+              "device_id" : 5,
+              "ipaddr" : "192.168.4.194"
+            },
+            {
+              "item_id" : 6,
+              "device_id" : 6,
+              "ipaddr" : "192.168.3.193"
+            },
+            {
+              "item_id" : 7,
+              "device_id" : 7,
+              "ipaddr" : "192.168.2.192"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

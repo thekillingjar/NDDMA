@@ -1,0 +1,14 @@
+{
+  "Add":{
+    "isGray":false,
+    "isHeavy":false
+    },
+  "SparseSegmentSumGrad":{
+	"isGray":false,
+	"isHeavy":false
+  },
+   "QuantizeV2":{
+	"isGray":false,
+	"isHeavy":false
+  }
+}

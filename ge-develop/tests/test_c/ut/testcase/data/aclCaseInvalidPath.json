@@ -1,0 +1,10 @@
+{
+    "dump":{
+        "dump_scene":"exception",
+        "dump_list":[
+        ],
+        "dump_mode":"all",
+        "dump_data":"tensor",
+        "dump_op_switch":"on"
+    }
+}

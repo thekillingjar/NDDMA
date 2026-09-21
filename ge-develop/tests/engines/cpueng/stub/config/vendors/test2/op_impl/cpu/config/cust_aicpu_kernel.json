@@ -1,0 +1,30 @@
+{
+    "RandomChoiceWithMask":{
+        "input0":{
+            "format":"NHWC",
+            "name":"x",
+            "type":"DT_BOOL"
+        },
+        "opInfo":{
+            "computeCost":"100",
+            "engine":"DNN_VM_AICPU",
+            "flagAsync":"False",
+            "flagPartial":"False",
+            "functionName":"RandomChoiceWithMask",
+            "kernelSo":"custom_so.ini",
+            "opKernelLib":"CUSTAICPUKernel",
+            "workspaceSize":"500",
+            "userDefined":"True"
+        },
+        "output0":{
+            "format":"NHWC",
+            "name":"y",
+            "type":"DT_INT32"
+        },
+        "ouput1":{
+            "format":"NHWC",
+            "name":"mask",
+            "type":"DT_BOOL"
+        }
+    }
+}

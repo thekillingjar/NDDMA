@@ -1,0 +1,16 @@
+{
+    "dump":{
+        "dump_list":[
+            {
+                "model_name":"concat_nano",
+                "layer":[
+                    "conaacatv2"
+                ]
+            }
+        ],
+        "dump_path":"./",
+        "dump_mode":"all",
+        "dump_data":"tensor",
+        "dump_op_switch":"off"
+    }
+}

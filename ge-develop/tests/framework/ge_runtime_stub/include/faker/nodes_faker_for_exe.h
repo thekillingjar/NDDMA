@@ -1,0 +1,27 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of 
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+#ifndef AIR_CXX_TESTS_FRAMEWORK_GE_RUNTIME_STUB_SRC_NODES_FAKER_NODES_FAKER_FOR_EXE_H_
+#define AIR_CXX_TESTS_FRAMEWORK_GE_RUNTIME_STUB_SRC_NODES_FAKER_NODES_FAKER_FOR_EXE_H_
+#include <string>
+#include "base_node_exe_faker.h"
+#include "stub/gert_runtime_stub.h"
+
+namespace gert {
+class NodesFakerForExe {
+ public:
+  static void FakeNode(const std::string &node_type, GertRuntimeStub *stub, int32_t placement = -1);
+  static BaseNodeExeFaker *GetNodeExeFaker(const std::string &node_type);
+  static void PushCtxFaker(const std::string &node_type, std::shared_ptr<BaseNodeExeFaker> faker);
+  static void PopCtxFaker(const std::string &node_type);
+};
+}  // namespace gert
+
+#endif  // AIR_CXX_TESTS_FRAMEWORK_GE_RUNTIME_STUB_SRC_NODES_FAKER_NODES_FAKER_FOR_EXE_H_

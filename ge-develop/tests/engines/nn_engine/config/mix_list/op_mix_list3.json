@@ -1,0 +1,8 @@
+{
+  "black-list":{
+    "to-remove":["A"]
+  },
+  "white-list":{
+    "to-add":["A"]
+  }
+}

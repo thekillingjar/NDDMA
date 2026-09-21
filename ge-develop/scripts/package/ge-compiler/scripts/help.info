@@ -1,0 +1,25 @@
+  --run                             Install run mode
+    --docker-root=<docker root fs directory>    Specify the path of docker root
+    --install-path=<path>           Install product to specific dir path
+    --install-for-all               Install for all user
+    --pylocal                       Install python packages to install dir path
+  --devel                           Install devel mode
+    --docker-root=<docker root fs directory>    Specify the path of docker root
+    --install-path=<path>           Install product to specific dir path
+    --install-for-all               Install for all user
+    --pylocal                       Install python packages to install dir path
+  --full                            Install full mode
+    --docker-root=<docker root fs directory>    Specify the path of docker root
+    --install-path=<path>           Install product to specific dir path
+    --install-for-all               Install for all user
+    --pylocal                       Install python packages to install dir path
+  --uninstall                       Uninstall product
+    --docker-root=<path>            Specify the path of docker root
+    --install-path=<path>           Uninstall product to specific dir path
+  --upgrade                         Upgrade product immediately
+    --docker-root=<docker root fs directory>    Specify the path of docker root
+    --install-path=<path>           Install product to specific dir path
+    --install-for-all               Install for all user
+    --pylocal                       Install python packages to install dir path
+  --version                         Query the package version
+ 

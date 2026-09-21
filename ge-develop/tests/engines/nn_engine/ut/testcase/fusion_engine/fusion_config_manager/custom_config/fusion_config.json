@@ -1,0 +1,10 @@
+{
+  "Switch": {
+    "GraphFusion": {
+      "CUSTOM_PASS1": "off"
+    },
+    "UBFusion": {
+      "AutomaticUbFusion": "on"
+    }
+  }
+}

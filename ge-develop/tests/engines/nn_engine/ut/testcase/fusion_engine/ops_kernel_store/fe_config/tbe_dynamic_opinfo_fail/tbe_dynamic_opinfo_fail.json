@@ -1,0 +1,22 @@
+{
+    "FormatAgnosticOpFail":{
+        "op": {
+            "pattern": "formatAgnostic"
+        },
+        "input0":{
+            "name":"x0",
+            "dtype": "float,float16",
+            "paramType":"required"
+        },
+        "input1":{
+            "name":"x1",
+            "dtype": "float,float16",
+            "paramType":"required"
+        },
+        "output0":{
+            "name":"y",
+            "dtype": "float,float16",
+            "paramType":"required"
+        }
+    }
+}

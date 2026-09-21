@@ -1,0 +1,34 @@
+[
+    {
+        "compile_flag":1
+    },
+    {
+        "op": "Add",
+        "input_desc": [
+            {
+                "format": "ND",
+                "shape": [3,3],
+                "type": "int32",
+                "name": "x1"
+            },
+            {
+                "format": "ND",
+                "shape": [3,3],
+                "type": "int32"
+            }
+        ],
+        "output_desc": [
+            {
+                "format": "ND",
+                "shape": [3,3],
+                "type": "int32"
+            },
+            {
+                "format": "ND",
+                "shape": [3,3],
+                "type": "int32",
+                "name": "fake"
+            }
+        ]
+    }
+]

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<block name="DflowExecutorBin" copy_type="delivery" src_path="" dst_path="" install_path="" install_own="$username:$usergroup" install_mod="550" install_type="all">
+    <dir_info value="DflowExecutorBin">
+        <path value="$(TARGET_ENV)/bin"/>
+        <path value="runtime"/>
+        <path value="runtime/bin"/>
+    </dir_info>
+    <file_info value="bin" copy_type="delivery" src_path="" dst_path="bin" install_path="$(TARGET_ENV)/bin" install_type="devel" install_mod="550">
+        <file value="deployer_daemon" file_type="executable"/>
+        <file value="npu_executor_main" file_type="executable"/>
+        <file value="host_cpu_executor_main" file_type="executable"/>
+        <file value="udf_executor" file_type="executable"/>
+        <file value="monitor.sh" install_softlink="runtime/bin/monitor.sh"/>
+    </file_info>
+</block>

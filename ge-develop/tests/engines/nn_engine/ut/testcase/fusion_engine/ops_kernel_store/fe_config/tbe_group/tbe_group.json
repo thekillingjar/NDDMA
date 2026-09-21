@@ -1,0 +1,846 @@
+{
+    "DepthwiseConv2dNative": {
+        "async": {
+            "flag": "false"
+        },
+        "attr": {
+            "list": "strides,padding,dilations"
+        },
+        "attr_dilations": {
+            "paramType": "optional",
+            "type": "listInt",
+            "value": "all"
+        },
+        "attr_padding": {
+            "paramType": "required",
+            "type": "str",
+            "value": "all"
+        },
+        "attr_strides": {
+            "paramType": "required",
+            "type": "listInt",
+            "value": "all"
+        },
+        "binfile": {
+            "name": "depthwise_conv2d_native.so"
+        },
+        "compute": {
+            "cost": "10"
+        },
+        "input0": {
+            "dtype": "float16",
+            "format": "NC1HWC0",
+            "name": "featureMap",
+            "paramType": "required",
+            "shape": "all"
+        },
+        "input1": {
+            "dtype": "float16",
+            "format": "C1HWNCoC0",
+            "name": "filter",
+            "paramType": "required",
+            "shape": "all"
+        },
+        "kernel": {
+            "name": "depthwise_conv2d_native"
+        },
+        "output0": {
+            "dtype": "float16",
+            "format": "NC1HWC0",
+            "name": "output",
+            "paramType": "required",
+            "shape": "all"
+        },
+        "partial":{
+            "flag":"true"
+        },
+        "heavyOp":{
+            "flag":"true"
+        }
+    },
+    "A":{
+        "compute":{
+            "cost":"10"
+        },
+        "partial":{
+            "flag":"true"
+        },
+        "async":{
+            "flag":"false"
+        },
+        "input0":{
+            "name":"x",
+            "needCompile":"true",
+            "dtype":"float16",
+            "paramType":"required",
+            "shape":"all",
+            "format":"FRACTAL_Z"
+        },
+        "input1":{
+            "name":"y",
+            "needCompile":"false",
+            "paramType":"required",
+            "dtype":"float16",
+            "format":"FRACTAL_Z",
+            "shape":"all"
+        },
+        "output0":{
+            "name":"z",
+            "paramType":"required",
+            "needCompile":"true",
+            "shape":"all",
+            "dtype":"float16",
+            "format":"FRACTAL_Z"
+        },
+        "kernel_name":{
+            "prefix":"conv3"
+        }
+    },
+    "AA":{
+        "compute":{
+            "cost":"10"
+        },
+        "partial":{
+            "flag":"true"
+        },
+        "async":{
+            "flag":"false"
+        },
+        "input0":{
+            "name":"x",
+            "needCompile":"true",
+            "dtype":"float",
+            "paramType":"required",
+            "shape":"all",
+            "format":"FRACTAL_Z"
+        },
+        "input1":{
+            "name":"y",
+            "needCompile":"false",
+            "paramType":"required",
+            "dtype":"float",
+            "format":"FRACTAL_Z",
+            "shape":"all"
+        },
+        "output0":{
+            "name":"z",
+            "paramType":"required",
+            "needCompile":"true",
+            "shape":"all",
+            "dtype":"float",
+            "format":"FRACTAL_Z"
+        },
+        "kernel_name":{
+            "prefix":"conv3"
+        }
+    },
+    "B":{
+        "compute":{
+            "cost":"10"
+        },
+        "partial":{
+            "flag":"true"
+        },
+        "async":{
+            "flag":"false"
+        },
+        "input0":{
+            "name":"x",
+            "needCompile":"true",
+            "dtype":"float16",
+            "paramType":"required",
+            "shape":"all",
+            "format":"FRACTAL_Z"
+        },
+        "output0":{
+            "name":"z",
+            "paramType":"required",
+            "needCompile":"true",
+            "shape":"all",
+            "dtype":"float16",
+            "format":"FRACTAL_Z"
+        },
+        "kernel_name":{
+            "prefix":"a"
+        }
+    },
+    "C":{
+        "compute":{
+            "cost":"10"
+        },
+        "partial":{
+            "flag":"true"
+        },
+        "async":{
+            "flag":"false"
+        },
+        "input0":{
+            "name":"x",
+            "needCompile":"true",
+            "dtype":"float16,float,double,int8,uint8,float16",
+            "paramType":"required",
+            "shape":"all",
+            "format":"NC1HWC0,NC1HWC0,NC1HWC0,NC1HWC0,NC1HWC0,NDHWC"
+        },
+        "output0":{
+            "name":"z",
+            "paramType":"required",
+            "needCompile":"true",
+            "shape":"all",
+            "dtype":"float16,int8,bool,uint8,uint8,float16",
+            "format":"NC1HWC0,NC1HWC0,NC1HWC0,NC1HWC0,NC1HWC0,NDHWC"
+        },
+        "kernel_name":{
+            "prefix":"a"
+        }
+    },
+    "D":{
+        "compute":{
+            "cost":"10"
+        },
+        "partial":{
+            "flag":"true"
+        },
+        "async":{
+            "flag":"false"
+        },
+        "input0":{
+            "name":"x",
+            "needCompile":"true",
+            "dtype":"float16,float16,float16",
+            "paramType":"required",
+            "shape":"all",
+            "format":"NCHW,NHWC,HWCN"
+        },
+        "output0":{
+            "name":"z",
+            "paramType":"required",
+            "needCompile":"true",
+            "shape":"all",
+            "dtype":"float16,float16,float16",
+            "format":"NCHW,NHWC,HWCN"
+        },
+        "kernel_name":{
+            "prefix":"a"
+        }
+    },
+    "E":{
+        "compute":{
+            "cost":"10"
+        },
+        "partial":{
+            "flag":"true"
+        },
+        "async":{
+            "flag":"false"
+        },
+        "input0":{
+            "name":"x",
+            "needCompile":"true",
+            "dtype":"float16",
+            "paramType":"required",
+            "shape":"all",
+            "format":"FRACTAL_Z_3D"
+        },
+        "input1":{
+            "name":"y",
+            "needCompile":"false",
+            "paramType":"required",
+            "dtype":"float16",
+            "format":"FRACTAL_Z_3D",
+            "shape":"all"
+        },
+        "output0":{
+            "name":"z",
+            "paramType":"required",
+            "needCompile":"true",
+            "shape":"all",
+            "dtype":"float16",
+            "format":"FRACTAL_Z_3D"
+        },
+        "kernel_name":{
+            "prefix":"conv3"
+        }
+    },
+    "EE":{
+        "compute":{
+            "cost":"10"
+        },
+        "partial":{
+            "flag":"true"
+        },
+        "async":{
+            "flag":"false"
+        },
+        "input0":{
+            "name":"x",
+            "needCompile":"true",
+            "dtype":"float",
+            "paramType":"required",
+            "shape":"all",
+            "format":"FRACTAL_Z_3D"
+        },
+        "input1":{
+            "name":"y",
+            "needCompile":"false",
+            "paramType":"required",
+            "dtype":"float",
+            "format":"FRACTAL_Z_3D",
+            "shape":"all"
+        },
+        "output0":{
+            "name":"z",
+            "paramType":"required",
+            "needCompile":"true",
+            "shape":"all",
+            "dtype":"float",
+            "format":"FRACTAL_Z_3D"
+        },
+        "kernel_name":{
+            "prefix":"conv3"
+        }
+    },
+    "Cast":{
+        "compute":{
+            "cost":"10"
+        },
+        "partial":{
+            "flag":"true"
+        },
+        "async":{
+            "flag":"false"
+        },
+        "input0":{
+            "name":"x",
+            "needCompile":"false",
+            "paramType":"required",
+            "shape":"all",
+            "dtype":"float,float,float,float,float16,float16,float16,float16",
+            "format":"NCHW,NC1HWC0,NHWC,ND,NCHW,NC1HWC0,NHWC,ND"
+        },
+        "output0":{
+            "name":"y",
+            "needCompile":"false",
+            "paramType":"required",
+            "shape":"all",
+            "dtype":"float,float,float,float,float16,float16,float16,float16",
+            "format":"NCHW,NC1HWC0,NHWC,ND,NCHW,NC1HWC0,NHWC,ND"
+        },
+        "kernel_name":{
+            "prefix":""
+        }
+    },
+    "TransposeD":{
+        "compute":{
+            "cost":"10"
+        },
+        "partial":{
+            "flag":"true"
+        },
+        "async":{
+            "flag":"false"
+        },
+        "input0":{
+            "name":"x",
+            "needCompile":"false",
+            "paramType":"required",
+            "shape":"all",
+            "dtype":"float,float",
+            "format":"NCHW,NHWC"
+        },
+        "output0":{
+            "name":"y",
+            "needCompile":"false",
+            "paramType":"required",
+            "shape":"all",
+            "dtype":"float,float",
+            "format":"NHWC,NCHW"
+        },
+        "kernel_name":{
+            "prefix":""
+        }
+    },
+    "TransData":{
+        "attr":{
+            "list":"src_format,dst_format"
+        },
+        "attr_dst_format":{
+            "paramType":"required",
+            "type":"str",
+            "value":"NHWC,NCHW,NC1HWC0,FRACTAL_Z,HWCN,C1HWNCoC0,FRACTAL_NZ,ND,NDHWC,NDC1HWC0"
+        },
+        "attr_src_format":{
+            "paramType":"required",
+            "type":"str",
+            "value":"NHWC,NCHW,NC1HWC0,FRACTAL_Z,HWCN,C1HWNCoC0,FRACTAL_NZ,ND,NDHWC,NDC1HWC0"
+        },
+        "input0":{
+            "dtype":"float16,float16,float,float,float,float,float,float,float,float,float,float,float16,float16,float16,float16,float16,float16,float16,float16,float16,float16,float16,float,float16,float,bool,bool",
+            "format":"NDHWC,NDC1HWC0,NHWC,NCHW,NC1HWC0,NC1HWC0,FRACTAL_Z,NCHW,HWCN,FRACTAL_Z,C1HWNCoC0,HWCN,NHWC,NCHW,NC1HWC0,NC1HWC0,FRACTAL_Z,NCHW,HWCN,FRACTAL_Z,C1HWNCoC0,HWCN,ND,ND,FRACTAL_NZ,FRACTAL_NZ,NHWC,NCHW",
+            "name":"src",
+            "paramType":"required"
+        },
+        "output0":{
+            "dtype":"float16,float16,float,float,float,float,float,float,float,float,float,float,float16,float16,float16,float16,float16,float16,float16,float16,float16,float16,float16,float,float16,float,bool,bool",
+            "format":"NDC1HWC0,NDHWC,NC1HWC0,NC1HWC0,NHWC,NCHW,NCHW,FRACTAL_Z,FRACTAL_Z,HWCN,HWCN,C1HWNCoC0,NC1HWC0,NC1HWC0,NHWC,NCHW,NCHW,FRACTAL_Z,FRACTAL_Z,HWCN,HWCN,C1HWNCoC0,FRACTAL_NZ,FRACTAL_NZ,ND,ND,NC1HWC0,NC1HWC0",
+            "name":"dst",
+            "needCompile":"false",
+            "paramType":"required",
+            "shape":"all"
+        }
+    },
+    "Conv2D":{
+        "async":{
+            "flag":"false"
+        },
+        "attr":{
+            "list":"strides,pad,dilations"
+        },
+        "attr_dilations":{
+            "paramType":"required",
+            "type":"listInt",
+            "value":"all"
+        },
+        "attr_pad":{
+            "paramType":"required",
+            "type":"listInt",
+            "value":"all"
+        },
+        "attr_strides":{
+            "paramType":"required",
+            "type":"listInt",
+            "value":"all"
+        },
+        "binfile":{
+            "name":"conv2d.so"
+        },
+        "compute":{
+            "cost":"10"
+        },
+        "input0":{
+            "dtype":"float16",
+            "format":"NC1HWC0",
+            "name":"x",
+            "paramType":"required",
+            "shape":"all"
+        },
+        "input1":{
+            "dtype":"float16",
+            "format":"FRACTAL_Z",
+            "sub_format":"0",
+            "name":"filter",
+            "paramType":"required",
+            "shape":"all"
+        },
+        "input2":{
+            "dtype":"float16",
+            "format":"ND",
+            "name":"bias",
+            "paramType":"optional",
+            "shape":"all"
+        },
+        "kernel":{
+            "name":"conv2d"
+        },
+        "output0":{
+            "dtype":"float16",
+            "format":"NC1HWC0",
+            "name":"y",
+            "paramType":"required",
+            "shape":"all"
+        },
+        "partial":{
+            "flag":"true"
+        },
+        "heavyOp":{
+            "flag":"true"
+        }
+    },
+    "Conv2DBackpropInput":{
+        "async":{
+            "flag":"false"
+        },
+        "attr":{
+            "list":"input_sizes,strides,padding,dilations"
+        },
+        "attr_dilations":{
+            "paramType":"required",
+            "type":"listInt",
+            "value":"all"
+        },
+        "attr_input_sizes":{
+            "paramType":"required",
+            "type":"listInt",
+            "value":"all"
+        },
+        "attr_padding":{
+            "paramType":"required",
+            "type":"str",
+            "value":"all"
+        },
+        "attr_strides":{
+            "paramType":"required",
+            "type":"listInt",
+            "value":"all"
+        },
+        "binfile":{
+            "name":"conv2d_backprop_input.so"
+        },
+        "compute":{
+            "cost":"10"
+        },
+        "input0":{
+            "dtype":"float16",
+            "format":"FRACTAL_Z",
+            "sub_format":"0",
+            "name":"filters",
+            "paramType":"required",
+            "shape":"all"
+        },
+        "input1":{
+            "dtype":"float16",
+            "format":"NC1HWC0",
+            "name":"out_backprop",
+            "paramType":"required",
+            "shape":"all"
+        },
+        "kernel":{
+            "name":"conv2d_backprop_input"
+        },
+        "output0":{
+            "dtype":"float16",
+            "format":"NC1HWC0",
+            "name":"y",
+            "paramType":"required",
+            "shape":"all"
+        },
+        "partial":{
+            "flag":"true"
+        },
+        "heavyOp":{
+            "flag":"true"
+        }
+    },
+    "ApplyMomentum":{
+        "async":{
+            "flag":"false"
+        },
+        "attr":{
+            "list":"use_nesterov"
+        },
+        "attr_use_nesterov":{
+            "defaultValue":"false",
+            "paramType":"optional",
+            "type":"bool",
+            "value":"true,false"
+        },
+        "binfile":{
+            "name":"apply_momentum.so"
+        },
+        "compute":{
+            "cost":"10"
+        },
+        "input0":{
+            "dtype":"float16,float16,float16,float16,float16,float16,float16,float,float,float,float,float,float,float",
+            "format":"NCHW,NC1HWC0,NHWC,FRACTAL_Z_3D,C1HWNCoC0,ND,FRACTAL_Z,NCHW,NC1HWC0,NHWC,C1HWNCoC0,ND,FRACTAL_Z,FRACTAL_Z_3D",
+            "sub_format":"0",
+            "name":"var",
+            "paramType":"required",
+            "shape":"all"
+        },
+        "input1":{
+            "dtype":"float16,float16,float16,float16,float16,float16,float16,float,float,float,float,float,float,float",
+            "format":"NCHW,NC1HWC0,NHWC,FRACTAL_Z_3D,C1HWNCoC0,ND,FRACTAL_Z,NCHW,NC1HWC0,NHWC,C1HWNCoC0,ND,FRACTAL_Z,FRACTAL_Z_3D",
+            "sub_format":"0",
+            "name":"accum",
+            "paramType":"required",
+            "shape":"all"
+        },
+        "input2":{
+            "dtype":"float16,float16,float16,float16,float16,float16,float16,float,float,float,float,float,float,float",
+            "format":"ND,ND,ND,ND,ND,ND,ND,ND,ND,ND,ND,ND,ND,ND",
+            "name":"lr",
+            "paramType":"required",
+            "shape":"all"
+        },
+        "input3":{
+            "dtype":"float16,float16,float16,float16,float16,float16,float16,float,float,float,float,float,float,float",
+            "format":"NCHW,NC1HWC0,NHWC,FRACTAL_Z_3D,C1HWNCoC0,ND,FRACTAL_Z,NCHW,NC1HWC0,NHWC,C1HWNCoC0,ND,FRACTAL_Z,FRACTAL_Z_3D",
+            "sub_format":"0",
+            "name":"grad",
+            "paramType":"required",
+            "shape":"all"
+        },
+        "input4":{
+            "dtype":"float16,float16,float16,float16,float16,float16,float16,float,float,float,float,float,float,float",
+            "format":"ND,ND,ND,ND,ND,ND,ND,ND,ND,ND,ND,ND,ND,ND",
+            "name":"momentum",
+            "paramType":"required",
+            "shape":"all"
+        },
+        "kernel":{
+            "name":"apply_momentum"
+        },
+        "output0":{
+            "dtype":"float16,float16,float16,float16,float16,float16,float16,float,float,float,float,float,float,float",
+            "format":"NCHW,NC1HWC0,NHWC,FRACTAL_Z_3D,C1HWNCoC0,ND,FRACTAL_Z,NCHW,NC1HWC0,NHWC,C1HWNCoC0,ND,FRACTAL_Z,FRACTAL_Z_3D",
+            "sub_format":"0",
+            "name":"var",
+            "paramType":"required",
+            "shape":"all"
+        },
+        "partial":{
+            "flag":"true"
+        }
+    },
+    "L2Loss":{
+        "async":{
+            "flag":"false"
+        },
+        "binfile":{
+            "name":"l2_loss.so"
+        },
+        "compute":{
+            "cost":"10"
+        },
+        "input0":{
+            "dtype":"float16,float16,float16,float16,float16,float,float,float,float,float",
+            "format":"NCHW,NC1HWC0,NHWC,ND,FRACTAL_Z,NCHW,NC1HWC0,NHWC,ND,FRACTAL_Z",
+            "sub_format":"0",
+            "name":"x",
+            "paramType":"required",
+            "shape":"all"
+        },
+        "kernel":{
+            "name":"L2Loss"
+        },
+        "output0":{
+            "dtype":"float16,float16,float16,float16,float16,float,float,float,float,float",
+            "format":"NCHW,NC1HWC0,NHWC,ND,FRACTAL_Z,NCHW,NC1HWC0,NHWC,ND,FRACTAL_Z",
+            "sub_format":"0",
+            "name":"y",
+            "paramType":"required",
+            "shape":"all"
+        },
+        "partial":{
+            "flag":"true"
+        }
+    },
+    "BiasAddGrad":{
+        "async":{
+            "flag":"false"
+        },
+        "attr":{
+            "list":"data_format"
+        },
+        "attr_data_format":{
+            "paramType":"required",
+            "type":"str",
+            "value":"all"
+        },
+        "binfile":{
+            "name":"biasaddgrad.so"
+        },
+        "compute":{
+            "cost":"10"
+        },
+        "input0":{
+            "dtype":"float16,float,float16,float,float16,float16,float,float",
+            "format":"FRACTAL_Z,FRACTAL_Z,FRACTAL_Z,FRACTAL_Z,NCHW,NHWC,NCHW,NHWC",
+            "name":"x",
+            "needCompile":"false",
+            "paramType":"required",
+            "shape":"all"
+        },
+        "kernel":{
+            "name":"biasaddgrad"
+        },
+        "output0":{
+            "dtype":"float16,float,float16,float,float16,float16,float,float",
+            "format":"NHWC,NHWC,NCHW,NCHW,NCHW,NHWC,NCHW,NHWC",
+            "name":"y",
+            "paramType":"required",
+            "shape":"all"
+        },
+        "partial":{
+            "flag":"true"
+        }
+    },
+    "Mul":{
+        "async":{
+            "flag":"false"
+        },
+        "binfile":{
+            "name":"mul.so"
+        },
+        "compute":{
+            "cost":"10"
+        },
+        "input0":{
+            "dtype":"float16,float,int32,int32,int32,int32,float16,float16,float16,float16,float16,float,float,float,float,float",
+            "format":"FRACTAL_Z,FRACTAL_Z,ND,NCHW,NHWC,NC1HWC0,ND,NCHW,NHWC,NC1HWC0,FRACTAL_Z,ND,NCHW,NHWC,NC1HWC0,FRACTAL_Z",
+            "sub_format":"0",
+            "name":"x1",
+            "paramType":"required",
+            "shape":"all"
+        },
+        "input1":{
+            "dtype":"float16,float,int32,int32,int32,int32,float16,float16,float16,float16,float16,float,float,float,float,float",
+            "format":"FRACTAL_Z,FRACTAL_Z,ND,NCHW,NHWC,NC1HWC0,ND,NCHW,NHWC,NC1HWC0,ND,ND,NCHW,NHWC,NC1HWC0,ND",
+            "sub_format":"0",
+            "name":"x2",
+            "paramType":"required",
+            "shape":"all"
+        },
+        "kernel":{
+            "name":"mul"
+        },
+        "output0":{
+            "dtype":"float16,float,int32,int32,int32,int32,float16,float16,float16,float16,float16,float,float,float,float,float",
+            "format":"FRACTAL_Z,FRACTAL_Z,ND,NCHW,NHWC,NC1HWC0,ND,NCHW,NHWC,NC1HWC0,FRACTAL_Z,ND,NCHW,NHWC,NC1HWC0,FRACTAL_Z",
+            "sub_format":"0",
+            "name":"y",
+            "paramType":"required",
+            "shape":"all"
+        },
+        "partial":{
+            "flag":"true"
+        }
+    },
+    "Const": {
+        "input0": {
+            "dtype": "float16",
+            "format": "NDC1HWC0",
+            "name": "x",
+            "paramType": "required",
+            "shape": "all"
+        },
+        "input1": {
+            "dtype": "float16",
+            "format": "FRACTAL_Z_3D",
+            "name": "filter",
+            "paramType": "optional",
+            "shape": "all"
+        },
+        "input2": {
+            "dtype": "float16",
+            "format": "ND",
+            "name": "bias",
+            "paramType": "optional",
+            "shape": "all"
+        },
+        "kernel": {
+            "name": "conv2d"
+        },
+        "output0": {
+            "dtype": "float16",
+            "format": "NDC1HWC0",
+            "name": "y",
+            "paramType": "required",
+            "shape": "all"
+        },
+        "partial": {
+            "flag": "true"
+        }
+    },
+    "Data": {
+        "input0": {
+            "dtype": "float16",
+            "format": "NDC1HWC0",
+            "name": "x",
+            "paramType": "required",
+            "shape": "all"
+        },
+        "input1": {
+            "dtype": "float16",
+            "format": "FRACTAL_Z_3D",
+            "name": "filter",
+            "paramType": "optional",
+            "shape": "all"
+        },
+        "input2": {
+            "dtype": "float16",
+            "format": "ND",
+            "name": "bias",
+            "paramType": "optional",
+            "shape": "all"
+        },
+        "kernel": {
+            "name": "conv2d"
+        },
+        "output0": {
+            "dtype": "float16",
+            "format": "NDC1HWC0",
+            "name": "y",
+            "paramType": "required",
+            "shape": "all"
+        },
+        "partial": {
+            "flag": "true"
+        }
+    },
+    "PadD":{
+        "dynamicFormat":{
+            "flag":"true"
+        },
+        "input0":{
+            "name":"x",
+            "paramType":"required"
+        },
+        "output0":{
+            "name":"y",
+            "paramType":"required"
+        }
+    },
+    "Maximum":{
+        "input0":{
+            "dtype":"float16,float,int32,int8",
+            "name":"x1",
+            "paramType":"required"
+        },
+        "input1":{
+            "dtype":"float16,float,int32,int8",
+            "name":"x2",
+            "paramType":"required"
+        },
+        "op":{
+            "pattern":"broadcast"
+        },
+        "output0":{
+            "dtype":"float16,float,int32,int8",
+            "name":"y",
+            "needCompile":"true",
+            "paramType":"required",
+            "shape":"all"
+        }
+    },
+    "ReduceMeanD":{
+        "attr":{
+            "list":"axes,keep_dims"
+        },
+        "attr_axes":{
+            "paramType":"required",
+            "type":"listInt",
+            "value":"all"
+        },
+        "attr_keep_dims":{
+            "defaultValue":"false",
+            "paramType":"optional",
+            "type":"bool",
+            "value":"all"
+        },
+        "input0":{
+            "dtype":"float16,float",
+            "name":"x",
+            "paramType":"required"
+        },
+        "op":{
+            "pattern":"reduce"
+        },
+        "output0":{
+            "dtype":"float16,float",
+            "name":"y",
+            "paramType":"required"
+        }
+    }
+}

@@ -1,0 +1,1103 @@
+{
+  "Rules":[
+    {
+      "RuleName": "LayerNormGradFusionRule",
+      "OuterInputs": [
+        {
+          "name": "Input0"
+        },
+        {
+          "name": "Input1"
+        },
+        {
+          "name": "NegIn"
+        },
+        {
+          "name": "Mul1In"
+        },
+        {
+          "name": "Mul2In"
+        }
+      ],
+      "OuterOutputs": [
+        {
+          "name": "Output0"
+        },
+        {
+          "name": "Output1"
+        }
+      ],
+      "OriginGraph": {
+        "Nodes": [
+          {
+            "name": "Neg0",
+            "type": [
+              "Neg"
+            ]
+          },
+          {
+            "name": "Mul1",
+            "type": [
+              "Mul"
+            ]
+          },
+          {
+            "name": "Mul2",
+            "type": [
+              "Mul"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0",
+            "dst": "Neg0:0"
+          },
+          {
+            "src": "Input1",
+            "dst": "Neg0:1"
+          },
+          {
+            "src": "NegIn",
+            "dst": "Neg0:2"
+          },
+          {
+            "src": "Neg0:0",
+            "dst": "Mul1:0"
+          },
+          {
+            "src": "Mul1In",
+            "dst": "Mul1:1"
+          },
+          {
+            "src": "Mul1:0",
+            "dst": "Mul2:0"
+          },
+          {
+            "src": "Mul2In",
+            "dst": "Mul2:1"
+          },
+          {
+            "src": "Mul2:0",
+            "dst": "Output0"
+          },
+          {
+            "src": "Mul1:1",
+            "dst": "Output1"
+          }
+        ]
+      },
+      "FusionGraph": {
+        "Nodes": [
+          {
+            "name": "LayerNormGrad",
+            "type": [
+              "LayerNormGrad"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0",
+            "dst": "LayerNormGrad:0"
+          },
+          {
+            "src": "Input1",
+            "dst": "LayerNormGrad:1"
+          },
+          {
+            "src": "NegIn",
+            "dst": "LayerNormGrad:2"
+          },
+          {
+            "src": "Mul1In",
+            "dst": "LayerNormGrad:3"
+          },
+          {
+            "src": "Mul2In",
+            "dst": "LayerNormGrad:4"
+          },
+          {
+            "src": "LayerNormGrad:0",
+            "dst": "Output0"
+          },
+          {
+            "src": "LayerNormGrad:1",
+            "dst": "Output1"
+          }
+        ]
+      }
+    },
+    {
+      "RuleName": "LayerNormGradFusionRule2",
+      "OuterInputs": [
+        {
+          "name": "Input0"
+        },
+        {
+          "name": "Input1"
+        },
+        {
+          "name": "Input2"
+        },
+        {
+          "name": "Input3"
+        },
+        {
+          "name": "Input4"
+        }
+      ],
+      "OuterOutputs": [
+        {
+          "name": "Output0"
+        },
+        {
+          "name": "Output1"
+        }
+      ],
+      "OriginGraph": {
+        "Nodes": [
+          {
+            "name": "Neg0",
+            "type": [
+              "Neg"
+            ]
+          },
+          {
+            "name": "Mul1",
+            "type": [
+              "Mul"
+            ]
+          },
+          {
+            "name": "Mul2",
+            "type": [
+              "Mul"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0",
+            "dst": "Neg0:0"
+          },
+          {
+            "src": "Input1",
+            "dst": "Neg0:1"
+          },
+          {
+            "src": "Input2",
+            "dst": "Neg0:2"
+          },
+          {
+            "src": "Neg0:0",
+            "dst": "Mul1:0"
+          },
+          {
+            "src": "Neg0:0",
+            "dst": "Mul2:0"
+          },
+          {
+            "src": "Input3",
+            "dst": "Mul1:1"
+          },
+          {
+            "src": "Input4",
+            "dst": "Mul2:1"
+          },
+          {
+            "src": "Mul1:0",
+            "dst": "Output0"
+          },
+          {
+            "src": "Mul2:0",
+            "dst": "Output1"
+          }
+        ]
+      },
+      "FusionGraph": {
+        "Nodes": [
+          {
+            "name": "LayerNormGrad",
+            "type": [
+              "LayerNormGrad"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0",
+            "dst": "LayerNormGrad:0"
+          },
+          {
+            "src": "Input1",
+            "dst": "LayerNormGrad:1"
+          },
+          {
+            "src": "Input2",
+            "dst": "LayerNormGrad:2"
+          },
+          {
+            "src": "Input3",
+            "dst": "LayerNormGrad:3"
+          },
+          {
+            "src": "Input4",
+            "dst": "LayerNormGrad:4"
+          },
+          {
+            "src": "LayerNormGrad:0",
+            "dst": "Output0"
+          },
+          {
+            "src": "LayerNormGrad:1",
+            "dst": "Output1"
+          }
+        ]
+      }
+    },
+    {
+      "RuleName": "LayerNormGradFusionRule2WithCtrl",
+      "OuterInputs": [
+        {
+          "name": "Input0"
+        },
+        {
+          "name": "Input1"
+        },
+        {
+          "name": "Input2"
+        },
+        {
+          "name": "Input3"
+        },
+        {
+          "name": "Input4"
+        }
+      ],
+      "OuterOutputs": [
+        {
+          "name": "Output0"
+        },
+        {
+          "name": "Output1"
+        }
+      ],
+      "OriginGraph": {
+        "Nodes": [
+          {
+            "name": "Neg0",
+            "type": [
+              "Neg"
+            ]
+          },
+          {
+            "name": "Mul1",
+            "type": [
+              "Mul"
+            ]
+          },
+          {
+            "name": "Mul2",
+            "type": [
+              "Mul"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0",
+            "dst": "Neg0:0"
+          },
+          {
+            "src": "Input0:-1",
+            "dst": "Neg0:-1"
+          },
+          {
+            "src": "Input1",
+            "dst": "Neg0:1"
+          },
+          {
+            "src": "Input2",
+            "dst": "Neg0:2"
+          },
+          {
+            "src": "Neg0:0",
+            "dst": "Mul1:0"
+          },
+          {
+            "src": "Neg0:0",
+            "dst": "Mul2:0"
+          },
+          {
+            "src": "Input3",
+            "dst": "Mul1:1"
+          },
+          {
+            "src": "Input4",
+            "dst": "Mul2:1"
+          },
+          {
+            "src": "Mul1:0",
+            "dst": "Output0"
+          },
+          {
+            "src": "Mul2:0",
+            "dst": "Output1"
+          },
+          {
+            "src": "Mul2:-1",
+            "dst": "Output1:-1"
+          }
+        ]
+      },
+      "FusionGraph": {
+        "Nodes": [
+          {
+            "name": "LayerNormGrad",
+            "type": [
+              "LayerNormGrad"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0",
+            "dst": "LayerNormGrad:0"
+          },
+          {
+            "src": "Input1",
+            "dst": "LayerNormGrad:1"
+          },
+          {
+            "src": "Input2",
+            "dst": "LayerNormGrad:2"
+          },
+          {
+            "src": "Input3",
+            "dst": "LayerNormGrad:3"
+          },
+          {
+            "src": "Input4",
+            "dst": "LayerNormGrad:4"
+          },
+          {
+            "src": "LayerNormGrad:0",
+            "dst": "Output0"
+          },
+          {
+            "src": "LayerNormGrad:1",
+            "dst": "Output1"
+          }
+        ]
+      }
+    },
+    {
+      "RuleName": "LayerNormGradFusionRule2WithCtrl2",
+      "OuterInputs": [
+        {
+          "name": "Input0"
+        },
+        {
+          "name": "Input1"
+        },
+        {
+          "name": "Input2"
+        },
+        {
+          "name": "Input3"
+        },
+        {
+          "name": "Input4"
+        }
+      ],
+      "OuterOutputs": [
+        {
+          "name": "Output0"
+        },
+        {
+          "name": "Output1"
+        }
+      ],
+      "OriginGraph": {
+        "Nodes": [
+          {
+            "name": "Neg0",
+            "type": [
+              "Neg"
+            ]
+          },
+          {
+            "name": "Mul1",
+            "type": [
+              "Mul"
+            ]
+          },
+          {
+            "name": "Mul2",
+            "type": [
+              "Mul"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0",
+            "dst": "Neg0:0"
+          },
+          {
+            "src": "Input0:-1",
+            "dst": "Neg0:-1"
+          },
+          {
+            "src": "Input1",
+            "dst": "Neg0:1"
+          },
+          {
+            "src": "Input2",
+            "dst": "Neg0:2"
+          },
+          {
+            "src": "Neg0:0",
+            "dst": "Mul1:0"
+          },
+          {
+            "src": "Neg0:0",
+            "dst": "Mul2:0"
+          },
+          {
+            "src": "Input3",
+            "dst": "Mul1:1"
+          },
+          {
+            "src": "Input4",
+            "dst": "Mul2:1"
+          },
+          {
+            "src": "Mul1:0",
+            "dst": "Output0"
+          },
+          {
+            "src": "Mul2:0",
+            "dst": "Output1"
+          },
+          {
+            "src": "Mul2:-1",
+            "dst": "Output1:-1"
+          }
+        ]
+      },
+      "FusionGraph": {
+        "Nodes": [
+          {
+            "name": "LayerNormGrad",
+            "type": [
+              "LayerNormGrad"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0:-1",
+            "dst": "LayerNormGrad:-1"
+          },
+          {
+            "src": "Input0",
+            "dst": "LayerNormGrad:0"
+          },
+          {
+            "src": "Input1",
+            "dst": "LayerNormGrad:1"
+          },
+          {
+            "src": "Input2",
+            "dst": "LayerNormGrad:2"
+          },
+          {
+            "src": "Input3",
+            "dst": "LayerNormGrad:3"
+          },
+          {
+            "src": "Input4",
+            "dst": "LayerNormGrad:4"
+          },
+          {
+            "src": "LayerNormGrad:0",
+            "dst": "Output0"
+          },
+          {
+            "src": "LayerNormGrad:1",
+            "dst": "Output1"
+          },
+          {
+            "src": "LayerNormGrad:-1",
+            "dst": "Output1:-1"
+          }
+        ]
+      }
+    },
+    {
+      "RuleName": "LayerNormGradFusionRule2WithCtrl3",
+      "OuterInputs": [
+        {
+          "name": "Input0"
+        },
+        {
+          "name": "Input1"
+        },
+        {
+          "name": "Input2"
+        },
+        {
+          "name": "Input3"
+        },
+        {
+          "name": "Input4"
+        }
+      ],
+      "OuterOutputs": [
+        {
+          "name": "Output0"
+        },
+        {
+          "name": "Output1"
+        }
+      ],
+      "OriginGraph": {
+        "Nodes": [
+          {
+            "name": "LayerNormGrad",
+            "type": [
+              "LayerNormGrad"
+            ]
+          },
+          {
+            "name": "Mul1",
+            "type": [
+              "Mul"
+            ]
+          },
+          {
+            "name": "Mul2",
+            "type": [
+              "Mul"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0",
+            "dst": "LayerNormGrad:0"
+          },
+          {
+            "src": "Input0:-1",
+            "dst": "LayerNormGrad:-1"
+          },
+          {
+            "src": "Input1",
+            "dst": "LayerNormGrad:1"
+          },
+          {
+            "src": "Input2",
+            "dst": "LayerNormGrad:2"
+          },
+          {
+            "src": "LayerNormGrad:0",
+            "dst": "Mul1:0"
+          },
+          {
+            "src": "LayerNormGrad:0",
+            "dst": "Mul2:0"
+          },
+          {
+            "src": "Input3",
+            "dst": "Mul1:1"
+          },
+          {
+            "src": "Input4",
+            "dst": "Mul2:1"
+          },
+          {
+            "src": "Mul1:0",
+            "dst": "Output0"
+          },
+          {
+            "src": "Mul2:0",
+            "dst": "Output1"
+          },
+          {
+            "src": "Mul2:-1",
+            "dst": "Output1:-1"
+          }
+        ]
+      },
+      "FusionGraph": {
+        "Nodes": [
+          {
+            "name": "LayerNormGrad",
+            "type": [
+              "LayerNormGrad"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0:-1",
+            "dst": "LayerNormGrad:-1"
+          },
+          {
+            "src": "Input0",
+            "dst": "LayerNormGrad:0"
+          },
+          {
+            "src": "Input1",
+            "dst": "LayerNormGrad:1"
+          },
+          {
+            "src": "Input2",
+            "dst": "LayerNormGrad:2"
+          },
+          {
+            "src": "Input3",
+            "dst": "LayerNormGrad:3"
+          },
+          {
+            "src": "Input4",
+            "dst": "LayerNormGrad:4"
+          },
+          {
+            "src": "LayerNormGrad:0",
+            "dst": "Output0"
+          },
+          {
+            "src": "LayerNormGrad:1",
+            "dst": "Output1"
+          },
+          {
+            "src": "LayerNormGrad:-1",
+            "dst": "Output1:-1"
+          }
+        ]
+      }
+    },
+    {
+      "RuleName": "LayerNormGradFusionRule3",
+      "OuterInputs": [
+        {
+          "name": "Input0"
+        },
+        {
+          "name": "Input1"
+        },
+        {
+          "name": "Input2"
+        },
+        {
+          "name": "Input3"
+        },
+        {
+          "name": "Input4"
+        }
+      ],
+      "OuterOutputs": [
+        {
+          "name": "Output0"
+        },
+        {
+          "name": "Output1"
+        }
+      ],
+      "OriginGraph": {
+        "Nodes": [
+          {
+            "name": "Neg0",
+            "type": [
+              "Neg"
+            ]
+          },
+          {
+            "name": "Mul1",
+            "type": [
+              "Mul"
+            ]
+          },
+          {
+            "name": "Mul2",
+            "type": [
+              "Mul"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0",
+            "dst": "Neg0:0"
+          },
+          {
+            "src": "Input1",
+            "dst": "Neg0:1"
+          },
+          {
+            "src": "Input2",
+            "dst": "Neg0:2"
+          },
+          {
+            "src": "Neg0:0",
+            "dst": "Mul1:0"
+          },
+          {
+            "src": "Neg0:0",
+            "dst": "Mul2:0"
+          },
+          {
+            "src": "Input3",
+            "dst": "Mul1:1"
+          },
+          {
+            "src": "Input4",
+            "dst": "Mul2:1"
+          },
+          {
+            "src": "Mul1:0",
+            "dst": "Output0"
+          },
+          {
+            "src": "Mul2:0",
+            "dst": "Output1"
+          }
+        ]
+      },
+      "FusionGraph": {
+        "Nodes": [
+          {
+            "name": "LayerNormGrad",
+            "type": [
+              "LayerNormGrad"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0",
+            "dst": "LayerNormGrad:0"
+          },
+          {
+            "src": "Input1",
+            "dst": "LayerNormGrad:1"
+          },
+          {
+            "src": "Input2",
+            "dst": "LayerNormGrad:2"
+          },
+          {
+            "src": "Input3",
+            "dst": "LayerNormGrad:3"
+          },
+          {
+            "src": "Input4",
+            "dst": "LayerNormGrad:4"
+          },
+          {
+            "src": "LayerNormGrad:0",
+            "dst": "Output0"
+          },
+          {
+            "src": "LayerNormGrad:1",
+            "dst": "Output1"
+          }
+        ],
+        "Attrs": [
+          {
+            "attr": "LayerNormGrad.test",
+            "value": "Mul2.test",
+            "expr": "="
+          }
+        ]
+      }
+    },
+    {
+      "RuleName": "LayerNormGradFusionRule4",
+      "OuterInputs": [
+        {
+          "name": "Input0"
+        },
+        {
+          "name": "Input1"
+        },
+        {
+          "name": "Input2"
+        },
+        {
+          "name": "Input3"
+        },
+        {
+          "name": "Input4"
+        }
+      ],
+      "OuterOutputs": [
+        {
+          "name": "Output0"
+        },
+        {
+          "name": "Output1"
+        }
+      ],
+      "OriginGraph": {
+        "Nodes": [
+          {
+            "name": "Neg0",
+            "type": [
+              "Neg"
+            ]
+          },
+          {
+            "name": "Mul1",
+            "type": [
+              "Mul"
+            ]
+          },
+          {
+            "name": "Mul2",
+            "type": [
+              "Mul"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0",
+            "dst": "Neg0:0"
+          },
+          {
+            "src": "Input1",
+            "dst": "Neg0:1"
+          },
+          {
+            "src": "Input2",
+            "dst": "Neg0:2"
+          },
+          {
+            "src": "Neg0:0",
+            "dst": "Mul1:0"
+          },
+          {
+            "src": "Neg0:0",
+            "dst": "Mul2:0"
+          },
+          {
+            "src": "Input3",
+            "dst": "Mul1:1"
+          },
+          {
+            "src": "Input4",
+            "dst": "Mul2:1"
+          },
+          {
+            "src": "Mul1:0",
+            "dst": "Output0"
+          },
+          {
+            "src": "Mul2:0",
+            "dst": "Output1"
+          }
+        ]
+      },
+      "FusionGraph": {
+        "Nodes": [
+          {
+            "name": "Add",
+            "type": [
+              "Add"
+            ]
+          },
+          {
+            "name": "LayerNormGrad",
+            "type": [
+              "LayerNormGrad"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0",
+            "dst": "Add:0"
+          },
+          {
+            "src": "Input1",
+            "dst": "Add:1"
+          },
+          {
+            "src": "Add:0",
+            "dst": "LayerNormGrad:0"
+          },
+          {
+            "src": "Add:0",
+            "dst": "LayerNormGrad:1"
+          },
+          {
+            "src": "Input2",
+            "dst": "LayerNormGrad:2"
+          },
+          {
+            "src": "Input3",
+            "dst": "LayerNormGrad:3"
+          },
+          {
+            "src": "Input4",
+            "dst": "LayerNormGrad:4"
+          },
+          {
+            "src": "LayerNormGrad:0",
+            "dst": "Output0"
+          },
+          {
+            "src": "LayerNormGrad:1",
+            "dst": "Output1"
+          }
+        ]
+      }
+    },
+    {
+      "RuleName": "LayerNormGradFusionRule5",
+      "OuterInputs": [
+        {
+          "name": "Input0"
+        },
+        {
+          "name": "Input1"
+        },
+        {
+          "name": "Input2"
+        },
+        {
+          "name": "Input3"
+        },
+        {
+          "name": "Input4"
+        }
+      ],
+      "OuterOutputs": [
+        {
+          "name": "Output0"
+        },
+        {
+          "name": "Output1"
+        }
+      ],
+      "OriginGraph": {
+        "Nodes": [
+          {
+            "name": "Neg0",
+            "type": [
+              "Neg"
+            ]
+          },
+          {
+            "name": "Mul1",
+            "type": [
+              "Mul"
+            ]
+          },
+          {
+            "name": "Mul2",
+            "type": [
+              "Mul"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0",
+            "dst": "Neg0:0"
+          },
+          {
+            "src": "Input1",
+            "dst": "Neg0:1"
+          },
+          {
+            "src": "Input2",
+            "dst": "Neg0:2"
+          },
+          {
+            "src": "Neg0:0",
+            "dst": "Mul1:0"
+          },
+          {
+            "src": "Neg0:0",
+            "dst": "Mul2:0"
+          },
+          {
+            "src": "Input3",
+            "dst": "Mul1:1"
+          },
+          {
+            "src": "Input4",
+            "dst": "Mul2:1"
+          },
+          {
+            "src": "Mul1:0",
+            "dst": "Output0"
+          },
+          {
+            "src": "Mul2:0",
+            "dst": "Output1"
+          }
+        ]
+      },
+      "FusionGraph": {
+        "Nodes": [
+          {
+            "name": "ReduceMean",
+            "type": [
+              "ReduceMean"
+            ]
+          },
+          {
+            "name": "LayerNormGrad",
+            "type": [
+              "LayerNormGrad"
+            ]
+          }
+        ],
+        "Edges": [
+          {
+            "src": "Input0",
+            "dst": "ReduceMean:0"
+          },
+          {
+            "src": "Input1",
+            "dst": "ReduceMean:1"
+          },
+          {
+            "src": "ReduceMean:0",
+            "dst": "LayerNormGrad:0"
+          },
+          {
+            "src": "ReduceMean:0",
+            "dst": "LayerNormGrad:1"
+          },
+          {
+            "src": "Input2",
+            "dst": "LayerNormGrad:2"
+          },
+          {
+            "src": "Input3",
+            "dst": "LayerNormGrad:3"
+          },
+          {
+            "src": "Input4",
+            "dst": "LayerNormGrad:4"
+          },
+          {
+            "src": "LayerNormGrad:0",
+            "dst": "Output0"
+          },
+          {
+            "src": "LayerNormGrad:1",
+            "dst": "Output1"
+          }
+        ]
+      }
+    }
+  ]
+}
