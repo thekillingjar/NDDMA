@@ -17,17 +17,18 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 DATA_COLLECTION_DIR = SCRIPT_DIR.parent / "Data_collection"
 HARNESS_DIR = DATA_COLLECTION_DIR / "common" / "executables" / "standalone_nddma"
 ANALYSIS_SCRIPT = HARNESS_DIR / "analyze_profiling_with_params.py"
-DEFAULT_OUTPUT_DIR = SCRIPT_DIR / "results_analysis" / "round2_1d_single_core"
-DEFAULT_FACTOR_CSV = SCRIPT_DIR / "generated" / "round2_1d_single_core_factor.csv"
-ROUND_ID = "r2_1d_single_core"
-GROUP_ID = "R2_1D"
+DEFAULT_ANA_DIR = SCRIPT_DIR.parent / "Ana" / "round1"
+DEFAULT_OUTPUT_DIR = DEFAULT_ANA_DIR / "collection"
+DEFAULT_FACTOR_CSV = DEFAULT_ANA_DIR / "round1_1d_single_core_factor.csv"
+ROUND_ID = "r1_1d_single_core"
+GROUP_ID = "R1_1D"
 DTYPE_SIZES = {"int8_t": 1, "int16_t": 2, "int32_t": 4, "int64_t": 8}
 DTYPES = ("int8_t", "int16_t", "int32_t", "int64_t")
 BYTE_VALUES = (4096, 6144, 8192, 12288, 16384, 24576, 32768, 40960, 49152, 57344, 61440)
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Generate and collect focused Round2 1D data.")
+    parser = argparse.ArgumentParser(description="Generate and collect focused NDDMA2 Round1 1D data.")
     parser.add_argument("--factor-csv", default=str(DEFAULT_FACTOR_CSV))
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR))
     parser.add_argument("--executable-dir", default=str(HARNESS_DIR))
@@ -65,11 +66,11 @@ def generate_factor(path: Path, kernel_repeat: int, execution_repeat_count: int)
                 "execution_repeat_index": "",
                 "execution_repeat_count": str(execution_repeat_count),
                 "sensitivity_id": GROUP_ID,
-                "sensitivity_key": "round2_1d_single_core",
+                "sensitivity_key": "round1_1d_single_core",
                 "sensitivity_name": "single_core_single_dimensional_contiguous",
                 "stage_define": "1",
                 "group_id": "A",
-                "group_name": "round2_1d_single_core",
+                "group_name": "round1_1d_single_core",
                 "model_target": "cycles = alpha + bytes / T",
                 "metric_target": "nddma_mte2_cycles_per_block",
                 "scan_variable": "dtype,logical_total_bytes",
@@ -105,7 +106,7 @@ def generate_factor(path: Path, kernel_repeat: int, execution_repeat_count: int)
                 "input_stride_pattern": "contiguous",
                 "output_stride_pattern": "contiguous",
                 "layout_pattern": "contiguous",
-                "notes": "Reduced Round2 single-core single-dimensional contiguous baseline.",
+                "notes": "NDDMA2 Round1 single-core single-dimensional contiguous baseline.",
                 "fit_role": "fit",
                 "bytes_region": "single_core_1d",
                 "shape_policy": "dim1",

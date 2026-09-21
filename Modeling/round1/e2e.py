@@ -15,7 +15,7 @@ DRAW = SCRIPT_DIR / "draw.py"
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Round2 1D single-core end-to-end workflow.")
+    parser = argparse.ArgumentParser(description="NDDMA2 Round1 1D single-core end-to-end workflow.")
     parser.add_argument("action", choices=("all", "collect", "fit", "draw"))
     parser.add_argument("--data-dir", default="")
     parser.add_argument("--measurement-csv", default="")

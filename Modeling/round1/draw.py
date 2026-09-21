@@ -8,15 +8,15 @@ from pathlib import Path
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DEFAULT_INPUT_DIR = SCRIPT_DIR / "generated"
-MODEL_FILENAME = "round2_1d_single_core_model.json"
-PREDICTIONS_FILENAME = "round2_1d_single_core_predictions.csv"
+DEFAULT_INPUT_DIR = SCRIPT_DIR.parent / "Ana" / "round1"
+MODEL_FILENAME = "round1_1d_single_core_model.json"
+PREDICTIONS_FILENAME = "round1_1d_single_core_predictions.csv"
 DTYPES = ("int8_t", "int16_t", "int32_t", "int64_t")
 COLORS = {"int8_t": "#b91c1c", "int16_t": "#15803d", "int32_t": "#0369a1", "int64_t": "#7c3aed"}
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Draw Round2 1D model diagnostics.")
+    parser = argparse.ArgumentParser(description="Draw NDDMA2 Round1 1D model diagnostics.")
     parser.add_argument("--input-dir", default=str(DEFAULT_INPUT_DIR))
     parser.add_argument("--output-dir", default="")
     return parser.parse_args()
@@ -44,7 +44,7 @@ def svg_for_dtype(dtype: str, rows: list[dict[str, str]], output: Path) -> None:
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
         "<style>text{font-family:Arial,sans-serif;font-size:13px;fill:#1f2937}.grid{stroke:#e5e7eb}.axis{stroke:#374151}.actual{fill:#111827}.predicted{fill:none;stroke:#2563eb;stroke-width:2}</style>",
-        f'<text x="{width/2}" y="22" text-anchor="middle">Round2 1D single-core {dtype}: actual vs predicted</text>',
+        f'<text x="{width/2}" y="22" text-anchor="middle">Round1 1D single-core {dtype}: actual vs predicted</text>',
         f'<line class="axis" x1="{left}" y1="{top}" x2="{left}" y2="{top+plot_h}"/><line class="axis" x1="{left}" y1="{top+plot_h}" x2="{left+plot_w}" y2="{top+plot_h}"/>',
         f'<text x="{left+plot_w/2}" y="{height-20}" text-anchor="middle">bytes</text>',
         f'<text x="18" y="{top+plot_h/2}" text-anchor="middle" transform="rotate(-90 18 {top+plot_h/2})">cycles</text>',
@@ -75,7 +75,7 @@ def main() -> int:
         rows = list(csv.DictReader(file_obj))
     for dtype in DTYPES:
         svg_for_dtype(dtype, [row for row in rows if row["dtype"] == dtype],
-                      output_dir / f"round2_1d_single_core_{dtype}.svg")
+                      output_dir / f"round1_1d_single_core_{dtype}.svg")
     print(f"[INFO] wrote plots to {output_dir}")
     return 0
 

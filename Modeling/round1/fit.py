@@ -11,10 +11,11 @@ from typing import Iterable
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DEFAULT_DATA_DIR = SCRIPT_DIR / "results_analysis" / "round2_1d_single_core"
-DEFAULT_OUTPUT_DIR = SCRIPT_DIR / "generated"
-MODEL_FILENAME = "round2_1d_single_core_model.json"
-PREDICTIONS_FILENAME = "round2_1d_single_core_predictions.csv"
+DEFAULT_ANA_DIR = SCRIPT_DIR.parent / "Ana" / "round1"
+DEFAULT_DATA_DIR = DEFAULT_ANA_DIR / "collection"
+DEFAULT_OUTPUT_DIR = DEFAULT_ANA_DIR
+MODEL_FILENAME = "round1_1d_single_core_model.json"
+PREDICTIONS_FILENAME = "round1_1d_single_core_predictions.csv"
 DTYPES = ("int8_t", "int16_t", "int32_t", "int64_t")
 METRIC_FIELDS = (
     "actual_y",
@@ -26,7 +27,7 @@ METRIC_FIELDS = (
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Fit the reduced Round2 1D single-core model.")
+    parser = argparse.ArgumentParser(description="Fit the NDDMA2 Round1 1D single-core model.")
     parser.add_argument("--data-dir", default=str(DEFAULT_DATA_DIR))
     parser.add_argument("--measurement-csv", default="")
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR))
@@ -171,7 +172,7 @@ def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
         }
 
     return {
-        "model": "NDDMA_ROUND2_1D_SINGLE_CORE_PIECEWISE",
+        "model": "NDDMA_ROUND1_1D_SINGLE_CORE_PIECEWISE",
         "formula": {
             "name": "round4_inherited_piecewise",
             "split_block_dim": 2,
