@@ -9,6 +9,7 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_INPUT_DIR = SCRIPT_DIR.parent / "Ana" / "round1"
+DEFAULT_OUTPUT_DIR = SCRIPT_DIR.parent / "Ana" / "round1" / "figures"
 MODEL_FILENAME = "round1_1d_single_multi_core_model.json"
 PREDICTIONS_FILENAME = "round1_1d_single_core_predictions.csv"
 DTYPES = ("int8_t", "int16_t", "int32_t", "int64_t")
@@ -71,7 +72,7 @@ def svg_for_dtype(dtype: str, rows: list[dict[str, str]], output: Path) -> None:
 def main() -> int:
     args = parse_args()
     input_dir = Path(args.input_dir).resolve()
-    output_dir = Path(args.output_dir).resolve() if args.output_dir else input_dir
+    output_dir = Path(args.output_dir).resolve() if args.output_dir else DEFAULT_OUTPUT_DIR
     prediction_path = input_dir / PREDICTIONS_FILENAME
     with prediction_path.open(newline="", encoding="utf-8") as file_obj:
         rows = list(csv.DictReader(file_obj))

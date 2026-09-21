@@ -40,7 +40,8 @@ Modeling/Ana/round4/
 ├── round4_2d_transpose_multicore_factor.csv
 ├── round4_2d_transpose_multicore_model.json
 ├── round4_2d_transpose_multicore_predictions.csv
-├── round4_2d_transpose_multicore_<dtype>_actual_vs_predicted.svg
-├── round4_2d_transpose_multicore_<dtype>_residual.svg
+├── figures/
+│   ├── round4_2d_transpose_multicore_<dtype>_actual_vs_predicted.svg
+│   └── round4_2d_transpose_multicore_<dtype>_residual.svg
 └── collection/
 ```

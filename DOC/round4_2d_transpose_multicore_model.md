@@ -100,3 +100,11 @@ rho_predicted
 predicted_cycles
 error_cycles
 ```
+
+绘图输出：
+
+```text
+Modeling/Ana/round4/figures/
+round4_2d_transpose_multicore_<dtype>_actual_vs_predicted.svg
+round4_2d_transpose_multicore_<dtype>_residual.svg
+```

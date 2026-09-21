@@ -36,7 +36,8 @@ NDDMA2/Modeling/Ana/round1/
 ├── round1_1d_single_core_factor.csv
 ├── round1_1d_single_multi_core_model.json
 ├── round1_1d_single_core_predictions.csv
-├── round1_1d_single_core_<dtype>.svg
+├── figures/
+│   └── round1_1d_single_core_<dtype>.svg
 └── collection/
     ├── build/
     ├── profiling_raw/
@@ -516,6 +517,7 @@ NDDMA2/Modeling/Ana/round1/round1_1d_single_core_predictions.csv
 四种 dtype 各生成一张：
 
 ```text
+NDDMA2/Modeling/Ana/round1/figures/
 round1_1d_single_core_int8_t.svg
 round1_1d_single_core_int16_t.svg
 round1_1d_single_core_int32_t.svg

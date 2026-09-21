@@ -9,6 +9,7 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_INPUT_DIR = SCRIPT_DIR.parent / "Ana" / "round4"
+DEFAULT_OUTPUT_DIR = SCRIPT_DIR.parent / "Ana" / "round4" / "figures"
 PREDICTIONS_FILENAME = "round4_2d_transpose_multicore_predictions.csv"
 
 
@@ -84,7 +85,7 @@ def draw(rows: list[dict[str, str]], output: Path, title: str, residual: bool) -
 def main() -> int:
     args = parse_args()
     input_dir = Path(args.input_dir).resolve()
-    output_dir = Path(args.output_dir).resolve() if args.output_dir else input_dir
+    output_dir = Path(args.output_dir).resolve() if args.output_dir else DEFAULT_OUTPUT_DIR
     with (input_dir / PREDICTIONS_FILENAME).open(newline="", encoding="utf-8") as file_obj:
         rows = list(csv.DictReader(file_obj))
     for dtype in sorted({row["dtype"] for row in rows}):

@@ -48,7 +48,8 @@ Ana/round1/
 ├── round1_1d_single_core_factor.csv
 ├── round1_1d_single_multi_core_model.json
 ├── round1_1d_single_core_predictions.csv
-├── round1_1d_single_core_<dtype>.svg
+├── figures/
+│   └── round1_1d_single_core_<dtype>.svg
 └── collection/
     ├── build/
     ├── profiling_raw/

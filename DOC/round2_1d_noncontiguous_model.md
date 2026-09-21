@@ -137,6 +137,7 @@ c1, c2, c3, c4
 `draw` 生成每种 dtype 两张图：
 
 ```text
+Modeling/Ana/round2/figures/
 round2_1d_noncontiguous_actual_vs_predicted_<dtype>.svg
 round2_1d_noncontiguous_residual_<dtype>.svg
 ```

@@ -64,7 +64,7 @@ def main() -> int:
             return status
     if args.action in ("all", "draw"):
         status = invoke(DRAW, args, data_dir=args.model_output_dir,
-                        output_dir=args.model_output_dir)
+                        output_dir="")
         if status:
             return status
     return 0

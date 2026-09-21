@@ -111,6 +111,7 @@ n1_terms_json
 绘图输出：
 
 ```text
+Modeling/Ana/round3/figures/
 round3_d<dim>_<dtype>_actual_vs_predicted.svg
 round3_d<dim>_<dtype>_residual.svg
 ```

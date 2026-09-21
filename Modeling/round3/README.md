@@ -41,8 +41,9 @@ Modeling/Ana/round3/
 ├── round3_multidim_factor.csv
 ├── round3_multidim_model.json
 ├── round3_multidim_predictions.csv
-├── round3_d<dim>_<dtype>_actual_vs_predicted.svg
-├── round3_d<dim>_<dtype>_residual.svg
+├── figures/
+│   ├── round3_d<dim>_<dtype>_actual_vs_predicted.svg
+│   └── round3_d<dim>_<dtype>_residual.svg
 └── collection/
 ```
 

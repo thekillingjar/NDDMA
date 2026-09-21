@@ -82,7 +82,6 @@ def main() -> int:
             args,
             [],
             data_dir=model_output_dir,
-            output_dir=model_output_dir,
         )
         if status:
             return status

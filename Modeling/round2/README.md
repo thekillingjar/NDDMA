@@ -24,8 +24,9 @@ NDDMA2/Modeling/Ana/round2/
 ├── round2_1d_noncontiguous_factor.csv
 ├── round2_1d_noncontiguous_model.json
 ├── round2_1d_noncontiguous_predictions.csv
-├── round2_1d_noncontiguous_actual_vs_predicted_<dtype>.svg
-├── round2_1d_noncontiguous_residual_<dtype>.svg
+├── figures/
+│   ├── round2_1d_noncontiguous_actual_vs_predicted_<dtype>.svg
+│   └── round2_1d_noncontiguous_residual_<dtype>.svg
 └── collection/
 ```
 
