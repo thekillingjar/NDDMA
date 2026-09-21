@@ -2,22 +2,7 @@
 
 ## 1. 目标
 
-NDDMA2 Round1 建立一维连续 NDDMA 的基础模型，同时覆盖：
-
-- 单核：`block_dim=1`
-- 双核：`block_dim=2`
-- 多核：`block_dim=3..56`
-
-本轮数据和原始 NDDMA Round2 的 C 组保持一致。模型只研究连续搬运随
-`bytes_per_core` 和 `block_dim` 的变化，不引入 stride、shape 或 store 修正。
-
-后续非连续模型可以把 Round1 的连续预测作为基础项：
-
-```text
-non-contiguous prediction
-    = Round1 contiguous base
-    + non-contiguous correction
-```
+NDDMA2 Round1 建立多核一维连续 NDDMA 的基础模型
 
 ## 2. 目录和运行入口
 
@@ -49,7 +34,7 @@ NDDMA2/ge-develop/
 ```text
 NDDMA2/Modeling/Ana/round1/
 ├── round1_1d_single_core_factor.csv
-├── round1_1d_single_core_model.json
+├── round1_1d_single_multi_core_model.json
 ├── round1_1d_single_core_predictions.csv
 ├── round1_1d_single_core_<dtype>.svg
 └── collection/
@@ -74,7 +59,7 @@ src_offset_elem = 0
 dst_offset_elem = 0
 ```
 
-`block_dim` 是唯一的多核变量，取：
+`block_dim` 是多核变量，取：
 
 ```text
 block_dim = 1, 2, 3, ..., 56
@@ -89,37 +74,9 @@ int32_t
 int64_t
 ```
 
-本轮不建模：
-
-- 输入非连续 stride
-- 输出非连续 stride
-- broadcast
-- 二维及更高维搬运
-- store 路径
-- 地址偏移和非对齐修正
-
 ## 4. 数据集
 
-### 4.1 与原始 Round2 C 组的对应关系
-
-原始 Round2 C 组的每条配置由以下变量决定：
-
-```text
-dtype
-bytes_per_core = x
-block_dim = k
-```
-
-并满足：
-
-```text
-output_dims = x / dtype_size
-logical_total_bytes = x * k
-```
-
-Round1 复用了相同的 `x` 和 `k` 组合。
-
-### 4.2 每种 dtype 的 bytes 档位
+### 4.1 每种 dtype 的 bytes 档位
 
 | dtype | `bytes_per_core` 档位 | `block_dim` | 配置数 |
 | --- | --- | --- | ---: |
@@ -134,7 +91,7 @@ Round1 复用了相同的 `x` 和 `k` 组合。
 560 + 560 + 448 + 336 = 1904
 ```
 
-### 4.3 `output_dims`
+### 4.2 `output_dims`
 
 `output_dims` 是单核 payload 的一维长度：
 
@@ -151,7 +108,7 @@ block_dim=8
 logical_total_bytes=131072
 ```
 
-### 4.4 字节量定义
+### 4.3 字节量定义
 
 当前模型必须区分两个字节量：
 
@@ -169,7 +126,7 @@ bytes_per_core
 
 不是 `logical_total_bytes`。这样才能比较不同核数下每个核的连续搬运开销。
 
-### 4.5 Factor 文件
+### 4.4 Factor 文件
 
 默认 factor 文件：
 
@@ -264,22 +221,6 @@ cycles_per_byte   : cycles/byte
 predicted = alpha + bytes_per_core / T_bytes_per_cycle
 ```
 
-### 5.5 与原始 Round2 的关系
-
-该模型对应原始 Round2 尝试的分段常数模型，而不是偶数核震荡模型：
-
-```text
-block_dim <= 2  使用一组 alpha/T
-block_dim > 2   使用另一组 alpha/T
-```
-
-当前 Round1 不包含：
-
-- `T = A / block_dim + B`
-- `alpha` 的 Taylor 饱和项
-- 偶数核震荡项
-
-这些可以在后续模型需要时作为独立候选模型加入。
 
 ## 6. 运行命令
 
@@ -377,60 +318,12 @@ python3 Modeling/round1/e2e.py all \
   --model-output-dir /path/to/model
 ```
 
-## 7. 测量值处理
-
-### 7.1 支持的测量列
-
-`fit.py` 按以下顺序选择第一个可用的正数列：
-
-```text
-actual_y
-nddma_mte2_cycles_per_block
-mte2_cycles_per_block
-mte2_cycles
-nddma_mte2_cycles
-```
-
-如果使用的列不是 `actual_y`，程序会除以 factor 中的 `repeat`，
-将重复执行结果换算为单次 cycles。
-
-### 7.2 样本筛选
-
-只有以下数据进入拟合：
-
-```text
-dim = 1
-block_dim in 1..56
-input_stride = 1
-output_stride = 1
-input_stride_pattern 为空或 contiguous
-output_stride_pattern 为空或 contiguous
-```
-
-因此混入数据目录的二维、非连续或其他核数范围数据不会被使用。
-
-### 7.3 重复测量聚合
-
-重复样本使用以下 key 分组：
-
-```text
-config_id
-```
-
-没有 `config_id` 时使用：
-
-```text
-token
-```
-
-同一配置的多个测量值取中位数；偶数个值取中间两个值的平均值。
-
 ## 8. 拟合 JSON
 
 输出文件：
 
 ```text
-NDDMA2/Modeling/Ana/round1/round1_1d_single_core_model.json
+NDDMA2/Modeling/Ana/round1/round1_1d_single_multi_core_model.json
 ```
 
 文件名沿用历史名称，但 JSON 模型标识已经反映当前同时覆盖单核和多核：
@@ -713,81 +606,3 @@ cycles = params["alpha"] + bytes_per_core / params["T_bytes_per_cycle"]
 
 后续扩展时，应将 Round1 连续结果作为基础项，而不是把 stride 或 shape
 影响重新吸收到 `alpha` 和 `T` 中。
-
-## 12. 常见问题
-
-### 12.1 数据量不是 1904
-
-检查 factor：
-
-```bash
-wc -l NDDMA2/Modeling/Ana/round1/round1_1d_single_core_factor.csv
-```
-
-应为：
-
-```text
-1905
-```
-
-其中第一行为 CSV header，因此数据行数为 1904。
-
-### 12.2 没有 `gt2` 参数
-
-说明 profiling 数据没有覆盖 `block_dim=3..56`，或者 fit 使用的 CSV
-不是当前 C 组数据。
-
-### 12.3 报没有可拟合样本
-
-检查测量 CSV 是否包含：
-
-```text
-dim=1
-block_dim=1..56
-input_stride=1
-output_stride=1
-bytes_per_core
-```
-
-每个 dtype、每个 `block_dim` 至少需要两个不同的
-`bytes_per_core` 值。
-
-### 12.4 报 experiment.log 无法创建
-
-当前 `collect.py` 会提前创建：
-
-```text
-NDDMA2/Modeling/Ana/round1/collection/experiment/
-```
-
-如果错误路径仍指向旧的 `/NDDMA/...`，请确认运行的是：
-
-```bash
-realpath Modeling/round1/e2e.py
-realpath Modeling/round1/collect.py
-```
-
-## 13. 总结
-
-当前 Round1 流程为：
-
-```text
-原始 Round2 C 组配置
-        |
-        v
-1904 条一维连续单核/多核样本
-        |
-        v
-每个 dtype/block_dim 拟合 alpha 和 T
-        |
-        v
-按 block_dim<=2 与 block_dim>2 聚合参数
-        |
-        v
-分段模型 JSON
-        |
-        v
-逐点预测 CSV + 四张 dtype 图
-```
-
-该模型提供了 NDDMA2 后续建模所需的连续单核和多核基线。

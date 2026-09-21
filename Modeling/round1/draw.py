@@ -9,7 +9,7 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_INPUT_DIR = SCRIPT_DIR.parent / "Ana" / "round1"
-MODEL_FILENAME = "round1_1d_single_core_model.json"
+MODEL_FILENAME = "round1_1d_single_multi_core_model.json"
 PREDICTIONS_FILENAME = "round1_1d_single_core_predictions.csv"
 DTYPES = ("int8_t", "int16_t", "int32_t", "int64_t")
 COLORS = {"int8_t": "#b91c1c", "int16_t": "#15803d", "int32_t": "#0369a1", "int64_t": "#7c3aed"}
