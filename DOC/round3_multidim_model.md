@@ -3,8 +3,8 @@
 ## 目标
 
 Round3 用于 2D/3D/4D/5D 多维 NDDMA 建模。它不重新发明一维非连续公式，而是继承
-Round2 的一维 `N_base + N_G + N_GU + rho` 模型，再对多维展开后的修正项拟合一个
-按 dtype 和维度区分的缩放系数 `d0`。
+Round2 的一维 `N_base + N_G + N_GU + rho` 模型，并直接按多维轴展开后求和。
+本轮不再拟合额外缩放参数。
 
 ## 数据集来源
 
@@ -64,17 +64,17 @@ N_base = round2.base(dtype,total_bytes,block_dim)
 T_axis = round2.N_1_correction(dtype,axis_bytes,input_delta,output_delta)
 ```
 
-Round3 拟合：
+Round3 预测：
 
 ```text
-cycles = N_base + d0(dtype,dim) * sum(T_axis)
+cycles = N_base + sum(T_axis)
 ```
 
-其中 `d0` 是 Round3 唯一新增参数。这样 JSON 中可以清楚区分：
+因此 JSON 中可以清楚区分：
 
 ```text
 Round2 继承参数: base, N_G, N_GU, rho
-Round3 新拟合参数: d0(dtype,dim)
+Round3 新拟合参数: none
 ```
 
 ## 输出文件
@@ -88,7 +88,6 @@ round3_multidim_model.json
 ```text
 formula
 fit_scope
-dtype_dim_coefficients
 metrics
 ```
 
@@ -102,7 +101,6 @@ round3_multidim_predictions.csv
 actual_cycles
 n_base_cycles
 t1_cycles
-d0
 predicted_cycles
 error_cycles
 n1_terms_json

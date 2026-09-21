@@ -210,28 +210,8 @@ def fit_model(rows: list[dict[str, str]], round2: Mapping[str, object]) -> dict[
             "n1_terms_json": json.dumps(terms, separators=(",", ":")),
         })
 
-    coefficients: dict[str, dict[str, float]] = {}
-    for dtype in sorted({str(point["dtype"]) for point in points}):
-        coefficients[dtype] = {}
-        for dim in sorted({int(point["dim"]) for point in points if point["dtype"] == dtype}):
-            selected = [
-                point for point in points
-                if point["dtype"] == dtype and int(point["dim"]) == dim
-            ]
-            numerator = sum(
-                float(point["t1_cycles"])
-                * (float(point["actual_cycles"]) - float(point["n_base_cycles"]))
-                for point in selected
-            )
-            denominator = sum(float(point["t1_cycles"]) ** 2 for point in selected)
-            coefficients[dtype][str(dim)] = numerator / denominator if denominator > 0 else 1.0
-
     for point in points:
-        d0 = coefficients[str(point["dtype"])][str(point["dim"])]
-        predicted_unscaled = float(point["n_base_cycles"]) + float(point["t1_cycles"])
-        predicted = float(point["n_base_cycles"]) + d0 * float(point["t1_cycles"])
-        point["d0"] = d0
-        point["predicted_unscaled_cycles"] = predicted_unscaled
+        predicted = float(point["n_base_cycles"]) + float(point["t1_cycles"])
         point["predicted_cycles"] = predicted
         point["error_cycles"] = predicted - float(point["actual_cycles"])
 
@@ -251,7 +231,8 @@ def fit_model(rows: list[dict[str, str]], round2: Mapping[str, object]) -> dict[
             "source": "inherits round2 1D non-contiguous model",
             "n_base": "N_base = round2.base(dtype,total_bytes,block_dim)",
             "per_axis": "T_axis = round2.N_1_correction(dtype,axis_bytes,input_delta,output_delta)",
-            "fit": "cycles = N_base + d0(dtype,dim) * sum(T_axis)",
+            "prediction": "cycles = N_base + sum(T_axis)",
+            "round3_fitted_parameters": "none",
             "dimensions": [2, 3, 4, 5],
         },
         "round2_model_source": str(DEFAULT_ROUND2_MODEL),
@@ -260,7 +241,6 @@ def fit_model(rows: list[dict[str, str]], round2: Mapping[str, object]) -> dict[
             "dimensions": sorted({int(point["dim"]) for point in points}),
             "source_rounds": sorted({str(point["source_round"]) for point in points}),
         },
-        "dtype_dim_coefficients": coefficients,
         "metrics": model_metrics,
         "predictions": points,
     }
@@ -270,8 +250,8 @@ def write_predictions(path: Path, points: Sequence[Mapping[str, object]]) -> Non
     fields = (
         "token", "source_round", "dtype", "dim", "layout", "output_dims",
         "input_stride", "output_stride", "data_volume_bytes",
-        "actual_cycles", "n_base_cycles", "t1_cycles", "d0",
-        "predicted_unscaled_cycles", "predicted_cycles", "error_cycles",
+        "actual_cycles", "n_base_cycles", "t1_cycles",
+        "predicted_cycles", "error_cycles",
         "n1_terms_json",
     )
     path.parent.mkdir(parents=True, exist_ok=True)

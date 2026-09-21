@@ -1,8 +1,8 @@
 # NDDMA2 Round3 multidimensional model
 
 Round3 is the multidimensional extension stage. It builds one unified
-2D/3D/4D/5D dataset and fits a small scaling layer over the inherited
-Round2 one-dimensional non-contiguous model.
+2D/3D/4D/5D dataset and evaluates the inherited Round2 one-dimensional
+non-contiguous model without fitting an extra scaling parameter.
 
 Dataset sources:
 
@@ -51,9 +51,8 @@ Model form:
 ```text
 N_base = round2.base(dtype,total_bytes,block_dim)
 T_axis = round2.N_1_correction(dtype,axis_bytes,input_delta,output_delta)
-cycles = N_base + d0(dtype,dim) * sum(T_axis)
+cycles = N_base + sum(T_axis)
 ```
 
-The fitted parameter is only `d0(dtype,dim)`. The inherited one-dimensional
-terms are kept visible in `round3_multidim_predictions.csv` as
-`n1_terms_json`.
+Round3 has no fitted parameters. The inherited one-dimensional terms are
+kept visible in `round3_multidim_predictions.csv` as `n1_terms_json`.
