@@ -132,24 +132,10 @@ def branch_for_block_dim(block_dim: int) -> str:
     return "le2" if block_dim <= SPLIT_BLOCK_DIM else "gt2"
 
 
-def predict(branch: dict[str, object], bytes_per_core: float) -> float:
-    return float(branch["alpha"]) + bytes_per_core / float(branch["T_bytes_per_cycle"])
-
-
-def calculate_metrics(
-    points: list[dict[str, object]], branch: dict[str, object]
-) -> dict[str, float | int]:
-    errors = [
-        predict(branch, float(point["bytes_per_core"])) - float(point["actual"])
-        for point in points
-    ]
-    absolute = [abs(value) for value in errors]
-    return {
-        "count": len(points),
-        "rmse_cycles": math.sqrt(sum(value * value for value in errors) / len(errors)),
-        "mae_cycles": sum(absolute) / len(absolute),
-        "max_absolute_error_cycles": max(absolute),
-    }
+def predict(params: dict[str, object], block_dim: int, bytes_per_core: float) -> float:
+    if block_dim <= SPLIT_BLOCK_DIM:
+        return float(params["H_1"]) + bytes_per_core / float(params["T_1"])
+    return float(params["H_2"]) + bytes_per_core / float(params["T_2"])
 
 
 def summarize_metrics(rows: list[dict[str, object]]) -> dict[str, float | int]:
@@ -209,14 +195,14 @@ def fit_branch(
 def write_predictions(
     path: Path,
     rows: list[dict[str, object]],
-    parameters: dict[str, dict[str, object]],
+    parameters: dict[str, dict[str, float]],
 ) -> None:
     output_rows = []
     for point in rows:
         dtype = str(point["dtype"])
-        branch_name = branch_for_block_dim(int(point["block_dim"]))
-        branch = parameters[dtype][branch_name]
-        predicted = predict(branch, float(point["bytes_per_core"]))
+        block_dim = int(point["block_dim"])
+        branch_name = branch_for_block_dim(block_dim)
+        predicted = predict(parameters[dtype], block_dim, float(point["bytes_per_core"]))
         output_rows.append({
             "token": point["token"],
             "dtype": dtype,
@@ -238,7 +224,7 @@ def write_predictions(
 
 
 def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
-    parameters: dict[str, dict[str, object]] = {}
+    parameters: dict[str, dict[str, float]] = {}
     for dtype in DTYPES:
         dtype_rows = [row for row in rows if row["dtype"] == dtype]
         if not dtype_rows:
@@ -254,26 +240,32 @@ def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
             branch_name: fit_branch(points, branch_name)
             for branch_name, points in branch_points.items()
         }
-        parameters[dtype] = branches
+        parameters[dtype] = {
+            "T_1": float(branches["le2"]["T_bytes_per_cycle"]),
+            "H_1": float(branches["le2"]["alpha"]),
+            "T_2": float(branches["gt2"]["T_bytes_per_cycle"]),
+            "H_2": float(branches["gt2"]["alpha"]),
+        }
 
     metric_rows = []
     for row in rows:
         dtype = str(row["dtype"])
-        branch_name = branch_for_block_dim(int(row["block_dim"]))
-        predicted = predict(parameters[dtype][branch_name], float(row["bytes_per_core"]))
+        block_dim = int(row["block_dim"])
+        branch_name = branch_for_block_dim(block_dim)
+        predicted = predict(parameters[dtype], block_dim, float(row["bytes_per_core"]))
         metric_rows.append({**row, "branch": branch_name, "predicted": predicted})
 
     return {
         "model": "NDDMA_ROUND1_1D_PIECEWISE_SINGLE_MULTI_CORE",
         "formula": {
-            "name": "round2_c_group_piecewise_constant_t_alpha",
+            "name": "arbitrary_dim_multicore_1d_contiguous_base",
             "split_block_dim": SPLIT_BLOCK_DIM,
-            "le2": "cycles = alpha_le2(dtype) + bytes_per_core / T_le2(dtype)",
-            "gt2": "cycles = alpha_gt2(dtype) + bytes_per_core / T_gt2(dtype)",
+            "le2": "cycles = H_1(dtype) + bytes_per_core / T_1(dtype)",
+            "gt2": "cycles = H_2(dtype) + bytes_per_core / T_2(dtype)",
             "bytes_definition": "bytes_per_core = logical_total_bytes / block_dim",
             "fitting_method": (
-                "fit alpha and T independently for each dtype/block_dim, "
-                "then average alpha and T within each block_dim branch"
+                "fit H and T independently for each dtype/block_dim, "
+                "then average H and T within each block_dim branch"
             ),
         },
         "parameters": parameters,

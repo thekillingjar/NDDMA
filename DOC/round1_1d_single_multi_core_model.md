@@ -158,7 +158,7 @@ r1_1d_single_core_int32_t_b16384_c8
 
 ```text
 cycles(dtype, block_dim, B)
-    = alpha(dtype, block_dim)
+    = H(dtype, block_dim)
     + B / T(dtype, block_dim)
 ```
 
@@ -171,7 +171,7 @@ B = bytes_per_core
 等价地：
 
 ```text
-cycles = alpha + cycles_per_byte * B
+cycles = H + cycles_per_byte * B
 cycles_per_byte = 1 / T
 ```
 
@@ -183,10 +183,10 @@ Round1 最终把 `block_dim` 分为两个分支：
 
 ```text
 block_dim <= 2:
-    cycles = alpha_le2(dtype) + bytes_per_core / T_le2(dtype)
+    cycles = H_1(dtype) + bytes_per_core / T_1(dtype)
 
 block_dim > 2:
-    cycles = alpha_gt2(dtype) + bytes_per_core / T_gt2(dtype)
+    cycles = H_2(dtype) + bytes_per_core / T_2(dtype)
 ```
 
 对应关系：
@@ -200,26 +200,25 @@ gt2: block_dim = 3..56
 
 对于某个 dtype 和某个分支：
 
-1. 对分支内每个 `block_dim` 单独拟合 `alpha` 和 `T`。
-2. 对所有局部拟合结果的 `alpha` 取算术平均。
+1. 对分支内每个 `block_dim` 单独拟合 `H` 和 `T`。
+2. 对所有局部拟合结果的 `H` 取算术平均。
 3. 对所有局部拟合结果的 `T` 取算术平均。
 4. 使用这两个平均参数预测该分支的全部样本。
 
-注意：代码是分别平均 `alpha` 和 `T`，不是先平均
+注意：代码是分别平均 `H` 和 `T`，不是先平均
 `cycles_per_byte` 再求倒数。
 
 ### 5.4 参数单位
 
 ```text
-alpha             : cycles
-T_bytes_per_cycle : bytes/cycle
-cycles_per_byte   : cycles/byte
+H   : cycles
+T   : bytes/cycle
 ```
 
 预测时推荐使用：
 
 ```python
-predicted = alpha + bytes_per_core / T_bytes_per_cycle
+predicted = H + bytes_per_core / T
 ```
 
 
@@ -350,10 +349,10 @@ JSON 保留建模公式、最终参数和整体误差指标，不再输出每个
 
 ```json
 "formula": {
-  "name": "round2_c_group_piecewise_constant_t_alpha",
+  "name": "arbitrary_dim_multicore_1d_contiguous_base",
   "split_block_dim": 2,
-  "le2": "cycles = alpha_le2(dtype) + bytes_per_core / T_le2(dtype)",
-  "gt2": "cycles = alpha_gt2(dtype) + bytes_per_core / T_gt2(dtype)",
+  "le2": "cycles = H_1(dtype) + bytes_per_core / T_1(dtype)",
+  "gt2": "cycles = H_2(dtype) + bytes_per_core / T_2(dtype)",
   "bytes_definition": "bytes_per_core = logical_total_bytes / block_dim",
   "fitting_method": "..."
 }
@@ -372,21 +371,15 @@ JSON 保留建模公式、最终参数和整体误差指标，不再输出每个
 
 ### 8.3 `parameters`
 
-每种 dtype 只包含 `le2` 和 `gt2` 两段最终参数：
+每种 dtype 只包含与任意维度多核模型文档一致的四个最终参数：
 
 ```json
 {
   "int32_t": {
-    "le2": {
-      "alpha": 0.0,
-      "T_bytes_per_cycle": 0.0,
-      "cycles_per_byte": 0.0
-    },
-    "gt2": {
-      "alpha": 0.0,
-      "T_bytes_per_cycle": 0.0,
-      "cycles_per_byte": 0.0
-    }
+    "T_1": 0.0,
+    "H_1": 0.0,
+    "T_2": 0.0,
+    "H_2": 0.0
   }
 }
 ```
@@ -395,9 +388,10 @@ JSON 保留建模公式、最终参数和整体误差指标，不再输出每个
 
 | 字段 | 含义 |
 | --- | --- |
-| `alpha` | 分支平均固定开销，单位 cycles |
-| `T_bytes_per_cycle` | 分支平均搬运速率，单位 bytes/cycle |
-| `cycles_per_byte` | `1 / T_bytes_per_cycle` |
+| `T_1` | `block_dim<=2` 分支平均搬运速率，单位 bytes/cycle |
+| `H_1` | `block_dim<=2` 分支平均固定开销，单位 cycles |
+| `T_2` | `block_dim>2` 分支平均搬运速率，单位 bytes/cycle |
+| `H_2` | `block_dim>2` 分支平均固定开销，单位 cycles |
 
 ## 9. Predictions CSV
 
@@ -477,9 +471,9 @@ cycles
 | `block_dim<=2` 点整体偏离 | `le2` 分支参数不适合单核/双核 |
 | `block_dim>2` 点整体偏离 | `gt2` 分支参数不适合多核 |
 | 大字节量误差变大 | `T` 不准确或线性假设不足 |
-| 小字节量误差大、大字节量较好 | `alpha` 不准确 |
+| 小字节量误差大、大字节量较好 | `H` 不准确 |
 | 某些核数单独异常 | 该核数存在额外调度或硬件行为 |
-| 两个分支都呈明显弯曲 | 需要进一步引入连续的 `T(block_dim)` 或 `alpha(block_dim)` 模型 |
+| 两个分支都呈明显弯曲 | 需要进一步引入连续的 `T(block_dim)` 或 `H(block_dim)` 模型 |
 
 图像只提供直观诊断，逐点误差应查看 predictions CSV 的：
 
@@ -503,8 +497,11 @@ GM/UB contiguous
 
 ```python
 branch = "le2" if block_dim <= 2 else "gt2"
-params = model["parameters"][dtype][branch]
-cycles = params["alpha"] + bytes_per_core / params["T_bytes_per_cycle"]
+params = model["parameters"][dtype]
+if branch == "le2":
+    cycles = params["H_1"] + bytes_per_core / params["T_1"]
+else:
+    cycles = params["H_2"] + bytes_per_core / params["T_2"]
 ```
 
 不能直接用于：
@@ -518,4 +515,4 @@ cycles = params["alpha"] + bytes_per_core / params["T_bytes_per_cycle"]
 - 未验证的地址偏移和对齐组合
 
 后续扩展时，应将 Round1 连续结果作为基础项，而不是把 stride 或 shape
-影响重新吸收到 `alpha` 和 `T` 中。
+影响重新吸收到 `H` 和 `T` 中。

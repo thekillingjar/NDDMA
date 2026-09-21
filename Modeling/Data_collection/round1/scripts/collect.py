@@ -79,7 +79,7 @@ def generate_factor(path: Path, kernel_repeat: int, execution_repeat_count: int)
                 "stage_define": "1",
                 "group_id": "A",
                 "group_name": "round1_1d_single_core",
-                "model_target": "cycles = alpha + bytes / T",
+                "model_target": "cycles = H + bytes / T",
                 "metric_target": "nddma_mte2_cycles_per_block",
                 "scan_variable": "dtype,logical_total_bytes",
                 "controlled_variables": (
@@ -114,7 +114,7 @@ def generate_factor(path: Path, kernel_repeat: int, execution_repeat_count: int)
                 "input_stride_pattern": "contiguous",
                 "output_stride_pattern": "contiguous",
                 "layout_pattern": "contiguous",
-                "notes": "NDDMA2 Round1 C-group 1D contiguous T/alpha fit sample.",
+                "notes": "NDDMA2 Round1 C-group 1D contiguous T/H fit sample.",
                 "fit_role": "fit",
                 "bytes_region": "single_core_1d",
                 "shape_policy": "dim1",
