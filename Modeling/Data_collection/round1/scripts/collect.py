@@ -14,10 +14,11 @@ from typing import Iterable
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DATA_COLLECTION_DIR = SCRIPT_DIR.parent / "Data_collection"
+MODELING_DIR = SCRIPT_DIR.parents[2]
+DATA_COLLECTION_DIR = MODELING_DIR / "Data_collection"
 HARNESS_DIR = DATA_COLLECTION_DIR / "common" / "executables" / "standalone_nddma"
 ANALYSIS_SCRIPT = HARNESS_DIR / "analyze_profiling_with_params.py"
-DEFAULT_ANA_DIR = SCRIPT_DIR.parent / "Ana" / "round1"
+DEFAULT_ANA_DIR = MODELING_DIR / "Ana" / "round1"
 DEFAULT_OUTPUT_DIR = DEFAULT_ANA_DIR / "collection"
 DEFAULT_FACTOR_CSV = DEFAULT_ANA_DIR / "round1_1d_single_core_factor.csv"
 ROUND_ID = "r1_1d_single_core"

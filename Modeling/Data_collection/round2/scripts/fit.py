@@ -12,7 +12,8 @@ from typing import Iterable
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DEFAULT_ANA_DIR = SCRIPT_DIR.parent / "Ana" / "round2"
+MODELING_DIR = SCRIPT_DIR.parents[2]
+DEFAULT_ANA_DIR = MODELING_DIR / "Ana" / "round2"
 DEFAULT_DATA_DIR = DEFAULT_ANA_DIR / "collection"
 MODEL_FILENAME = "round2_1d_noncontiguous_model.json"
 PREDICTIONS_FILENAME = "round2_1d_noncontiguous_predictions.csv"

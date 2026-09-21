@@ -13,9 +13,11 @@ from pathlib import Path
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-HARNESS_DIR = SCRIPT_DIR.parent / "Data_collection" / "common" / "executables" / "standalone_nddma"
+MODELING_DIR = SCRIPT_DIR.parents[2]
+DATA_COLLECTION_DIR = MODELING_DIR / "Data_collection"
+HARNESS_DIR = DATA_COLLECTION_DIR / "common" / "executables" / "standalone_nddma"
 ANALYSIS_SCRIPT = HARNESS_DIR / "analyze_profiling_with_params.py"
-DEFAULT_ANA_DIR = SCRIPT_DIR.parent / "Ana" / "round2"
+DEFAULT_ANA_DIR = MODELING_DIR / "Ana" / "round2"
 DEFAULT_OUTPUT_DIR = DEFAULT_ANA_DIR / "collection"
 DEFAULT_FACTOR_CSV = DEFAULT_ANA_DIR / "round2_1d_noncontiguous_factor.csv"
 

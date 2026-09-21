@@ -8,8 +8,9 @@ from pathlib import Path
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DEFAULT_INPUT_DIR = SCRIPT_DIR.parent / "Ana" / "round2"
-DEFAULT_OUTPUT_DIR = SCRIPT_DIR.parent / "Ana" / "round2" / "figures"
+MODELING_DIR = SCRIPT_DIR.parents[2]
+DEFAULT_INPUT_DIR = MODELING_DIR / "Ana" / "round2"
+DEFAULT_OUTPUT_DIR = MODELING_DIR / "Ana" / "round2" / "figures"
 PREDICTIONS_FILENAME = "round2_1d_noncontiguous_predictions.csv"
 DTYPES = ("int8_t", "int16_t", "int32_t", "int64_t")
 

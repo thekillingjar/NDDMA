@@ -8,23 +8,24 @@ from pathlib import Path
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DEFAULT_INPUT_DIR = SCRIPT_DIR.parent / "Ana" / "round4"
-DEFAULT_OUTPUT_DIR = SCRIPT_DIR.parent / "Ana" / "round4" / "figures"
-PREDICTIONS_FILENAME = "round4_2d_transpose_multicore_predictions.csv"
+MODELING_DIR = SCRIPT_DIR.parents[2]
+DEFAULT_INPUT_DIR = MODELING_DIR / "Ana" / "round3"
+DEFAULT_OUTPUT_DIR = MODELING_DIR / "Ana" / "round3" / "figures"
+PREDICTIONS_FILENAME = "round3_multidim_predictions.csv"
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Draw Round4 2D transpose multicore diagnostics.")
+    parser = argparse.ArgumentParser(description="Draw Round3 multidimensional diagnostics.")
     parser.add_argument("--input-dir", default=str(DEFAULT_INPUT_DIR))
     parser.add_argument("--output-dir", default="")
     return parser.parse_args()
 
 
-def draw(rows: list[dict[str, str]], output: Path, title: str, residual: bool) -> None:
+def draw_svg(rows: list[dict[str, str]], output: Path, title: str, residual: bool) -> None:
     width, height = 920, 580
     left, top, right, bottom = 90, 36, 30, 72
     plot_w, plot_h = width - left - right, height - top - bottom
-    xs = [float(row["logical_total_bytes"]) for row in rows]
+    xs = [float(row["data_volume_bytes"]) for row in rows]
     if residual:
         ys = [float(row["error_cycles"]) for row in rows]
         ylabel = "predicted - actual cycles"
@@ -45,10 +46,19 @@ def draw(rows: list[dict[str, str]], output: Path, title: str, residual: bool) -
     def py(value: float) -> float:
         return top + (y_max - value) / max(1.0, y_max - y_min) * plot_h
 
-    def color(block_dim: int) -> str:
-        palette = {2: "#2563eb", 4: "#16a34a", 8: "#ca8a04", 32: "#dc2626", 64: "#7c3aed"}
-        return palette.get(block_dim, "#4b5563")
-
+    colors = {
+        "continuous": "#2563eb",
+        "transpose_outer": "#dc2626",
+        "transpose_outer_ub_gap": "#ea580c",
+        "transpose_dim2": "#16a34a",
+        "transpose_dim1_dim3": "#9333ea",
+        "transpose_3d": "#0891b2",
+        "gm_noncontiguous": "#ca8a04",
+        "transpose_dim1_dim4": "#be123c",
+        "transpose_dim3_dim4": "#15803d",
+        "transpose_dim1_dim5": "#7c3aed",
+        "transpose_dim1_dim2": "#0f766e",
+    }
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}">',
         "<style>text{font-family:Arial,sans-serif;font-size:13px;fill:#1f2937}"
@@ -57,7 +67,7 @@ def draw(rows: list[dict[str, str]], output: Path, title: str, residual: bool) -
         f'<text x="{width/2}" y="23" text-anchor="middle">{title}</text>',
         f'<line class="axis" x1="{left}" y1="{top}" x2="{left}" y2="{top+plot_h}"/>',
         f'<line class="axis" x1="{left}" y1="{top+plot_h}" x2="{left+plot_w}" y2="{top+plot_h}"/>',
-        f'<text x="{left+plot_w/2}" y="{height-20}" text-anchor="middle">logical total bytes</text>',
+        f'<text x="{left+plot_w/2}" y="{height-20}" text-anchor="middle">data volume bytes</text>',
         f'<text x="18" y="{top+plot_h/2}" text-anchor="middle" transform="rotate(-90 18 {top+plot_h/2})">{ylabel}</text>',
         f'<text x="{left}" y="{top+plot_h+22}">{x_min:.0f}</text>',
         f'<text x="{left+plot_w}" y="{top+plot_h+22}" text-anchor="end">{x_max:.0f}</text>',
@@ -67,12 +77,12 @@ def draw(rows: list[dict[str, str]], output: Path, title: str, residual: bool) -
     if residual and y_min < 0 < y_max:
         parts.append(f'<line x1="{left}" y1="{py(0):.2f}" x2="{left+plot_w}" y2="{py(0):.2f}" stroke="#9ca3af"/>')
     for row in rows:
-        block_dim = int(row["block_dim"])
-        x = px(float(row["logical_total_bytes"]))
+        color = colors.get(row["layout"], "#4b5563")
+        x = px(float(row["data_volume_bytes"]))
         if residual:
             parts.append(
                 f'<circle class="error" cx="{x:.2f}" cy="{py(float(row["error_cycles"])):.2f}" '
-                f'r="3" fill="{color(block_dim)}"><title>k={block_dim}; error={row["error_cycles"]}</title></circle>'
+                f'r="3" fill="{color}"><title>{row["layout"]}; error={row["error_cycles"]}</title></circle>'
             )
         else:
             parts.append(f'<circle class="actual" cx="{x:.2f}" cy="{py(float(row["actual_cycles"])):.2f}" r="3"/>')
@@ -89,11 +99,13 @@ def main() -> int:
     with (input_dir / PREDICTIONS_FILENAME).open(newline="", encoding="utf-8") as file_obj:
         rows = list(csv.DictReader(file_obj))
     for dtype in sorted({row["dtype"] for row in rows}):
-        selected = [row for row in rows if row["dtype"] == dtype]
-        draw(selected, output_dir / f"round4_2d_transpose_multicore_{dtype}_actual_vs_predicted.svg",
-             f"Round4 2D transpose multicore {dtype}: actual vs predicted", False)
-        draw(selected, output_dir / f"round4_2d_transpose_multicore_{dtype}_residual.svg",
-             f"Round4 2D transpose multicore {dtype}: residual", True)
+        for dim in sorted({row["dim"] for row in rows if row["dtype"] == dtype}, key=int):
+            selected = [row for row in rows if row["dtype"] == dtype and row["dim"] == dim]
+            stem = f"round3_d{dim}_{dtype}"
+            draw_svg(selected, output_dir / f"{stem}_actual_vs_predicted.svg",
+                     f"Round3 {dim}D {dtype}: actual vs predicted", False)
+            draw_svg(selected, output_dir / f"{stem}_residual.svg",
+                     f"Round3 {dim}D {dtype}: residual", True)
     print(f"[INFO] wrote plots to {output_dir}")
     return 0
 

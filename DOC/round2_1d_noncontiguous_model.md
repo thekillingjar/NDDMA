@@ -3,16 +3,16 @@
 ## 目标
 
 Round2 将原始 NDDMA Round4 的一维非连续模型迁移到 NDDMA2，并补上多核拟合过程。
-本目录不依赖旧 `NDDMA` 路径，采集、拟合和绘图入口都在 `NDDMA2/Modeling/round2`。
+本目录不依赖旧 `NDDMA` 路径，采集、拟合和绘图入口都在 `NDDMA2/Modeling/Data_collection/round2/scripts`。
 
 ## 运行指令
 
 ```bash
 cd NDDMA2
-python3 Modeling/round2/e2e.py all --msprof-bin "$(which msprof)"
-python3 Modeling/round2/e2e.py collect --msprof-bin "$(which msprof)"
-python3 Modeling/round2/e2e.py fit
-python3 Modeling/round2/e2e.py draw
+python3 Modeling/Data_collection/round2/scripts/e2e.py all --msprof-bin "$(which msprof)"
+python3 Modeling/Data_collection/round2/scripts/e2e.py collect --msprof-bin "$(which msprof)"
+python3 Modeling/Data_collection/round2/scripts/e2e.py fit
+python3 Modeling/Data_collection/round2/scripts/e2e.py draw
 ```
 
 默认输出目录：

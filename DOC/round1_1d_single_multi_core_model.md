@@ -9,7 +9,7 @@ NDDMA2 Round1 建立多核一维连续 NDDMA 的基础模型
 Round1 脚本：
 
 ```text
-NDDMA2/Modeling/round1/
+NDDMA2/Modeling/Data_collection/round1/scripts/
 ├── e2e.py
 ├── collect.py
 ├── fit.py
@@ -230,7 +230,7 @@ predicted = alpha + bytes_per_core / T_bytes_per_cycle
 ### 6.1 完整流程
 
 ```bash
-python3 Modeling/round1/e2e.py all \
+python3 Modeling/Data_collection/round1/scripts/e2e.py all \
   --msprof-bin "$(which msprof)"
 ```
 
@@ -243,7 +243,7 @@ collect -> fit -> draw
 ### 6.2 生成、编译和采集
 
 ```bash
-python3 Modeling/round1/e2e.py collect \
+python3 Modeling/Data_collection/round1/scripts/e2e.py collect \
   --msprof-bin "$(which msprof)"
 ```
 
@@ -276,7 +276,7 @@ experiment/experiment.log
 ### 6.3 只拟合
 
 ```bash
-python3 Modeling/round1/e2e.py fit
+python3 Modeling/Data_collection/round1/scripts/e2e.py fit
 ```
 
 默认搜索：
@@ -294,14 +294,14 @@ NDDMA2/Modeling/Ana/round1/collection/
 也可以显式指定：
 
 ```bash
-python3 Modeling/round1/e2e.py fit \
+python3 Modeling/Data_collection/round1/scripts/e2e.py fit \
   --measurement-csv /path/to/measurements.csv
 ```
 
 ### 6.4 只绘图
 
 ```bash
-python3 Modeling/round1/e2e.py draw
+python3 Modeling/Data_collection/round1/scripts/e2e.py draw
 ```
 
 绘图读取：
@@ -313,7 +313,7 @@ NDDMA2/Modeling/Ana/round1/round1_1d_single_core_predictions.csv
 ### 6.5 自定义路径
 
 ```bash
-python3 Modeling/round1/e2e.py all \
+python3 Modeling/Data_collection/round1/scripts/e2e.py all \
   --msprof-bin "$(which msprof)" \
   --run-output-dir /path/to/collection \
   --model-output-dir /path/to/model

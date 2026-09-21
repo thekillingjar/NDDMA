@@ -13,7 +13,8 @@ from typing import Iterable, Mapping, Sequence
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DEFAULT_ANA_DIR = SCRIPT_DIR.parent / "Ana" / "round4"
+MODELING_DIR = SCRIPT_DIR.parents[2]
+DEFAULT_ANA_DIR = MODELING_DIR / "Ana" / "round4"
 DEFAULT_DATA_DIR = DEFAULT_ANA_DIR / "collection"
 MODEL_FILENAME = "round4_2d_transpose_multicore_model.json"
 PREDICTIONS_FILENAME = "round4_2d_transpose_multicore_predictions.csv"

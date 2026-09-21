@@ -12,7 +12,8 @@ from typing import Iterable
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DEFAULT_ANA_DIR = SCRIPT_DIR.parent / "Ana" / "round1"
+MODELING_DIR = SCRIPT_DIR.parents[2]
+DEFAULT_ANA_DIR = MODELING_DIR / "Ana" / "round1"
 DEFAULT_DATA_DIR = DEFAULT_ANA_DIR / "collection"
 DEFAULT_OUTPUT_DIR = DEFAULT_ANA_DIR
 MODEL_FILENAME = "round1_1d_single_multi_core_model.json"

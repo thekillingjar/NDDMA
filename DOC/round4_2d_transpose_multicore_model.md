@@ -51,10 +51,10 @@ S=is1*dtype_size
 
 ```bash
 cd NDDMA2
-python3 Modeling/round4/e2e.py all --msprof-bin "$(which msprof)"
-python3 Modeling/round4/e2e.py collect --msprof-bin "$(which msprof)"
-python3 Modeling/round4/e2e.py fit
-python3 Modeling/round4/e2e.py draw
+python3 Modeling/Data_collection/round4/scripts/e2e.py all --msprof-bin "$(which msprof)"
+python3 Modeling/Data_collection/round4/scripts/e2e.py collect --msprof-bin "$(which msprof)"
+python3 Modeling/Data_collection/round4/scripts/e2e.py fit
+python3 Modeling/Data_collection/round4/scripts/e2e.py draw
 ```
 
 默认输出：

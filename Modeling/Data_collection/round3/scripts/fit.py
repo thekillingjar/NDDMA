@@ -13,9 +13,10 @@ from typing import Iterable, Mapping, Sequence
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DEFAULT_ANA_DIR = SCRIPT_DIR.parent / "Ana" / "round3"
+MODELING_DIR = SCRIPT_DIR.parents[2]
+DEFAULT_ANA_DIR = MODELING_DIR / "Ana" / "round3"
 DEFAULT_DATA_DIR = DEFAULT_ANA_DIR / "collection"
-DEFAULT_ROUND2_MODEL = SCRIPT_DIR.parent / "Ana" / "round2" / "round2_1d_noncontiguous_model.json"
+DEFAULT_ROUND2_MODEL = MODELING_DIR / "Ana" / "round2" / "round2_1d_noncontiguous_model.json"
 MODEL_FILENAME = "round3_multidim_model.json"
 PREDICTIONS_FILENAME = "round3_multidim_predictions.csv"
 DTYPE_SIZES = {"int8_t": 1, "int16_t": 2, "int32_t": 4, "int64_t": 8}

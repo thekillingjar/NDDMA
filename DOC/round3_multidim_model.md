@@ -31,10 +31,10 @@ Modeling/Ana/round3/collection
 
 ```bash
 cd NDDMA2
-python3 Modeling/round3/e2e.py all --msprof-bin "$(which msprof)"
-python3 Modeling/round3/e2e.py collect --msprof-bin "$(which msprof)"
-python3 Modeling/round3/e2e.py fit
-python3 Modeling/round3/e2e.py draw
+python3 Modeling/Data_collection/round3/scripts/e2e.py all --msprof-bin "$(which msprof)"
+python3 Modeling/Data_collection/round3/scripts/e2e.py collect --msprof-bin "$(which msprof)"
+python3 Modeling/Data_collection/round3/scripts/e2e.py fit
+python3 Modeling/Data_collection/round3/scripts/e2e.py draw
 ```
 
 拟合依赖 Round2 的 JSON：
@@ -46,7 +46,7 @@ Modeling/Ana/round2/round2_1d_noncontiguous_model.json
 如需指定：
 
 ```bash
-python3 Modeling/round3/e2e.py fit \
+python3 Modeling/Data_collection/round3/scripts/e2e.py fit \
   --round2-model Modeling/Ana/round2/round2_1d_noncontiguous_model.json
 ```
 

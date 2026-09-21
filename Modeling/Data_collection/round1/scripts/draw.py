@@ -8,8 +8,9 @@ from pathlib import Path
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DEFAULT_INPUT_DIR = SCRIPT_DIR.parent / "Ana" / "round1"
-DEFAULT_OUTPUT_DIR = SCRIPT_DIR.parent / "Ana" / "round1" / "figures"
+MODELING_DIR = SCRIPT_DIR.parents[2]
+DEFAULT_INPUT_DIR = MODELING_DIR / "Ana" / "round1"
+DEFAULT_OUTPUT_DIR = MODELING_DIR / "Ana" / "round1" / "figures"
 MODEL_FILENAME = "round1_1d_single_multi_core_model.json"
 PREDICTIONS_FILENAME = "round1_1d_single_core_predictions.csv"
 DTYPES = ("int8_t", "int16_t", "int32_t", "int64_t")
