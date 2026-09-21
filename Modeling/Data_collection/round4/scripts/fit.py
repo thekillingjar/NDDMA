@@ -16,8 +16,8 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 MODELING_DIR = SCRIPT_DIR.parents[2]
 DEFAULT_ANA_DIR = MODELING_DIR / "Ana" / "round4"
 DEFAULT_DATA_DIR = DEFAULT_ANA_DIR / "collection"
-MODEL_FILENAME = "round4_2d_transpose_multicore_model.json"
-PREDICTIONS_FILENAME = "round4_2d_transpose_multicore_predictions.csv"
+MODEL_FILENAME = "round4_2d_ub_contiguous_ng2_model.json"
+PREDICTIONS_FILENAME = "round4_2d_ub_contiguous_ng2_predictions.csv"
 DTYPES = ("int8_t", "int16_t", "int32_t", "int64_t")
 DTYPE_SIZES = {"int8_t": 1, "int16_t": 2, "int32_t": 4, "int64_t": 8}
 LOW_BYTE_STRIDE_MAX = 128.0
@@ -49,34 +49,14 @@ ONE_D = {
                 "c_4": -0.015756802},
 }
 
-TWO_D_RESIDUAL = {
-    "int8_t": {
-        "byte_stride_lt128": {"a0": 0.09008404383, "a1": -0.01026269497, "b": -226.0427898, "d": -55.20923231},
-        "byte_stride_ge128": {"a0": -1.2895225, "a1": -0.00005673311835, "b": -326.977851, "d": 1680.30515},
-    },
-    "int16_t": {
-        "byte_stride_lt128": {"a0": 0.1147179878, "a1": -0.0111467759, "b": -204.2465443, "d": -9.679316828},
-        "byte_stride_ge128": {"a0": -1.355039786, "a1": -0.00004883132643, "b": -309.400175, "d": 1362.591254},
-    },
-    "int32_t": {
-        "byte_stride_lt128": {"a0": 0.09418001368, "a1": -0.01088005879, "b": -207.4124997, "d": 93.04782625},
-        "byte_stride_ge128": {"a0": -1.55680738, "a1": -0.00001164850262, "b": -294.0304232, "d": 1399.193913},
-    },
-    "int64_t": {
-        "byte_stride_lt128": {"a0": 0.1959931613, "a1": -0.01092369082, "b": -229.3678605, "d": 173.7016138},
-        "byte_stride_ge128": {"a0": -1.737825597, "a1": 0.000004718964916, "b": -255.3441558, "d": 700.5878799},
-    },
-}
-
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Fit NDDMA2 Round4 standalone 2D transpose multicore model."
+        description="Fit NDDMA2 Round4 Round5 N_G2 2D UB-contiguous model."
     )
     parser.add_argument("--data-dir", default=str(DEFAULT_DATA_DIR))
     parser.add_argument("--measurement-csv", default="")
     parser.add_argument("--output-dir", default=str(DEFAULT_ANA_DIR))
-    parser.add_argument("--fit-byte-stride-max", type=float, default=LOW_BYTE_STRIDE_MAX)
     return parser.parse_args()
 
 
@@ -106,11 +86,26 @@ def actual_value(row: Mapping[str, str]) -> float:
     raise ValueError(f"no positive measurement found for {row.get('token', '')}")
 
 
+def parse_dims(value: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in value.replace(";", "x").split("x") if part)
+
+
 def aggregate(rows: Iterable[dict[str, str]]) -> list[dict[str, str]]:
     grouped: dict[str, list[dict[str, str]]] = defaultdict(list)
     for row in rows:
-        if row.get("dim") == "2" and int(row.get("block_dim") or 0) > 1:
-            grouped[row.get("config_id") or row.get("token") or ""].append(row)
+        if row.get("dim") != "2":
+            continue
+        dims = parse_dims(row.get("output_dims", ""))
+        input_stride = parse_dims(row.get("input_stride", ""))
+        output_stride = parse_dims(row.get("output_stride", ""))
+        if len(dims) != 2 or len(input_stride) != 2 or len(output_stride) != 2:
+            continue
+        if not (input_stride[0] < input_stride[1]):
+            continue
+        if output_stride != (dims[1], 1):
+            continue
+        token = row.get("config_id") or row.get("token") or ""
+        grouped[token].append(row)
     result = []
     for token, values in grouped.items():
         row = dict(values[0])
@@ -120,36 +115,61 @@ def aggregate(rows: Iterable[dict[str, str]]) -> list[dict[str, str]]:
     return result
 
 
-def parse_dims(value: str) -> tuple[int, ...]:
-    return tuple(int(part) for part in value.replace(";", "x").split("x") if part)
-
-
-def one_d_multicore(dtype: str, n: int, is1: int, block_dim: int) -> tuple[float, float, float]:
+def one_d_base(dtype: str, bytes_value: float, block_dim: int) -> float:
     params = ONE_D[dtype]
-    size = DTYPE_SIZES[dtype]
-    b = float(n * size)
-    s = min(float(is1 * size), LOW_BYTE_STRIDE_MAX)
     if block_dim <= 2:
-        base = float(params["H_1"]) + b / float(params["T_1"])
-    else:
-        base = float(params["H_2"]) + b / float(params["T_2"])
-    n_g = (float(params["a_1"]) + float(params["a_2"]) * b) * s
-    correction = n_g
-    if block_dim > 2:
-        correction *= float(params["c_1"]) + float(params["c_2"]) * s
-    return base + correction, base, correction
+        return float(params["H_1"]) + bytes_value / float(params["T_1"])
+    return float(params["H_2"]) + bytes_value / float(params["T_2"])
 
 
-def single_core_residual(dtype: str, m: int, n: int, is1: int) -> tuple[float, str, float]:
-    raw_s = float(is1 * DTYPE_SIZES[dtype])
-    region = "byte_stride_lt128" if raw_s < LOW_BYTE_STRIDE_MAX else "byte_stride_ge128"
-    params = TWO_D_RESIDUAL[dtype][region]
-    residual = (
-        (float(params["a0"]) + float(params["a1"]) * raw_s) * float(n * (m - 1))
-        + float(params["b"]) * float(m)
-        + float(params["d"])
+def one_d_gm_correction(dtype: str, bytes_value: float, input_stride: int,
+                        block_dim: int) -> float:
+    params = ONE_D[dtype]
+    s = min(float(input_stride) * DTYPE_SIZES[dtype], LOW_BYTE_STRIDE_MAX)
+    ng = (float(params["a_1"]) + float(params["a_2"]) * bytes_value) * s
+    if block_dim <= 2:
+        return ng
+    multiplier = float(params["c_1"]) + float(params["c_2"]) * s
+    return multiplier * ng
+
+
+def predict_ng2(params: Mapping[str, object], m: int, is2: int) -> float:
+    return (
+        (float(params["g10"]) + float(params["g11_M"]) * float(m)) * float(is2)
+        + float(params["g00"]) + float(params["g01_M"]) * float(m)
     )
-    return residual, region, raw_s
+
+
+def solve(matrix: list[list[float]], target: list[float]) -> list[float]:
+    if not matrix or len(matrix) < len(matrix[0]):
+        raise ValueError("not enough samples for linear fit")
+    width = len(matrix[0])
+    scales = [max(abs(row[col]) for row in matrix) or 1.0 for col in range(width)]
+    scaled = [[value / scales[col] for col, value in enumerate(row)] for row in matrix]
+    normal = [[sum(row[i] * row[j] for row in scaled) for j in range(width)]
+              for i in range(width)]
+    rhs = [sum(row[i] * value for row, value in zip(scaled, target))
+           for i in range(width)]
+    for i in range(width):
+        normal[i][i] += 1e-12
+    for col in range(width):
+        pivot = max(range(col, width), key=lambda row: abs(normal[row][col]))
+        if abs(normal[pivot][col]) < 1e-14:
+            raise ValueError("singular linear fit")
+        normal[col], normal[pivot] = normal[pivot], normal[col]
+        rhs[col], rhs[pivot] = rhs[pivot], rhs[col]
+        pivot_value = normal[col][col]
+        normal[col] = [value / pivot_value for value in normal[col]]
+        rhs[col] /= pivot_value
+        for row in range(width):
+            if row == col:
+                continue
+            factor = normal[row][col]
+            if factor == 0:
+                continue
+            normal[row] = [a - factor * b for a, b in zip(normal[row], normal[col])]
+            rhs[row] -= factor * rhs[col]
+    return [value / scale for value, scale in zip(rhs, scales)]
 
 
 def prepare(rows: Sequence[Mapping[str, str]]) -> list[dict[str, object]]:
@@ -157,47 +177,32 @@ def prepare(rows: Sequence[Mapping[str, str]]) -> list[dict[str, object]]:
     for row in rows:
         dtype = row["dtype"]
         m, n = parse_dims(row["output_dims"])
-        is1 = parse_dims(row["input_stride"])[1]
+        is2, is1 = parse_dims(row["input_stride"])
         block_dim = int(row["block_dim"])
+        dtype_size = DTYPE_SIZES[dtype]
+        total_bytes = float(m * n * dtype_size)
+        inner_bytes = float(n * dtype_size)
+        n_base = one_d_base(dtype, total_bytes, block_dim)
+        n_g1 = one_d_gm_correction(dtype, inner_bytes, is1, block_dim)
         actual = actual_value(row)
-        t1d, t1d_base, t1d_correction = one_d_multicore(dtype, n, is1, block_dim)
-        residual, region, raw_s = single_core_residual(dtype, m, n, is1)
-        baseline = float(m) * t1d
+        if abs(n_g1) <= 1e-12:
+            raise ValueError(f"{row.get('token', '')}: inherited N_G1 is zero")
         points.append({
             "token": row.get("config_id") or row.get("token"),
             "dtype": dtype,
             "block_dim": block_dim,
             "m": m,
             "n": n,
+            "is2": is2,
             "is1": is1,
-            "s": min(raw_s, LOW_BYTE_STRIDE_MAX),
-            "raw_byte_stride": raw_s,
-            "region": region,
-            "bytes_per_core": float(row["bytes_per_core"]),
-            "logical_total_bytes": float(row["logical_total_bytes"]),
-            "t1d_multicore_cycles": t1d,
-            "t1d_base_cycles": t1d_base,
-            "t1d_correction_cycles": t1d_correction,
-            "baseline_cycles": baseline,
-            "single_core_residual_cycles": residual,
+            "bytes_per_core": float(row.get("bytes_per_core") or total_bytes),
+            "logical_total_bytes": float(row.get("logical_total_bytes") or total_bytes),
+            "n_base_cycles": n_base,
+            "n_g1_cycles": n_g1,
             "actual_cycles": actual,
+            "observed_n_g2": (actual - n_base) / n_g1,
         })
     return points
-
-
-def fit_line(xs: list[float], ys: list[float], weights: list[float]) -> tuple[float, float]:
-    wx = [x * w for x, w in zip(xs, weights)]
-    wy = [y * w for y, w in zip(ys, weights)]
-    ww = [w * w for w in weights]
-    s00 = sum(ww)
-    s01 = sum(x * w for x, w in zip(wx, weights))
-    s11 = sum(x * x for x in wx)
-    t0 = sum(y * w for y, w in zip(wy, weights))
-    t1 = sum(x * y for x, y in zip(wx, wy))
-    det = s00 * s11 - s01 * s01
-    if abs(det) < 1e-12:
-        raise ValueError("rank deficient rho fit")
-    return (t0 * s11 - t1 * s01) / det, (s00 * t1 - s01 * t0) / det
 
 
 def calc_metrics(points: Sequence[Mapping[str, object]]) -> dict[str, float | int]:
@@ -227,67 +232,47 @@ def calc_metrics(points: Sequence[Mapping[str, object]]) -> dict[str, float | in
     }
 
 
-def fit_model(rows: list[dict[str, str]], fit_byte_stride_max: float) -> dict[str, object]:
+def fit_model(rows: list[dict[str, str]]) -> dict[str, object]:
     points = prepare(rows)
-    models: dict[str, dict[str, float | int | str]] = {}
+    parameters: dict[str, dict[str, float]] = {}
     for dtype in DTYPES:
-        selected = [
-            p for p in points
-            if p["dtype"] == dtype
-            and float(p["raw_byte_stride"]) <= fit_byte_stride_max
-            and abs(float(p["single_core_residual_cycles"])) > 1e-12
+        selected = [point for point in points if point["dtype"] == dtype]
+        if len(selected) < 4:
+            raise ValueError(f"{dtype}: need at least four Round5 N_G2 samples")
+        matrix = [
+            [float(point["is2"]), float(point["m"]) * float(point["is2"]),
+             1.0, float(point["m"])]
+            for point in selected
         ]
-        if len(selected) < 2:
-            raise ValueError(f"{dtype}: need at least two identifiable rho samples")
-        xs = [float(p["s"]) for p in selected]
-        ys = [
-            (float(p["actual_cycles"]) - float(p["baseline_cycles"]))
-            / float(p["single_core_residual_cycles"])
-            for p in selected
-        ]
-        weights = [abs(float(p["single_core_residual_cycles"])) for p in selected]
-        c1, c2 = fit_line(xs, ys, weights)
-        models[dtype] = {
-            "c1": c1,
-            "c2": c2,
-            "c3": 0.0,
-            "c4": 0.0,
+        target = [float(point["observed_n_g2"]) for point in selected]
+        g10, g11_m, g00, g01_m = solve(matrix, target)
+        parameters[dtype] = {
+            "g10": g10,
+            "g11_M": g11_m,
+            "g00": g00,
+            "g01_M": g01_m,
         }
 
     for point in points:
         dtype = str(point["dtype"])
-        model = models[dtype]
-        rho = float(model["c1"]) + float(model["c2"]) * float(point["s"])
-        predicted_no_rho = (
-            float(point["baseline_cycles"])
-            + float(point["single_core_residual_cycles"])
-        )
-        predicted = (
-            float(point["baseline_cycles"])
-            + rho * float(point["single_core_residual_cycles"])
-        )
-        point["rho_observed"] = (
-            (float(point["actual_cycles"]) - float(point["baseline_cycles"]))
-            / float(point["single_core_residual_cycles"])
-        )
-        point["rho_predicted"] = rho
-        point["predicted_no_rho"] = predicted_no_rho
+        n_g2 = predict_ng2(parameters[dtype], int(point["m"]), int(point["is2"]))
+        predicted = float(point["n_base_cycles"]) + float(point["n_g1_cycles"]) * n_g2
+        point["predicted_n_g2"] = n_g2
         point["predicted_cycles"] = predicted
         point["error_cycles"] = predicted - float(point["actual_cycles"])
 
     return {
-        "model": "NDDMA_ROUND4_2D_TRANSPOSE_MULTICORE_RHO",
+        "model": "NDDMA_ROUND4_ROUND5_NG2_2D_UB_CONTIGUOUS",
         "formula": {
-            "target": "T_2d = M*T_1d_multicore + rho_2d*r_singlecore",
-            "rho_2d": "rho_2d=(c1+c2*s)+min(1,os-1)*(c3+c4*s)",
-            "current_data": "output_stride=[N,1], so os=1 and c3/c4 are fixed to 0",
-            "s": "min(is1*dtype_size,128)",
-            "single_core_residual": "r=(a0+a1*S)*N*(M-1)+b*M+d",
+            "scope": "[M,N]/[is2,is1]/[N,1], is2<is1",
+            "N_base": "N_base(B,k), B=M*N*dtype_size",
+            "N_G1": "N_G1=N_1'(B1,is1,1,k), B1=N*dtype_size",
+            "N_G2": "N_G2=(g10+g11_M*M)*is2+g00+g01_M*M",
+            "prediction": "N_2=N_base+N_G1*N_G2",
         },
         "parameters": {
-            "rho_2d": models,
-            "one_d_multicore": ONE_D,
-            "single_core_2d_residual": TWO_D_RESIDUAL,
+            "N_G2": parameters,
+            "one_dimensional": ONE_D,
         },
         "metrics": {
             "all": calc_metrics(points),
@@ -311,11 +296,10 @@ def fit_model(rows: list[dict[str, str]], fit_byte_stride_max: float) -> dict[st
 
 def write_predictions(path: Path, points: Sequence[Mapping[str, object]]) -> None:
     fields = (
-        "token", "dtype", "block_dim", "m", "n", "is1", "s",
-        "raw_byte_stride", "region", "bytes_per_core", "logical_total_bytes",
-        "t1d_multicore_cycles", "baseline_cycles",
-        "single_core_residual_cycles", "rho_observed", "rho_predicted",
-        "actual_cycles", "predicted_no_rho", "predicted_cycles", "error_cycles",
+        "token", "dtype", "block_dim", "m", "n", "is2", "is1",
+        "bytes_per_core", "logical_total_bytes", "n_base_cycles", "n_g1_cycles",
+        "observed_n_g2", "predicted_n_g2", "actual_cycles", "predicted_cycles",
+        "error_cycles",
     )
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as file_obj:
@@ -333,17 +317,20 @@ def main() -> int:
         raise SystemExit(f"[ERROR] no profiling measurement csv found under {args.data_dir}")
     rows = aggregate(row for path in files for row in read_rows(path))
     if not rows:
-        raise SystemExit("[ERROR] no 2D transpose multicore measurements found")
-    model = fit_model(rows, args.fit_byte_stride_max)
+        raise SystemExit("[ERROR] no Round5 N_G2 2D UB-contiguous measurements found")
+    model = fit_model(rows)
     output_dir = Path(args.output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     model_path = output_dir / MODEL_FILENAME
     model_without_predictions = {
         key: value for key, value in model.items() if key != "predictions"
     }
-    model_path.write_text(json.dumps(model_without_predictions, indent=2) + "\n", encoding="utf-8")
+    model_path.write_text(
+        json.dumps(model_without_predictions, indent=2) + "\n",
+        encoding="utf-8",
+    )
     write_predictions(output_dir / PREDICTIONS_FILENAME, model["predictions"])
-    print(f"[INFO] fitted {len(rows)} 2D transpose multicore points")
+    print(f"[INFO] fitted {len(rows)} Round5 N_G2 points")
     print(f"[INFO] wrote model: {model_path}")
     return 0
 

@@ -11,11 +11,11 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 MODELING_DIR = SCRIPT_DIR.parents[2]
 DEFAULT_INPUT_DIR = MODELING_DIR / "Ana" / "round4"
 DEFAULT_OUTPUT_DIR = MODELING_DIR / "Ana" / "round4" / "figures"
-PREDICTIONS_FILENAME = "round4_2d_transpose_multicore_predictions.csv"
+PREDICTIONS_FILENAME = "round4_2d_ub_contiguous_ng2_predictions.csv"
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Draw Round4 2D transpose multicore diagnostics.")
+    parser = argparse.ArgumentParser(description="Draw Round4 Round5 N_G2 2D UB-contiguous diagnostics.")
     parser.add_argument("--input-dir", default=str(DEFAULT_INPUT_DIR))
     parser.add_argument("--output-dir", default="")
     return parser.parse_args()
@@ -91,10 +91,10 @@ def main() -> int:
         rows = list(csv.DictReader(file_obj))
     for dtype in sorted({row["dtype"] for row in rows}):
         selected = [row for row in rows if row["dtype"] == dtype]
-        draw(selected, output_dir / f"round4_2d_transpose_multicore_{dtype}_actual_vs_predicted.svg",
-             f"Round4 2D transpose multicore {dtype}: actual vs predicted", False)
-        draw(selected, output_dir / f"round4_2d_transpose_multicore_{dtype}_residual.svg",
-             f"Round4 2D transpose multicore {dtype}: residual", True)
+        draw(selected, output_dir / f"round4_2d_ub_contiguous_ng2_{dtype}_actual_vs_predicted.svg",
+             f"Round4 Round5 N_G2 2D UB-contiguous {dtype}: actual vs predicted", False)
+        draw(selected, output_dir / f"round4_2d_ub_contiguous_ng2_{dtype}_residual.svg",
+             f"Round4 Round5 N_G2 2D UB-contiguous {dtype}: residual", True)
     print(f"[INFO] wrote plots to {output_dir}")
     return 0
 

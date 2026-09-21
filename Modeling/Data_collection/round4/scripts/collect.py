@@ -21,14 +21,15 @@ HARNESS_DIR = DATA_COLLECTION_DIR / "common" / "executables" / "standalone_nddma
 ANALYSIS_SCRIPT = HARNESS_DIR / "analyze_profiling_with_params.py"
 DEFAULT_ANA_DIR = MODELING_DIR / "Ana" / "round4"
 DEFAULT_OUTPUT_DIR = DEFAULT_ANA_DIR / "collection"
-DEFAULT_FACTOR_CSV = DEFAULT_ANA_DIR / "round4_2d_transpose_multicore_factor.csv"
+DEFAULT_FACTOR_CSV = DEFAULT_ANA_DIR / "round4_2d_ub_contiguous_ng2_factor.csv"
 
 DTYPE_SIZES = {"int8_t": 1, "int16_t": 2, "int32_t": 4, "int64_t": 8}
 DTYPES = tuple(DTYPE_SIZES)
 BLOCK_DIMS = (2, 4, 8, 32, 64)
-M_VALUES = (2, 3, 4, 8, 16, 32, 64, 128, 156, 256)
-N_VALUES = (8, 16, 32, 64, 128, 512, 1024, 2048)
-INPUT_STRIDES = (2, 3, 4, 8, 16, 32, 64, 128, 256, 1024, 2048)
+M_VALUES = (2, 4, 8, 16, 32, 64, 128, 256)
+N_VALUES = (8, 16, 32, 64, 128, 512, 2048)
+INPUT_STRIDES = (2, 4, 8, 16, 32, 64, 128, 256, 1024)
+OUTER_INPUT_STRIDES = (1, 2, 4, 8, 16, 32)
 MAX_GM_SPAN_BYTES = 4 * 1024 * 1024
 MAX_UB_SPAN_BYTES = 256 * 1024
 GUARD_ELEMS = 64
@@ -53,8 +54,8 @@ CSV_COLUMNS = (
     "input_span_elems", "output_span_elems", "input_span_bytes",
     "output_span_bytes", "input_gap_elems", "output_gap_elems",
     "input_gap_bytes", "output_gap_bytes", "basis_variable_count",
-    "basis_candidate_count", "sampling_seed", "m", "n", "is1",
-    "rho_input_stride", "rho_output_stride", "s_byte_stride",
+    "basis_candidate_count", "sampling_seed", "m", "n", "is2", "is1",
+    "ng2_input_stride", "inner_input_stride", "s_byte_stride",
     "pair_role", "address_set_id", "api_output_dims", "api_input_stride",
     "api_output_stride", "loop_output_dims_reversed",
     "loop_input_stride_reversed", "loop_output_stride_reversed",
@@ -63,7 +64,7 @@ CSV_COLUMNS = (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Generate and collect NDDMA2 Round4 2D transpose multicore data."
+        description="Generate and collect NDDMA2 Round4 Round5 N_G2 2D UB-contiguous data."
     )
     parser.add_argument("--factor-csv", default=str(DEFAULT_FACTOR_CSV))
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR))
@@ -84,9 +85,9 @@ def span_elems(dims: Sequence[int], strides: Sequence[int]) -> int:
     return 1 + sum((int(dim) - 1) * int(stride) for dim, stride in zip(dims, strides))
 
 
-def safe(dtype: str, m: int, n: int, is1: int) -> bool:
+def safe(dtype: str, m: int, n: int, is2: int, is1: int) -> bool:
     size = DTYPE_SIZES[dtype]
-    gm_span = span_elems((m, n), (1, is1))
+    gm_span = span_elems((m, n), (is2, is1))
     ub_span = span_elems((m, n), (n, 1))
     return (
         (gm_span + GUARD_ELEMS) * size <= MAX_GM_SPAN_BYTES
@@ -95,32 +96,32 @@ def safe(dtype: str, m: int, n: int, is1: int) -> bool:
 
 
 def build_row(index: int, dtype: str, block_dim: int, m: int, n: int,
-              is1: int, execution_repeat_count: int) -> dict[str, str]:
+              is2: int, is1: int, execution_repeat_count: int) -> dict[str, str]:
     size = DTYPE_SIZES[dtype]
-    gm_span = span_elems((m, n), (1, is1))
+    gm_span = span_elems((m, n), (is2, is1))
     ub_span = span_elems((m, n), (n, 1))
     total_elems = m * n
     total_bytes = total_elems * size
-    token = f"r4_2dtr_mc_{dtype}_k{block_dim}_m{m}_n{n}_i{is1}"
+    token = f"r4_ng2_{dtype}_k{block_dim}_m{m}_n{n}_i{is2}x{is1}"
     return {
         "experiment_idx": str(index),
         "token": token,
         "config_id": token,
-        "round_id": "r4_2d_transpose_multicore",
+        "round_id": "r4_round5_ng2_2d_ub_contiguous",
         "sample_id": token,
         "execution_repeat_count": str(execution_repeat_count),
-        "sensitivity_id": "R4O",
-        "sensitivity_key": "group_o_2d_transpose_multicore_rho",
-        "sensitivity_name": "two_d_transpose_multicore_rho",
+        "sensitivity_id": "R4G",
+        "sensitivity_key": "group_g_round5_ng2_2d_ub_contiguous",
+        "sensitivity_name": "round5_ng2_2d_ub_contiguous",
         "stage_define": "29",
-        "group_id": "O",
-        "group_name": "group_o_2d_transpose_multicore_rho",
-        "fit_stage": "two_d_transpose_multicore_rho",
-        "parent_model": "single_core_2d_transpose_residual_plus_1d_multicore",
-        "model_target": "T_2d=M*T_1d_multicore+rho_2d*r_singlecore",
+        "group_id": "G",
+        "group_name": "group_g_round5_ng2_2d_ub_contiguous",
+        "fit_stage": "round5_ng2",
+        "parent_model": "unified_1d_base_plus_gm_correction",
+        "model_target": "N2=N_base(B,k)+N_G1(B1,is1,k)*N_G2(M,is2)",
         "metric_target": "nddma_mte2_cycles_per_block",
-        "scan_variable": "block_dim,M,N,is1",
-        "controlled_variables": "dim=2,enable_store=0,output=[M,N],input=[1,is1],output_stride=[N,1]",
+        "scan_variable": "block_dim,M,N,is2,is1",
+        "controlled_variables": "dim=2,enable_store=0,output=[M,N],input=[is2,is1],output_stride=[N,1],is2<is1",
         "dtype": dtype,
         "dtype_size": str(size),
         "dim": "2",
@@ -128,10 +129,10 @@ def build_row(index: int, dtype: str, block_dim: int, m: int, n: int,
         "repeat": str(KERNEL_REPEAT),
         "enable_store": "0",
         "output_dims": f"{m}x{n}",
-        "input_stride": f"1x{is1}",
+        "input_stride": f"{is2}x{is1}",
         "output_stride": f"{n}x1",
-        "input_stride_axis": "1",
-        "input_stride_multiplier": str(is1),
+        "input_stride_axis": "0,1",
+        "input_stride_multiplier": f"{is2},{is1}",
         "output_stride_axis": "0",
         "output_stride_multiplier": str(n),
         "src_offset_elem": "0",
@@ -146,17 +147,17 @@ def build_row(index: int, dtype: str, block_dim: int, m: int, n: int,
         "logical_total_bytes": str(total_bytes * block_dim),
         "gm_span_elems": str(gm_span),
         "ub_span_elems": str(ub_span),
-        "input_stride_pattern": "api_1_is1_transpose",
+        "input_stride_pattern": "api_is2_is1_ub_contiguous",
         "output_stride_pattern": "api_N_1_contiguous",
-        "layout_pattern": "two_d_transpose_multicore_rho",
-        "notes": "NDDMA2 Round4 standalone 2D transpose multicore model.",
+        "layout_pattern": "round5_ng2_2d_ub_contiguous",
+        "notes": "NDDMA2 Round4 adopts legacy Round5 N_G2 2D UB-contiguous specialization.",
         "fit_role": "calibration" if is1 * size <= 128 else "high_stride_validation",
         "bytes_region": "safety_filtered",
         "shape_policy": "M_N_is1_cross_block_dim_with_span_filter",
-        "model_family": "T2D_EQUALS_M_T1D_PLUS_RHO_RESIDUAL",
-        "data_split": "O",
-        "shape_family_id": f"m{m}_n{n}_i{is1}",
-        "input_layout_policy": "api_1_is1",
+        "model_family": "ROUND5_NG2_2D_UB_CONTIGUOUS",
+        "data_split": "G",
+        "shape_family_id": f"m{m}_n{n}_i{is2}x{is1}",
+        "input_layout_policy": "api_is2_is1",
         "output_layout_policy": "api_N_1",
         "input_span_elems": str(gm_span),
         "output_span_elems": str(ub_span),
@@ -171,30 +172,32 @@ def build_row(index: int, dtype: str, block_dim: int, m: int, n: int,
         "sampling_seed": "",
         "m": str(m),
         "n": str(n),
+        "is2": str(is2),
         "is1": str(is1),
-        "rho_input_stride": str(is1),
-        "rho_output_stride": "1",
+        "ng2_input_stride": str(is2),
+        "inner_input_stride": str(is1),
         "s_byte_stride": str(min(is1 * size, 128)),
-        "pair_role": "two_d_transpose_multicore_rho",
-        "address_set_id": f"{dtype}_k{block_dim}_m{m}_n{n}_i{is1}",
+        "pair_role": "round5_ng2",
+        "address_set_id": f"{dtype}_k{block_dim}_m{m}_n{n}_i{is2}x{is1}",
         "api_output_dims": f"{m}x{n}",
-        "api_input_stride": f"1x{is1}",
+        "api_input_stride": f"{is2}x{is1}",
         "api_output_stride": f"{n}x1",
         "loop_output_dims_reversed": f"{n}x{m}",
-        "loop_input_stride_reversed": f"{is1}x1",
+        "loop_input_stride_reversed": f"{is1}x{is2}",
         "loop_output_stride_reversed": f"1x{n}",
     }
 
 
 def build_rows(execution_repeat_count: int) -> list[dict[str, str]]:
     rows = []
-    for dtype, block_dim, m, n, is1 in product(
-            DTYPES, BLOCK_DIMS, M_VALUES, N_VALUES, INPUT_STRIDES):
-        if is1 < m:
+    for dtype, block_dim, m, n, is2, is1 in product(
+            DTYPES, BLOCK_DIMS, M_VALUES, N_VALUES, OUTER_INPUT_STRIDES,
+            INPUT_STRIDES):
+        if is2 >= is1:
             continue
-        if safe(dtype, m, n, is1):
+        if safe(dtype, m, n, is2, is1):
             rows.append(build_row(
-                len(rows) + 1, dtype, block_dim, m, n, is1,
+                len(rows) + 1, dtype, block_dim, m, n, is2, is1,
                 execution_repeat_count))
     return rows
 

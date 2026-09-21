@@ -16,7 +16,7 @@ DRAW = SCRIPT_DIR / "draw.py"
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="NDDMA2 Round4 standalone 2D transpose multicore workflow."
+        description="NDDMA2 Round4 Round5 N_G2 2D UB-contiguous workflow."
     )
     parser.add_argument("action", choices=("all", "collect", "fit", "draw"))
     parser.add_argument("--data-dir", default="")
