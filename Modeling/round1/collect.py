@@ -39,7 +39,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--execution-repeat-count", type=int, default=1)
     parser.add_argument("--jobs", type=int, default=8)
     parser.add_argument("--run-mode", default="")
-    parser.add_argument("--npu-arch", default="dav-3101")
+    parser.add_argument("--npu-arch", default="dav-3510")
     parser.add_argument("--cmake-extra-arg", action="append", default=[])
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args()
