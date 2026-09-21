@@ -12,7 +12,7 @@ set(CMAKE_ASC_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-get_filename_component(REPO_ROOT "${CMAKE_CURRENT_LIST_DIR}/../../../../../.." ABSOLUTE)
+get_filename_component(REPO_ROOT "${CMAKE_CURRENT_LIST_DIR}/../../../../../" ABSOLUTE)
 set(REGBASE_INCLUDE_DIR
     "${REPO_ROOT}/ge-develop/compiler/graph/optimize/autofuse/v35/ascendc/api_regbase"
     CACHE PATH "Directory containing datacopy_nddma.h"

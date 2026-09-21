@@ -46,3 +46,5 @@ The local `Data_collection/common/executables/standalone_nddma` directory
 contains the harness and profiling parser. Collection orchestration and
 factor generation live directly in `round1/collect.py`, so the workflow
 does not depend on a separate Round1 scripts layer.
+
+The harness compiler dependency is expected at `NDDMA2/ge-develop`.
