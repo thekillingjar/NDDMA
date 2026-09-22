@@ -167,11 +167,10 @@ c1, c2, c3, c4
 
 ## 图解释
 
-`draw` 生成每种 dtype 七类图：
+`draw` 生成每种 dtype 六类图：
 
 ```text
 Modeling/Ana/round2/figures/
-round2_1d_noncontiguous_actual_vs_predicted_<dtype>.svg
 round2_1d_noncontiguous_residual_<dtype>.svg
 round2_1d_input_stride_vs_cycles_<dtype>.svg
 round2_1d_is1_output_stride_vs_cycles_<dtype>.svg
@@ -180,15 +179,17 @@ round2_1d_os2_output_dim_vs_cycles_<dtype>.svg
 round2_1d_os2_rho_vs_cores_<dtype>.svg
 ```
 
-第一类图横轴为 `logical_total_bytes`，纵轴为 cycles，黑点是实测值，蓝色空心点是预测值。
-
-第二类图横轴为 `logical_total_bytes`，纵轴为：
+第一类图横轴为 `bytes_per_core`，纵轴为：
 
 ```text
-predicted_cycles - actual_cycles
+(predicted_cycles - actual_cycles) / actual_cycles
 ```
 
-第三类图学习原始 NDDMA Round4 的
+颜色区分 `input_stride/output_stride` 组合，点大小区分核数 `block_dim`；
+每个点的 tooltip 记录 `block_dim/input_stride/output_stride/bytes_per_core`
+和相对误差。
+
+第二类图学习原始 NDDMA Round4 的
 `round4_1d_input_stride_vs_cycles_<dtype>.svg` 风格：使用 A 组
 `block_dim=1/output_stride=1` 数据，横轴为 `input_stride`，纵轴为
 `actual_cycles`。每条曲线固定一个 `output_dim`，颜色区分不同
@@ -199,7 +200,7 @@ predicted_cycles - actual_cycles
 保留网格和刻度线但不显示数字。例外是保留拐点标记：
 `int32_t` 额外标记 `32`，`int64_t` 额外标记 `16`。
 
-第四类图学习原始 NDDMA Round4 的
+第三类图学习原始 NDDMA Round4 的
 `round4_1d_is1_output_stride_vs_cycles_<dtype>.svg` 风格：使用 B 组
 `block_dim=1/input_stride=1/output_stride>1` 数据，横轴为
 `output_stride`，纵轴为 `actual_cycles`。每条曲线固定一个
@@ -207,18 +208,18 @@ predicted_cycles - actual_cycles
 `output_stride=1`，图中在 `output_stride=1` 处使用继承的 Round1
 `base_cycles` 增加空心基准点，`output_stride>=2` 的实心点为实测值。
 
-第五类图固定单核 `output_stride=1`，横轴为 `output_dim`，纵轴为
+第四类图固定单核 `output_stride=1`，横轴为 `output_dim`，纵轴为
 `actual_cycles`，颜色区分不同 `input_stride`。其中 `input_stride=1`
 来自 F 组单核连续基准数据，`input_stride>=2` 来自 A 组。为避免横轴
 低维度区域标签重叠，`output_dim<512` 的刻度只显示一个数字，其余低维度
 刻度保留网格和刻度线。
 
-第六类图固定单核 `output_stride=2`，横轴为 `output_dim`，纵轴为
+第五类图固定单核 `output_stride=2`，横轴为 `output_dim`，纵轴为
 `actual_cycles`，颜色区分不同 `input_stride`。其中 `input_stride=1`
 来自 B 组，`input_stride>=2` 来自 C 组。为避免横轴低维度区域标签重叠，
 `output_dim<512` 的刻度只显示一个数字，其余低维度刻度保留网格和刻度线。
 
-第七类图固定 `output_stride=2`，横轴为核数 `block_dim`，纵轴为：
+第六类图固定 `output_stride=2`，横轴为核数 `block_dim`，纵轴为：
 
 ```text
 (N_act - N_base) / (N_G + N_GU)

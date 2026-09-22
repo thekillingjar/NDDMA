@@ -35,26 +35,41 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def svg(dtype: str, rows: list[dict[str, str]], output: Path, residual: bool) -> None:
-    width, height = 920, 580
-    left, top, right, bottom = 90, 35, 30, 72
+def residual_relative_svg(dtype: str, rows: list[dict[str, str]], output: Path) -> None:
+    selected = [row for row in rows if row["dtype"] == dtype]
+    if not selected:
+        return
+
+    width, height = 1220, 700
+    left, top, right, bottom = 105, 50, 310, 92
     plot_w, plot_h = width - left - right, height - top - bottom
-    xs = [float(row["logical_total_bytes"]) for row in rows]
-    if residual:
-        ys = [float(row["error_cycles"]) for row in rows]
-        title = f"Round2 1D {dtype}: prediction error"
-        y_label = "predicted - actual cycles"
-    else:
-        ys = [float(row["actual_cycles"]) for row in rows]
-        predicted = [float(row["predicted_cycles"]) for row in rows]
-        ys += predicted
-        title = f"Round2 1D {dtype}: actual vs predicted"
-        y_label = "cycles"
+    xs = [float(row["bytes_per_core"]) for row in selected]
+    ys = [
+        (float(row["predicted_cycles"]) - float(row["actual_cycles"]))
+        / float(row["actual_cycles"])
+        for row in selected
+        if float(row["actual_cycles"]) != 0.0
+    ]
+    if not ys:
+        return
     x_min, x_max = min(xs), max(xs)
     y_min, y_max = min(ys), max(ys)
-    pad = max((y_max - y_min) * 0.08, 1.0)
-    y_min -= pad
-    y_max += pad
+    y_pad = max((y_max - y_min) * 0.08, 0.01)
+    y_min -= y_pad
+    y_max += y_pad
+    stride_keys = sorted({
+        (int(float(row["input_stride"])), int(float(row["output_stride"])))
+        for row in selected
+    })
+    palette = (
+        "#b91c1c", "#0369a1", "#15803d", "#7c3aed", "#c2410c", "#0f766e",
+        "#be185d", "#4338ca", "#4d7c0f", "#a16207", "#0e7490", "#6d28d9",
+        "#374151",
+    )
+    stride_colors = {
+        key: palette[index % len(palette)]
+        for index, key in enumerate(stride_keys)
+    }
 
     def px(value: float) -> float:
         return left + (value - x_min) / max(1.0, x_max - x_min) * plot_w
@@ -64,29 +79,75 @@ def svg(dtype: str, rows: list[dict[str, str]], output: Path, residual: bool) ->
 
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}">',
-        "<style>text{font-family:Arial,sans-serif;font-size:13px;fill:#1f2937}"
-        ".axis{stroke:#374151}.actual{fill:#111827}.predicted{fill:#fff;stroke:#2563eb;"
-        "stroke-width:2}.error{fill:#b91c1c}</style>",
-        f'<text x="{width/2}" y="22" text-anchor="middle">{title}</text>',
-        f'<line class="axis" x1="{left}" y1="{top}" x2="{left}" y2="{top+plot_h}"/>',
-        f'<line class="axis" x1="{left}" y1="{top+plot_h}" x2="{left+plot_w}" y2="{top+plot_h}"/>',
-        f'<text x="{left+plot_w/2}" y="{height-20}" text-anchor="middle">logical total bytes</text>',
-        f'<text x="18" y="{top+plot_h/2}" text-anchor="middle" transform="rotate(-90 18 {top+plot_h/2})">{y_label}</text>',
-        f'<text x="{left}" y="{top+plot_h+22}">{x_min:.0f}</text>',
-        f'<text x="{left+plot_w}" y="{top+plot_h+22}" text-anchor="end">{x_max:.0f}</text>',
-        f'<text x="{left-8}" y="{py(y_min)+4}" text-anchor="end">{y_min:.0f}</text>',
-        f'<text x="{left-8}" y="{py(y_max)+4}" text-anchor="end">{y_max:.0f}</text>',
+        f'<defs><clipPath id="relative-residual-clip"><rect x="{left}" y="{top}" width="{plot_w}" height="{plot_h}"/></clipPath></defs>',
+        '<rect width="100%" height="100%" fill="white"/>',
+        f'<text x="{left + plot_w/2}" y="29" text-anchor="middle" font-family="sans-serif" font-size="20">{dtype}: relative prediction error vs bytes</text>',
+        f'<text x="24" y="{top + plot_h/2}" text-anchor="middle" transform="rotate(-90 24 {top + plot_h/2})" font-family="sans-serif" font-size="18" font-weight="600">(predicted - actual) / actual</text>',
+        f'<text x="{left + plot_w/2}" y="{height - 24}" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600">bytes_per_core</text>',
+        f'<rect x="{left}" y="{top}" width="{plot_w}" height="{plot_h}" fill="none" stroke="#555"/>',
     ]
-    if residual and y_min < 0 < y_max:
-        parts.append(f'<line x1="{left}" y1="{py(0)}" x2="{left+plot_w}" y2="{py(0)}" stroke="#9ca3af"/>')
-    for row in rows:
-        x = px(float(row["logical_total_bytes"]))
+    for index in range(6):
+        fraction = index / 5
+        x_value = x_min + fraction * (x_max - x_min)
+        x = px(x_value)
+        y_value = y_min + fraction * (y_max - y_min)
+        y = py(y_value)
+        parts.extend([
+            f'<line x1="{x:.2f}" y1="{top}" x2="{x:.2f}" y2="{top + plot_h}" stroke="#f3f4f6"/>',
+            f'<line x1="{x:.2f}" y1="{top + plot_h}" x2="{x:.2f}" y2="{top + plot_h + 6}" stroke="#555"/>',
+            f'<text x="{x:.2f}" y="{top + plot_h + 30}" text-anchor="middle" font-family="sans-serif" font-size="17">{x_value:.5g}</text>',
+            f'<line x1="{left}" y1="{y:.2f}" x2="{left + plot_w}" y2="{y:.2f}" stroke="#e5e7eb"/>',
+            f'<line x1="{left - 6}" y1="{y:.2f}" x2="{left}" y2="{y:.2f}" stroke="#555"/>',
+            f'<text x="{left - 12}" y="{y + 6:.2f}" text-anchor="end" font-family="sans-serif" font-size="17">{y_value:.4g}</text>',
+        ])
+    if y_min < 0.0 < y_max:
+        parts.append(
+            f'<line x1="{left}" y1="{py(0.0):.2f}" x2="{left + plot_w}" y2="{py(0.0):.2f}" stroke="#9ca3af" stroke-dasharray="6 5"/>'
+        )
+
+    parts.append('<g clip-path="url(#relative-residual-clip)">')
+    for row in selected:
         actual = float(row["actual_cycles"])
+        if actual == 0.0:
+            continue
         predicted = float(row["predicted_cycles"])
-        value = float(row["error_cycles"]) if residual else actual
-        parts.append(f'<circle class="{"error" if residual else "actual"}" cx="{x:.2f}" cy="{py(value):.2f}" r="3"/>')
-        if not residual:
-            parts.append(f'<circle class="predicted" cx="{x:.2f}" cy="{py(predicted):.2f}" r="3"/>')
+        error = (predicted - actual) / actual
+        input_stride = int(float(row["input_stride"]))
+        output_stride = int(float(row["output_stride"]))
+        block_dim = int(float(row["block_dim"]))
+        color = stride_colors[(input_stride, output_stride)]
+        radius = min(7.0, 2.5 + block_dim ** 0.35)
+        parts.append(
+            f'<circle cx="{px(float(row["bytes_per_core"])):.2f}" cy="{py(error):.2f}" r="{radius:.2f}" fill="{color}" fill-opacity="0.42"><title>k={block_dim}; is={input_stride}; os={output_stride}; bytes={float(row["bytes_per_core"]):.0f}; rel_error={error:.5g}</title></circle>'
+        )
+    parts.append("</g>")
+
+    legend_x = left + plot_w + 35
+    legend_y = top + 15
+    parts.append(
+        f'<text x="{legend_x}" y="{legend_y}" font-family="sans-serif" font-size="16" font-weight="bold">input/output stride</text>'
+    )
+    for index, key in enumerate(stride_keys[:18]):
+        input_stride, output_stride = key
+        color = stride_colors[key]
+        column, row_index = divmod(index, 9)
+        x = legend_x + column * 132
+        y = legend_y + 28 + row_index * 27
+        parts.extend([
+            f'<circle cx="{x + 10}" cy="{y - 5}" r="4" fill="{color}" fill-opacity="0.65"/>',
+            f'<text x="{x + 24}" y="{y}" font-family="sans-serif" font-size="14">is={input_stride}, os={output_stride}</text>',
+        ])
+    if len(stride_keys) > 18:
+        parts.append(
+            f'<text x="{legend_x}" y="{legend_y + 28 + 9 * 27}" font-family="sans-serif" font-size="14">+{len(stride_keys) - 18} stride groups</text>'
+        )
+    parts.extend([
+        f'<text x="{legend_x}" y="{height - 68}" font-family="sans-serif" font-size="14" font-weight="bold">point size</text>',
+        f'<circle cx="{legend_x + 11}" cy="{height - 42}" r="3.5" fill="#6b7280" fill-opacity="0.45"/>',
+        f'<text x="{legend_x + 28}" y="{height - 38}" font-family="sans-serif" font-size="13">smaller core count</text>',
+        f'<circle cx="{legend_x + 11}" cy="{height - 19}" r="7" fill="#6b7280" fill-opacity="0.45"/>',
+        f'<text x="{legend_x + 28}" y="{height - 15}" font-family="sans-serif" font-size="13">larger core count</text>',
+    ])
     parts.append("</svg>")
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text("\n".join(parts) + "\n", encoding="utf-8")
@@ -706,9 +767,16 @@ def main() -> int:
     with (input_dir / PREDICTIONS_FILENAME).open(newline="", encoding="utf-8") as file_obj:
         rows = list(csv.DictReader(file_obj))
     for dtype in DTYPES:
-        selected = [row for row in rows if row["dtype"] == dtype]
-        svg(dtype, selected, output_dir / f"round2_1d_noncontiguous_actual_vs_predicted_{dtype}.svg", False)
-        svg(dtype, selected, output_dir / f"round2_1d_noncontiguous_residual_{dtype}.svg", True)
+        legacy_actual_vs_predicted = (
+            output_dir / f"round2_1d_noncontiguous_actual_vs_predicted_{dtype}.svg"
+        )
+        if legacy_actual_vs_predicted.exists():
+            legacy_actual_vs_predicted.unlink()
+        residual_relative_svg(
+            dtype,
+            rows,
+            output_dir / f"round2_1d_noncontiguous_residual_{dtype}.svg",
+        )
         input_stride_vs_cycles_svg(
             dtype,
             rows,
