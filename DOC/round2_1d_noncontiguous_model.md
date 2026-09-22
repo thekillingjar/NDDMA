@@ -32,8 +32,8 @@ g = min(1, output_stride-1)
 连续基础项：
 
 ```text
-N_base = alpha_le2 + B/T_le2, block_dim<=2
-N_base = alpha_gt2 + B/T_gt2, block_dim>2
+N_base = H_1 + B/T_1, block_dim<=2
+N_base = H_2 + B/T_2, block_dim>2
 ```
 
 先拟合 GM 非连续项：
@@ -99,11 +99,14 @@ base -> N_G -> N_GU -> multicore_rho
 ```
 
 ```text
-parameters.<dtype>.base.le2
-parameters.<dtype>.base.gt2
+parameters.<dtype>.base
 ```
 
-连续基础项的两段参数，包含 `alpha` 和 `T_bytes_per_cycle`。
+连续基础项参数，与任意维多核模型文档一致：
+
+```text
+T_1, H_1, T_2, H_2
+```
 
 ```text
 parameters.<dtype>.N_G

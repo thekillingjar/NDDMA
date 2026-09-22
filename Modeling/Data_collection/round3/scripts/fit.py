@@ -99,12 +99,18 @@ def round2_parameters(round2: Mapping[str, object]) -> Mapping[str, object]:
 
 def base_params(round2: Mapping[str, object], dtype: str, block_dim: int) -> Mapping[str, object]:
     base = round2_parameters(round2)[dtype]["base"]
+    if "T_1" in base:
+        return base
     return base["le2" if block_dim <= 2 else "gt2"]
 
 
 def one_d_base(round2: Mapping[str, object], dtype: str, bytes_value: float,
                block_dim: int) -> float:
     params = base_params(round2, dtype, block_dim)
+    if "T_1" in params:
+        if block_dim <= 2:
+            return float(params["H_1"]) + bytes_value / float(params["T_1"])
+        return float(params["H_2"]) + bytes_value / float(params["T_2"])
     return float(params["alpha"]) + bytes_value / float(params["T_bytes_per_cycle"])
 
 

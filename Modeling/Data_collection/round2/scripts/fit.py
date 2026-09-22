@@ -128,8 +128,10 @@ def solve(matrix: list[list[float]], target: list[float]) -> list[float]:
 
 
 def predict_base(params: dict[str, object], dtype: str, k: int, b: float) -> float:
-    values = params[dtype][branch(k)] if dtype in params else params[branch(k)]
-    return float(values["alpha"]) + b / float(values["T_bytes_per_cycle"])
+    values = params[dtype] if dtype in params else params
+    if k <= 2:
+        return float(values["H_1"]) + b / float(values["T_1"])
+    return float(values["H_2"]) + b / float(values["T_2"])
 
 
 def s_value(dtype: str, input_stride: float) -> float:
@@ -188,17 +190,23 @@ def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
             if row["group"] == "F" and row["input_stride"] == 1
             and row["output_stride"] == 1
         ]
-        base: dict[str, object] = {}
+        branch_base: dict[str, object] = {}
         for segment in ("le2", "gt2"):
             selected = [row for row in base_rows if branch(int(row["block_dim"])) == segment]
             coefficients = solve(
                 [[1.0, float(row["bytes_per_core"])] for row in selected],
                 [float(row["actual"]) for row in selected],
             )
-            base[segment] = {
+            branch_base[segment] = {
                 "alpha": coefficients[0],
                 "T_bytes_per_cycle": 1.0 / coefficients[1],
             }
+        base = {
+            "T_1": float(branch_base["le2"]["T_bytes_per_cycle"]),
+            "H_1": float(branch_base["le2"]["alpha"]),
+            "T_2": float(branch_base["gt2"]["T_bytes_per_cycle"]),
+            "H_2": float(branch_base["gt2"]["alpha"]),
+        }
 
         ng_rows = [
             row for row in dtype_rows
@@ -288,7 +296,7 @@ def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
     return {
         "model": "NDDMA_ROUND2_1D_NONCONTIGUOUS_NG_NGU_MULTICORE",
         "formula": {
-            "base": "N_base = B/T_le2 + alpha_le2 (k<=2), else B/T_gt2 + alpha_gt2",
+            "base": "N_base = H_1 + B/T_1 (k<=2), else H_2 + B/T_2",
             "N_G": "N_G=(a1+a2*B)*s",
             "N_GU": "N_GU=((b1+b2*s)+(b3+b4*s)*B)*min(1,os-1)",
             "rho": "rho=(c1+c2*s)+min(1,os-1)*(c3+c4*s)",
