@@ -124,8 +124,6 @@ def one_d_base(round2: Mapping[str, object], dtype: str, bytes_value: float,
 
 def one_d_correction(round2: Mapping[str, object], dtype: str, bytes_value: float,
                      input_stride: int, output_stride: int, block_dim: int) -> float:
-    if input_stride <= 1 and output_stride <= 1:
-        return 0.0
     model = round2_parameters(round2)[dtype]
     s = min(float(input_stride) * DTYPE_SIZES[dtype], 128.0)
     gate = min(1.0, max(0.0, float(output_stride - 1)))
@@ -247,10 +245,13 @@ def fit_model(rows: list[dict[str, str]], round2: Mapping[str, object]) -> dict[
     return {
         "model": "NDDMA_ROUND3_MULTIDIM_EXTENSION_2D_3D_4D_5D",
         "formula": {
-            "source": "inherits round2 1D non-contiguous model",
-            "n_base": "N_base = round2.base(dtype,total_bytes,block_dim)",
-            "per_axis": "T_axis = round2.N_1_correction(dtype,axis_bytes,input_delta,output_delta)",
-            "prediction": "cycles = N_base + sum(T_axis)",
+            "source": "inherits the arbitrary-dimensional multicore unified formula",
+            "n_base": "N_base = round1/round2.base(dtype,B,block_dim), B=prod(loop_sizes)*dtype_size",
+            "axis_bytes": "B_j = B / prod_{t=0}^{j-1}(ls_t)",
+            "effective_input_stride": "is_hat_j = abs(is_j - sum_{t=0}^{j-1}(ls_t*is_t)) + 1, j>=1; is_hat_0=is_0",
+            "effective_output_stride": "os_hat_j = abs(os_j - sum_{t=0}^{j-1}(ls_t*os_t)) + 1, j>=1; os_hat_0=os_0",
+            "per_axis": "T_axis = round2.N_1_prime(dtype,B_j,is_hat_j,os_hat_j,block_dim)",
+            "prediction": "N_D = N_base + sum_j(T_axis)",
             "round3_fitted_parameters": "none",
             "dimensions": [2, 3, 4, 5],
         },

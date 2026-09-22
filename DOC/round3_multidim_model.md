@@ -2,9 +2,9 @@
 
 ## 目标
 
-Round3 用于 2D/3D/4D/5D 多维 NDDMA 建模。它不重新发明一维非连续公式，而是继承
-Round2 的一维 `N_base + N_G + N_GU + rho` 模型，并直接按多维轴展开后求和。
-本轮不再拟合额外缩放参数。
+Round3 用于 2D/3D/4D/5D 多维 NDDMA 建模。它采用原始
+`任意维度多核模型.md` 中的多维统一公式，继承 Round1/Round2 的
+一维 `N_base + N_G + N_GU + rho` 参数。本轮不重新拟合额外缩放参数。
 
 ## 数据集来源
 
@@ -52,29 +52,61 @@ python3 Modeling/Data_collection/round3/scripts/e2e.py fit \
 
 ## 建模形式
 
-对一个多维样本，先用总数据量计算连续基础项：
+对一个多维样本，先反转 API 维度顺序，得到 kernel 逻辑 loop 顺序：
 
 ```text
-N_base = round2.base(dtype,total_bytes,block_dim)
+output_dim    = [ls0, ls1, ..., ls{D-1}]
+input_stride  = [is0, is1, ..., is{D-1}]
+output_stride = [os0, os1, ..., os{D-1}]
 ```
 
-其中 `round2.base` 使用 Round1/Round2 当前的一维连续 base 形式：
+总数据量：
+
+```text
+B = product(ls_j) * dtype_size
+```
+
+连续基础项只计算一次，使用 Round1/Round2 当前 base 形式：
 
 ```text
 N_base = B*(block_dim/T_1+h_1)+H_1, block_dim<=2
 N_base = B*(block_dim/T_2+h_2)+H_2, block_dim>2
 ```
 
-再把多维 stride 按 loop 轴拆成若干一维继承修正：
+第 `j` 维修正项使用去掉更内侧 `0..j-1` 维后的数据量：
 
 ```text
-T_axis = round2.N_1_correction(dtype,axis_bytes,input_delta,output_delta)
+B_j = B / product_{t=0}^{j-1}(ls_t)
+B_0 = B
 ```
 
-Round3 预测：
+等效 stride：
 
 ```text
-cycles = N_base + sum(T_axis)
+is_hat_0 = is0
+os_hat_0 = os0
+
+is_hat_j = abs(is_j - sum_{t=0}^{j-1}(ls_t*is_t)) + 1, j>=1
+os_hat_j = abs(os_j - sum_{t=0}^{j-1}(ls_t*os_t)) + 1, j>=1
+```
+
+每一维使用 Round2 的一维非连续修正项：
+
+```text
+T_axis_j = round2.N_1_prime(dtype,B_j,is_hat_j,os_hat_j,block_dim)
+```
+
+其中：
+
+```text
+N_1_prime = N_G + N_GU, block_dim<=2
+N_1_prime = rho*(N_G + N_GU), block_dim>2
+```
+
+Round3 最终预测：
+
+```text
+N_D = N_base + sum_j(T_axis_j)
 ```
 
 因此 JSON 中可以清楚区分：
