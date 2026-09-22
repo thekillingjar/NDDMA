@@ -255,17 +255,8 @@ def svg_for_output_dim_fit_error(
         for _, series_rows in series
         for row in series_rows
     ]
-    ys = [
-        (float(row["predicted_cycles"]) - float(row["actual_cycles"]))
-        / max(abs(float(row["actual_cycles"])), 1e-12)
-        for _, series_rows in series
-        for row in series_rows
-    ]
     x_min, x_max = min(xs), max(xs)
-    y_min, y_max = min(ys + [0.0]), max(ys + [0.0])
-    y_pad = max((y_max - y_min) * 0.08, 0.01)
-    y_min -= y_pad
-    y_max += y_pad
+    y_min, y_max = -1.0, 1.0
 
     def px(value: float) -> float:
         return left + (value - x_min) / max(1.0, x_max - x_min) * plot_w

@@ -512,7 +512,8 @@ round1_1d_single_core_<dtype>_output_dim_error.svg
 (predicted_cycles - actual_cycles) / actual_cycles
 ```
 
-同样只绘制 `block_dim=1,2,4,8,32`，不同 `block_dim` 使用不同颜色。
+纵轴范围固定为 `[-1, 1]`。同样只绘制 `block_dim=1,2,4,8,32`，
+不同 `block_dim` 使用不同颜色。
 
 ### 10.4 判断方法
 
