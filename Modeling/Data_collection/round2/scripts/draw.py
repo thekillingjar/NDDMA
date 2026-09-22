@@ -14,7 +14,7 @@ DEFAULT_OUTPUT_DIR = MODELING_DIR / "Ana" / "round2" / "figures"
 PREDICTIONS_FILENAME = "round2_1d_noncontiguous_predictions.csv"
 DTYPES = ("int8_t", "int16_t", "int32_t", "int64_t")
 DTYPE_SIZES = {"int8_t": 1, "int16_t": 2, "int32_t": 4, "int64_t": 8}
-INPUT_STRIDE_LABEL_MIN = {"int8_t": 128, "int16_t": 64, "int32_t": 32, "int64_t": 16}
+INPUT_STRIDE_LABEL_MIN = {"int8_t": 128, "int16_t": 64, "int32_t": 256, "int64_t": 128}
 
 
 def parse_args() -> argparse.Namespace:
@@ -146,7 +146,7 @@ def input_stride_vs_cycles_svg(
         ])
         if stride >= min_labeled_stride:
             parts.append(
-                f'<text class="x-stride-label" x="{x:.2f}" y="{top + plot_h + 27}" text-anchor="middle" font-family="sans-serif" font-size="14">{stride:.0f}</text>'
+                f'<text class="x-stride-label" x="{x:.2f}" y="{top + plot_h + 30}" text-anchor="middle" font-family="sans-serif" font-size="17">{stride:.0f}</text>'
             )
     for index in range(6):
         fraction = index / 5
@@ -155,7 +155,7 @@ def input_stride_vs_cycles_svg(
         parts.extend([
             f'<line x1="{left}" y1="{y:.2f}" x2="{left + plot_w}" y2="{y:.2f}" stroke="#e5e7eb"/>',
             f'<line x1="{left - 6}" y1="{y:.2f}" x2="{left}" y2="{y:.2f}" stroke="#555"/>',
-            f'<text x="{left - 12}" y="{y + 5:.2f}" text-anchor="end" font-family="sans-serif" font-size="14">{y_value:.5g}</text>',
+            f'<text x="{left - 12}" y="{y + 6:.2f}" text-anchor="end" font-family="sans-serif" font-size="17">{y_value:.5g}</text>',
         ])
 
     parts.append('<g clip-path="url(#sweep-clip)">')

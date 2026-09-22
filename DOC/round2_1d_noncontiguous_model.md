@@ -191,5 +191,5 @@ predicted_cycles - actual_cycles
 `output_dim`。
 
 为避免横轴低 stride 区域标签重叠，`int8_t/int16_t/int32_t/int64_t`
-分别只从 `input_stride=128/64/32/16` 开始标记横轴数字；更小 stride
+分别只从 `input_stride=128/64/256/128` 开始标记横轴数字；更小 stride
 保留网格和刻度线但不显示数字。
