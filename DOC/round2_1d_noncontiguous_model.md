@@ -5,8 +5,9 @@
 Round2 将原始 NDDMA Round4 的一维非连续模型迁移到 NDDMA2，并补上多核拟合过程。
 本目录不依赖旧 `NDDMA` 路径，采集、拟合和绘图入口都在 `NDDMA2/Modeling/Data_collection/round2/scripts`。
 
-Round2 继承 Round1 的连续一维 base 参数 `T_1/h_1/H_1/T_2/h_2/H_2`，不再使用
-Round2 的 F 组重新拟合连续 base；Round2 只拟合非连续修正项和多核 `rho` 项。
+Round2 继承 Round1 的连续一维 base 建模公式和参数
+`T_1/h_1/H_1/T_2/h_2/H_2`，不再使用 Round2 的 F 组重新拟合连续
+base；Round2 只拟合非连续修正项和多核 `rho` 项。
 
 ## 运行指令
 
@@ -45,7 +46,8 @@ s = min(input_stride*dtype_size, 128)
 g = min(1, output_stride-1)
 ```
 
-连续基础项：
+连续基础项直接继承 Round1 JSON 的 `formula` 和 `parameters`。当前 Round1
+base 形式为：
 
 ```text
 N_base = B*(block_dim/T_1+h_1)+H_1, block_dim<=2
@@ -118,13 +120,20 @@ inherit_round1_base -> N_G -> N_GU -> multicore_rho
 parameters.<dtype>.base
 ```
 
-连续基础项参数，与任意维多核模型文档一致：
+连续基础项参数，直接从 Round1 的 `parameters.<dtype>` 拷贝：
 
 ```text
 T_1, h_1, H_1, T_2, h_2, H_2
 ```
 
 这些参数直接继承自 Round1，不在 Round2 中重新拟合。
+
+```text
+formula.base
+```
+
+连续基础项公式，直接从 Round1 的 `formula` 拷贝。Round2 JSON 中的
+`formula.base_source` 记录所继承的 Round1 JSON 路径。
 
 ```text
 parameters.<dtype>.N_G

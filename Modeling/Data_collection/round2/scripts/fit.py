@@ -193,8 +193,10 @@ def calc_metrics(rows: list[dict[str, object]]) -> dict[str, float | int]:
 
 def fit_model(
     rows: list[dict[str, object]],
-    round1_parameters: dict[str, dict[str, float]],
+    round1_model: dict[str, object],
 ) -> dict[str, object]:
+    round1_parameters = round1_model["parameters"]
+    round1_formula = round1_model.get("formula", {})
     params: dict[str, dict[str, object]] = {}
     for dtype in DTYPES:
         dtype_rows = [row for row in rows if row["dtype"] == dtype]
@@ -288,10 +290,7 @@ def fit_model(
     return {
         "model": "NDDMA_ROUND2_1D_NONCONTIGUOUS_NG_NGU_MULTICORE",
         "formula": {
-            "base": (
-                "N_base = B*(k/T_1+h_1)+H_1 (k<=2), else "
-                "B*(k/T_2+h_2)+H_2"
-            ),
+            "base": round1_formula,
             "N_G": "N_G=(a1+a2*B)*s",
             "N_GU": "N_GU=((b1+b2*s)+(b3+b4*s)*B)*min(1,os-1)",
             "rho": "rho=(c1+c2*s)+min(1,os-1)*(c3+c4*s)",
@@ -303,6 +302,7 @@ def fit_model(
             },
             "fit_order": ["inherit_round1_base", "N_G", "N_GU", "multicore_rho"],
             "base_source": "round1_1d_single_multi_core_model.json",
+            "base_parameters": "parameters.<dtype>.base is copied from round1.parameters.<dtype>",
         },
         "parameters": params,
         "metrics": {
@@ -361,6 +361,8 @@ def main() -> int:
     try:
         round1_model = json.loads(round1_model_path.read_text(encoding="utf-8"))
         round1_parameters = round1_model["parameters"]
+        if not isinstance(round1_model["formula"], dict):
+            raise ValueError("round1 formula must be an object")
         for dtype in DTYPES:
             values = round1_parameters[dtype]
             for key in ("T_1", "H_1", "T_2", "H_2"):
@@ -372,7 +374,7 @@ def main() -> int:
         raise SystemExit(
             f"[ERROR] invalid round1 model JSON: {round1_model_path}: {error}"
         ) from error
-    model = fit_model(rows, round1_parameters)
+    model = fit_model(rows, round1_model)
     model["formula"]["base_source"] = str(round1_model_path)
     output_dir = Path(args.output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
