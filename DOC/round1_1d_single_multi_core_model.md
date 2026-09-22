@@ -446,7 +446,7 @@ round1_1d_single_core_int64_t.svg
 横轴：
 
 ```text
-logical total bytes
+block_dim
 ```
 
 纵轴使用单核周期：
@@ -455,26 +455,35 @@ logical total bytes
 cycles
 ```
 
-横轴选择逻辑总字节数，是为了在同一张图上观察不同 `block_dim`
-下的完整搬运规模。实际模型计算仍使用 `bytes_per_core`。
+每种 dtype 只绘制两组 shape：
+
+```text
+min bytes_per_core
+max bytes_per_core
+```
+
+这样可以直接观察固定单核数据量时，单核 cycles 随设置的
+`block_dim` 的变化关系。
 
 ### 10.3 图中元素
 
-- 黑色实心圆：`actual_cycles`
-- 蓝色空心圆：`predicted_cycles`
+- 实线/实心点：`actual_cycles`
+- 虚线/空心点：`predicted_cycles`
+- 蓝色：最小 `bytes_per_core`
+- 红色：最大 `bytes_per_core`
 
 注意：Round1 的 `cycles` 口径是单核/每 block cycles，不是总 cycles。
 
-预测点不是一条连续折线，因为不同核数使用不同的 `bytes_per_core`
-和分支参数；用散点可以避免把不同核数的预测错误连接起来。
+预测点和实测点按 `block_dim` 连线；每条线内部的 `bytes_per_core`
+固定。
 
 ### 10.4 判断方法
 
 理想情况：
 
-- 蓝色预测点接近黑色实际点
+- 虚线预测点接近同色实线实测点
 - 单核/双核点与多核点都没有明显系统性偏差
-- 随逻辑总字节数增加，没有单向发散
+- 最小和最大 shape 都没有随核数单向发散的残差
 
 常见异常：
 
