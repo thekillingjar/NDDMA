@@ -21,11 +21,11 @@ PREDICTIONS_FILENAME = "round1_1d_single_core_predictions.csv"
 DTYPES = ("int8_t", "int16_t", "int32_t", "int64_t")
 BLOCK_DIMS = tuple(range(1, 57))
 SPLIT_BLOCK_DIM = 2
-TOTAL_METRIC_FIELDS = ("nddma_mte2_cycles", "mte2_cycles")
 PER_BLOCK_METRIC_FIELDS = (
     "nddma_mte2_cycles_per_block",
     "mte2_cycles_per_block",
 )
+TOTAL_METRIC_FIELDS = ("nddma_mte2_cycles", "mte2_cycles")
 
 
 def parse_args() -> argparse.Namespace:
@@ -44,21 +44,21 @@ def read_rows(path: Path) -> list[dict[str, str]]:
 
 
 def measurement_value(row: dict[str, str]) -> float:
-    """Return total cycles; older exports can be reconstructed from per-block cycles."""
+    """Return single-core/per-block cycles."""
     repeat = max(1.0, float(row.get("repeat") or "1"))
     block_dim = max(1.0, float(row.get("block_dim") or "1"))
-    for field in TOTAL_METRIC_FIELDS:
+    for field in PER_BLOCK_METRIC_FIELDS:
         raw = str(row.get(field, "")).strip()
         if not raw:
             continue
         value = float(raw) / repeat
         if math.isfinite(value) and value > 0:
             return value
-    for field in PER_BLOCK_METRIC_FIELDS:
+    for field in TOTAL_METRIC_FIELDS:
         raw = str(row.get(field, "")).strip()
         if not raw:
             continue
-        value = float(raw) / repeat * block_dim
+        value = float(raw) / repeat / block_dim
         if math.isfinite(value) and value > 0:
             return value
     raise ValueError(f"no positive measurement found for token={row.get('token', '')}")
@@ -241,8 +241,6 @@ def write_predictions(
             "branch": branch_name,
             "actual_cycles": point["actual"],
             "predicted_cycles": predicted,
-            "actual_cycles_per_block": float(point["actual"]) / block_dim,
-            "predicted_cycles_per_block": predicted / block_dim,
             "error_cycles": predicted - float(point["actual"]),
         })
 
@@ -295,7 +293,7 @@ def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
             "split_block_dim": SPLIT_BLOCK_DIM,
             "le2": "cycles = (h_1(dtype) + bytes_per_core / T_1(dtype)) * block_dim + H_1(dtype)",
             "gt2": "cycles = (h_2(dtype) + bytes_per_core / T_2(dtype)) * block_dim + H_2(dtype)",
-            "normalized": "cycles_per_block = h(dtype) + bytes_per_core / T(dtype) + H(dtype) / block_dim",
+            "metric": "cycles is single-core/per-block cycles",
             "bytes_definition": "bytes_per_core = logical_total_bytes / block_dim",
             "fitting_method": (
                 "jointly fit h, H and 1/T across block_dim and bytes_per_core "

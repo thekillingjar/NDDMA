@@ -79,8 +79,8 @@ def generate_factor(path: Path, kernel_repeat: int, execution_repeat_count: int)
                 "stage_define": "1",
                 "group_id": "A",
                 "group_name": "round1_1d_single_core",
-                "model_target": "cycles = block_dim * (H + bytes_per_core / T)",
-                "metric_target": "nddma_mte2_cycles",
+                "model_target": "cycles = (h + bytes_per_core / T) * block_dim + H",
+                "metric_target": "nddma_mte2_cycles_per_block",
                 "scan_variable": "dtype,logical_total_bytes",
                 "controlled_variables": (
                     "dim=1,block_dim=1..56,input_stride=1,output_stride=1,"

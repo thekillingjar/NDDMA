@@ -137,9 +137,8 @@ def predict_base(params: dict[str, object], dtype: str, k: int, b: float) -> flo
         suffix = "2"
     if f"h_{suffix}" in values:
         return (
-            float(values[f"h_{suffix}"])
-            + b / float(values[f"T_{suffix}"])
-            + float(values[f"H_{suffix}"]) / k
+            (float(values[f"h_{suffix}"]) + b / float(values[f"T_{suffix}"])) * k
+            + float(values[f"H_{suffix}"])
         )
     # Accept legacy Round1 models that used H as the per-core intercept.
     return float(values[f"H_{suffix}"]) + b / float(values[f"T_{suffix}"])
@@ -290,8 +289,8 @@ def fit_model(
         "model": "NDDMA_ROUND2_1D_NONCONTIGUOUS_NG_NGU_MULTICORE",
         "formula": {
             "base": (
-                "N_base = h_1 + B/T_1 + H_1/k (k<=2), else "
-                "h_2 + B/T_2 + H_2/k"
+                "N_base = (h_1 + B/T_1)*k + H_1 (k<=2), else "
+                "(h_2 + B/T_2)*k + H_2"
             ),
             "N_G": "N_G=(a1+a2*B)*s",
             "N_GU": "N_GU=((b1+b2*s)+(b3+b4*s)*B)*min(1,os-1)",

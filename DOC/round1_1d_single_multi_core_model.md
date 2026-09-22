@@ -155,7 +155,7 @@ r1_1d_single_core_int32_t_b16384_c8
 
 ### 5.1 每个 dtype、每个核数的局部模型
 
-每个分支内联合拟合以下总周期模型：
+每个分支内联合拟合以下单核/每 block 周期模型：
 
 ```text
 cycles(dtype, block_dim, B)
@@ -171,7 +171,7 @@ B = bytes_per_core
 等价地：
 
 ```text
-cycles = H + cycles_per_byte * B
+cycles = h * block_dim + H + cycles_per_byte * block_dim * B
 cycles_per_byte = 1 / T
 ```
 
@@ -189,9 +189,9 @@ block_dim > 2:
     cycles = (h_2(dtype) + bytes_per_core / T_2(dtype)) * block_dim + H_2(dtype)
 ```
 
-因此在 `bytes_per_core` 固定且较大时，`block_dim > 2` 的总
-`cycles` 对核数呈线性关系。`h_2` 是每核固定开销，`H_2` 是不随
-核数变化的全局固定开销。
+因此在 `bytes_per_core` 固定且较大时，`block_dim > 2` 的单核
+`cycles` 对核数呈线性关系。`h_2` 是随核数线性增加的固定项，
+`H_2` 是不随核数变化的固定项。
 
 对应关系：
 
@@ -213,7 +213,7 @@ gt2: block_dim = 3..56
 
 ```text
 H   : cycles
-h   : cycles/core
+h   : cycles/core-count
 T   : bytes/cycle
 ```
 
@@ -355,7 +355,7 @@ JSON 保留建模公式、最终参数和整体误差指标，不再输出每个
   "split_block_dim": 2,
   "le2": "cycles = (h_1(dtype) + bytes_per_core / T_1(dtype)) * block_dim + H_1(dtype)",
   "gt2": "cycles = (h_2(dtype) + bytes_per_core / T_2(dtype)) * block_dim + H_2(dtype)",
-  "normalized": "cycles_per_block = h(dtype) + bytes_per_core / T(dtype) + H(dtype) / block_dim",
+  "metric": "cycles is single-core/per-block cycles",
   "bytes_definition": "bytes_per_core = logical_total_bytes / block_dim",
   "fitting_method": "..."
 }
@@ -394,11 +394,11 @@ JSON 保留建模公式、最终参数和整体误差指标，不再输出每个
 | 字段 | 含义 |
 | --- | --- |
 | `T_1` | `block_dim<=2` 分支平均搬运速率，单位 bytes/cycle |
-| `h_1` | `block_dim<=2` 分支每核固定开销，单位 cycles/core |
-| `H_1` | `block_dim<=2` 分支全局固定开销，单位 cycles |
+| `h_1` | `block_dim<=2` 分支随核数线性增加的固定项，单位 cycles/core-count |
+| `H_1` | `block_dim<=2` 分支不随核数变化的固定项，单位 cycles |
 | `T_2` | `block_dim>2` 分支平均搬运速率，单位 bytes/cycle |
-| `h_2` | `block_dim>2` 分支每核固定开销，单位 cycles/core |
-| `H_2` | `block_dim>2` 分支全局固定开销，单位 cycles |
+| `h_2` | `block_dim>2` 分支随核数线性增加的固定项，单位 cycles/core-count |
+| `H_2` | `block_dim>2` 分支不随核数变化的固定项，单位 cycles |
 
 ## 9. Predictions CSV
 
@@ -418,10 +418,8 @@ NDDMA2/Modeling/Ana/round1/round1_1d_single_core_predictions.csv
 | `bytes_per_core` | 模型自变量 |
 | `logical_total_bytes` | 逻辑总搬运量 |
 | `branch` | `le2` 或 `gt2` |
-| `actual_cycles` | 聚合后的实际总 cycles |
+| `actual_cycles` | 聚合后的实际单核 cycles |
 | `predicted_cycles` | 分段模型预测值 |
-| `actual_cycles_per_block` | 实际总 cycles 除以核数 |
-| `predicted_cycles_per_block` | 预测总 cycles 除以核数 |
 | `error_cycles` | `predicted - actual` |
 
 该文件既用于绘图，也用于逐点检查模型误差。
@@ -448,10 +446,10 @@ round1_1d_single_core_int64_t.svg
 logical total bytes
 ```
 
-纵轴使用归一化后的单核周期：
+纵轴使用单核周期：
 
 ```text
-cycles_per_block = cycles / block_dim
+cycles
 ```
 
 横轴选择逻辑总字节数，是为了在同一张图上观察不同 `block_dim`
@@ -459,11 +457,10 @@ cycles_per_block = cycles / block_dim
 
 ### 10.3 图中元素
 
-- 黑色实心圆：`actual_cycles_per_block`
-- 蓝色空心圆：`predicted_cycles_per_block`
+- 黑色实心圆：`actual_cycles`
+- 蓝色空心圆：`predicted_cycles`
 
-注意：拟合模型和 JSON 的 `metrics` 使用总 `cycles` 计算误差；
-绘图仅将总周期除以 `block_dim`，用于观察单核 base 周期。
+注意：Round1 的 `cycles` 口径是单核/每 block cycles，不是总 cycles。
 
 预测点不是一条连续折线，因为不同核数使用不同的 `bytes_per_core`
 和分支参数；用散点可以避免把不同核数的预测错误连接起来。

@@ -48,8 +48,8 @@ g = min(1, output_stride-1)
 连续基础项：
 
 ```text
-N_base = h_1 + B/T_1 + H_1/block_dim, block_dim<=2
-N_base = h_2 + B/T_2 + H_2/block_dim, block_dim>2
+N_base = (h_1 + B/T_1)*block_dim + H_1, block_dim<=2
+N_base = (h_2 + B/T_2)*block_dim + H_2, block_dim>2
 ```
 
 先拟合 GM 非连续项：
