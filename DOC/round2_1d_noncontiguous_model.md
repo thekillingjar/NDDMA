@@ -189,3 +189,7 @@ predicted_cycles - actual_cycles
 `block_dim=1/output_stride=1` 数据，横轴为 `input_stride`，纵轴为
 `actual_cycles`。每条曲线固定一个 `output_dim`，颜色区分不同
 `output_dim`。
+
+为避免横轴低 stride 区域标签重叠，`int8_t/int16_t/int32_t/int64_t`
+分别只从 `input_stride=128/64/32/16` 开始标记横轴数字；更小 stride
+保留网格和刻度线但不显示数字。

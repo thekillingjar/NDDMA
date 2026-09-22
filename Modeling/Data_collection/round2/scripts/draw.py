@@ -14,6 +14,7 @@ DEFAULT_OUTPUT_DIR = MODELING_DIR / "Ana" / "round2" / "figures"
 PREDICTIONS_FILENAME = "round2_1d_noncontiguous_predictions.csv"
 DTYPES = ("int8_t", "int16_t", "int32_t", "int64_t")
 DTYPE_SIZES = {"int8_t": 1, "int16_t": 2, "int32_t": 4, "int64_t": 8}
+INPUT_STRIDE_LABEL_MIN = {"int8_t": 128, "int16_t": 64, "int32_t": 32, "int64_t": 16}
 
 
 def parse_args() -> argparse.Namespace:
@@ -106,7 +107,7 @@ def input_stride_vs_cycles_svg(
         curve_rows.sort(key=lambda row: float(row["input_stride"]))
 
     width, height = 1220, 700
-    left, top, right, bottom = 95, 50, 300, 80
+    left, top, right, bottom = 105, 50, 310, 92
     plot_w, plot_h = width - left - right, height - top - bottom
     strides = sorted({float(row["input_stride"]) for row in selected})
     cycles = [float(row["actual_cycles"]) for row in selected]
@@ -131,18 +132,22 @@ def input_stride_vs_cycles_svg(
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}">',
         f'<defs><clipPath id="sweep-clip"><rect x="{left}" y="{top}" width="{plot_w}" height="{plot_h}"/></clipPath></defs>',
         '<rect width="100%" height="100%" fill="white"/>',
-        f'<text x="{left + plot_w/2}" y="27" text-anchor="middle" font-family="sans-serif" font-size="18">{dtype}: input stride vs actual cycles</text>',
-        f'<text x="18" y="{top + plot_h/2}" text-anchor="middle" transform="rotate(-90 18 {top + plot_h/2})" font-family="sans-serif" font-size="13">actual cycles</text>',
-        f'<text x="{left + plot_w/2}" y="{height - 18}" text-anchor="middle" font-family="sans-serif" font-size="13">input stride</text>',
+        f'<text x="{left + plot_w/2}" y="29" text-anchor="middle" font-family="sans-serif" font-size="20">{dtype}: input stride vs actual cycles</text>',
+        f'<text x="24" y="{top + plot_h/2}" text-anchor="middle" transform="rotate(-90 24 {top + plot_h/2})" font-family="sans-serif" font-size="18" font-weight="600">actual cycles</text>',
+        f'<text x="{left + plot_w/2}" y="{height - 24}" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600">input stride</text>',
         f'<rect x="{left}" y="{top}" width="{plot_w}" height="{plot_h}" fill="none" stroke="#555"/>',
     ]
+    min_labeled_stride = INPUT_STRIDE_LABEL_MIN[dtype]
     for stride in strides:
         x = px(stride)
         parts.extend([
             f'<line x1="{x:.2f}" y1="{top}" x2="{x:.2f}" y2="{top + plot_h}" stroke="#f3f4f6"/>',
             f'<line x1="{x:.2f}" y1="{top + plot_h}" x2="{x:.2f}" y2="{top + plot_h + 6}" stroke="#555"/>',
-            f'<text x="{x:.2f}" y="{top + plot_h + 22}" text-anchor="middle" font-family="sans-serif" font-size="10">{stride:.0f}</text>',
         ])
+        if stride >= min_labeled_stride:
+            parts.append(
+                f'<text class="x-stride-label" x="{x:.2f}" y="{top + plot_h + 27}" text-anchor="middle" font-family="sans-serif" font-size="14">{stride:.0f}</text>'
+            )
     for index in range(6):
         fraction = index / 5
         y_value = y_min + fraction * (y_max - y_min)
@@ -150,7 +155,7 @@ def input_stride_vs_cycles_svg(
         parts.extend([
             f'<line x1="{left}" y1="{y:.2f}" x2="{left + plot_w}" y2="{y:.2f}" stroke="#e5e7eb"/>',
             f'<line x1="{left - 6}" y1="{y:.2f}" x2="{left}" y2="{y:.2f}" stroke="#555"/>',
-            f'<text x="{left - 10}" y="{y + 4:.2f}" text-anchor="end" font-family="sans-serif" font-size="11">{y_value:.5g}</text>',
+            f'<text x="{left - 12}" y="{y + 5:.2f}" text-anchor="end" font-family="sans-serif" font-size="14">{y_value:.5g}</text>',
         ])
 
     parts.append('<g clip-path="url(#sweep-clip)">')
@@ -173,16 +178,16 @@ def input_stride_vs_cycles_svg(
     legend_x = left + plot_w + 35
     legend_y = top + 15
     parts.append(
-        f'<text x="{legend_x}" y="{legend_y}" font-family="sans-serif" font-size="13" font-weight="bold">output_dim</text>'
+        f'<text x="{legend_x}" y="{legend_y}" font-family="sans-serif" font-size="16" font-weight="bold">output_dim</text>'
     )
     for curve_index, shape in enumerate(sorted(curves)):
         color = palette[curve_index % len(palette)]
         column, row_index = divmod(curve_index, 12)
         x = legend_x + column * 112
-        y = legend_y + 25 + row_index * 24
+        y = legend_y + 28 + row_index * 27
         parts.extend([
-            f'<line x1="{x}" y1="{y - 4}" x2="{x + 20}" y2="{y - 4}" stroke="{color}" stroke-width="2"/>',
-            f'<text x="{x + 28}" y="{y}" font-family="sans-serif" font-size="11">{shape}</text>',
+            f'<line x1="{x}" y1="{y - 5}" x2="{x + 24}" y2="{y - 5}" stroke="{color}" stroke-width="2.5"/>',
+            f'<text x="{x + 32}" y="{y}" font-family="sans-serif" font-size="14">{shape}</text>',
         ])
     parts.append("</svg>")
     output.parent.mkdir(parents=True, exist_ok=True)
