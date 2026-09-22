@@ -21,12 +21,10 @@ PREDICTIONS_FILENAME = "round1_1d_single_core_predictions.csv"
 DTYPES = ("int8_t", "int16_t", "int32_t", "int64_t")
 BLOCK_DIMS = tuple(range(1, 57))
 SPLIT_BLOCK_DIM = 2
-METRIC_FIELDS = (
-    "actual_y",
+TOTAL_METRIC_FIELDS = ("nddma_mte2_cycles", "mte2_cycles")
+PER_BLOCK_METRIC_FIELDS = (
     "nddma_mte2_cycles_per_block",
     "mte2_cycles_per_block",
-    "mte2_cycles",
-    "nddma_mte2_cycles",
 )
 
 
@@ -46,14 +44,21 @@ def read_rows(path: Path) -> list[dict[str, str]]:
 
 
 def measurement_value(row: dict[str, str]) -> float:
-    for field in METRIC_FIELDS:
+    """Return total cycles; older exports can be reconstructed from per-block cycles."""
+    repeat = max(1.0, float(row.get("repeat") or "1"))
+    block_dim = max(1.0, float(row.get("block_dim") or "1"))
+    for field in TOTAL_METRIC_FIELDS:
         raw = str(row.get(field, "")).strip()
         if not raw:
             continue
-        value = float(raw)
-        repeat = float(row.get("repeat") or "1")
-        if field != "actual_y":
-            value /= max(1.0, repeat)
+        value = float(raw) / repeat
+        if math.isfinite(value) and value > 0:
+            return value
+    for field in PER_BLOCK_METRIC_FIELDS:
+        raw = str(row.get(field, "")).strip()
+        if not raw:
+            continue
+        value = float(raw) / repeat * block_dim
         if math.isfinite(value) and value > 0:
             return value
     raise ValueError(f"no positive measurement found for token={row.get('token', '')}")
@@ -111,7 +116,10 @@ def fit_line(points: list[dict[str, object]]) -> tuple[float, float]:
     if len(points) < 2:
         raise ValueError("at least two measured points are required for each dtype/block_dim")
     xs = [float(point["bytes_per_core"]) for point in points]
-    ys = [float(point["actual"]) for point in points]
+    ys = [
+        float(point["actual"]) / max(1.0, float(point["block_dim"]))
+        for point in points
+    ]
     mean_x = sum(xs) / len(xs)
     mean_y = sum(ys) / len(ys)
     denominator = sum((x - mean_x) ** 2 for x in xs)
@@ -134,8 +142,12 @@ def branch_for_block_dim(block_dim: int) -> str:
 
 def predict(params: dict[str, object], block_dim: int, bytes_per_core: float) -> float:
     if block_dim <= SPLIT_BLOCK_DIM:
-        return float(params["H_1"]) + bytes_per_core / float(params["T_1"])
-    return float(params["H_2"]) + bytes_per_core / float(params["T_2"])
+        base = float(params["H_1"]) + bytes_per_core / float(params["T_1"])
+    else:
+        base = float(params["H_2"]) + bytes_per_core / float(params["T_2"])
+    # The fitted T/H describe one core's base cost. Total cycles scale with
+    # block_dim in the multi-core branch (and remain consistent for k<=2).
+    return block_dim * base
 
 
 def summarize_metrics(rows: list[dict[str, object]]) -> dict[str, float | int]:
@@ -212,6 +224,8 @@ def write_predictions(
             "branch": branch_name,
             "actual_cycles": point["actual"],
             "predicted_cycles": predicted,
+            "actual_cycles_per_block": float(point["actual"]) / block_dim,
+            "predicted_cycles_per_block": predicted / block_dim,
             "error_cycles": predicted - float(point["actual"]),
         })
 
@@ -260,11 +274,12 @@ def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
         "formula": {
             "name": "arbitrary_dim_multicore_1d_contiguous_base",
             "split_block_dim": SPLIT_BLOCK_DIM,
-            "le2": "cycles = H_1(dtype) + bytes_per_core / T_1(dtype)",
-            "gt2": "cycles = H_2(dtype) + bytes_per_core / T_2(dtype)",
+            "le2": "cycles = block_dim * (H_1(dtype) + bytes_per_core / T_1(dtype))",
+            "gt2": "cycles = block_dim * (H_2(dtype) + bytes_per_core / T_2(dtype))",
+            "normalized": "cycles_per_block = cycles / block_dim",
             "bytes_definition": "bytes_per_core = logical_total_bytes / block_dim",
             "fitting_method": (
-                "fit H and T independently for each dtype/block_dim, "
+                "divide total cycles by block_dim, fit H and T independently for each dtype/block_dim, "
                 "then average H and T within each block_dim branch"
             ),
         },

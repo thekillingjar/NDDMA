@@ -125,7 +125,8 @@ logical_total_bytes  = 所有核的逻辑总搬运量
 bytes_per_core
 ```
 
-不是 `logical_total_bytes`。这样才能比较不同核数下每个核的连续搬运开销。
+不是 `logical_total_bytes`。拟合时总 cycles 还会除以 `block_dim`，
+得到单个核的归一化 base 开销；预测总 cycles 时再乘回 `block_dim`。
 
 ### 4.4 Factor 文件
 
@@ -154,10 +155,10 @@ r1_1d_single_core_int32_t_b16384_c8
 
 ### 5.1 每个 dtype、每个核数的局部模型
 
-首先对每个 `(dtype, block_dim)` 独立拟合：
+首先对每个 `(dtype, block_dim)` 独立拟合归一化后的周期：
 
 ```text
-cycles(dtype, block_dim, B)
+cycles_per_block(dtype, block_dim, B)
     = H(dtype, block_dim)
     + B / T(dtype, block_dim)
 ```
@@ -183,11 +184,15 @@ Round1 最终把 `block_dim` 分为两个分支：
 
 ```text
 block_dim <= 2:
-    cycles = H_1(dtype) + bytes_per_core / T_1(dtype)
+    cycles = block_dim * (H_1(dtype) + bytes_per_core / T_1(dtype))
 
 block_dim > 2:
-    cycles = H_2(dtype) + bytes_per_core / T_2(dtype)
+    cycles = block_dim * (H_2(dtype) + bytes_per_core / T_2(dtype))
 ```
+
+因此在 `bytes_per_core` 固定且较大时，`block_dim > 2` 的总
+`cycles` 对核数呈线性关系。`T_2/H_2` 表示每个核的归一化 base
+参数，而不是总周期参数。
 
 对应关系：
 
@@ -218,7 +223,8 @@ T   : bytes/cycle
 预测时推荐使用：
 
 ```python
-predicted = H + bytes_per_core / T
+base_cycles = H + bytes_per_core / T
+predicted = block_dim * base_cycles
 ```
 
 
@@ -351,8 +357,9 @@ JSON 保留建模公式、最终参数和整体误差指标，不再输出每个
 "formula": {
   "name": "arbitrary_dim_multicore_1d_contiguous_base",
   "split_block_dim": 2,
-  "le2": "cycles = H_1(dtype) + bytes_per_core / T_1(dtype)",
-  "gt2": "cycles = H_2(dtype) + bytes_per_core / T_2(dtype)",
+  "le2": "cycles = block_dim * (H_1(dtype) + bytes_per_core / T_1(dtype))",
+  "gt2": "cycles = block_dim * (H_2(dtype) + bytes_per_core / T_2(dtype))",
+  "normalized": "cycles_per_block = cycles / block_dim",
   "bytes_definition": "bytes_per_core = logical_total_bytes / block_dim",
   "fitting_method": "..."
 }
@@ -411,8 +418,10 @@ NDDMA2/Modeling/Ana/round1/round1_1d_single_core_predictions.csv
 | `bytes_per_core` | 模型自变量 |
 | `logical_total_bytes` | 逻辑总搬运量 |
 | `branch` | `le2` 或 `gt2` |
-| `actual_cycles` | 聚合后的实际 cycles |
+| `actual_cycles` | 聚合后的实际总 cycles |
 | `predicted_cycles` | 分段模型预测值 |
+| `actual_cycles_per_block` | 实际总 cycles 除以核数 |
+| `predicted_cycles_per_block` | 预测总 cycles 除以核数 |
 | `error_cycles` | `predicted - actual` |
 
 该文件既用于绘图，也用于逐点检查模型误差。
@@ -499,9 +508,9 @@ GM/UB contiguous
 branch = "le2" if block_dim <= 2 else "gt2"
 params = model["parameters"][dtype]
 if branch == "le2":
-    cycles = params["H_1"] + bytes_per_core / params["T_1"]
+    cycles = block_dim * (params["H_1"] + bytes_per_core / params["T_1"])
 else:
-    cycles = params["H_2"] + bytes_per_core / params["T_2"]
+    cycles = block_dim * (params["H_2"] + bytes_per_core / params["T_2"])
 ```
 
 不能直接用于：
