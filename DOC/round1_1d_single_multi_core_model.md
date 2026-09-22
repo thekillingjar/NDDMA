@@ -159,7 +159,7 @@ r1_1d_single_core_int32_t_b16384_c8
 
 ```text
 cycles(dtype, block_dim, B)
-    = (h(dtype) + B / T(dtype)) * block_dim + H(dtype)
+    = B * (block_dim / T(dtype) + h(dtype)) + H(dtype)
 ```
 
 其中：
@@ -171,7 +171,7 @@ B = bytes_per_core
 等价地：
 
 ```text
-cycles = h * block_dim + H + cycles_per_byte * block_dim * B
+cycles = cycles_per_byte * block_dim * B + h * B + H
 cycles_per_byte = 1 / T
 ```
 
@@ -183,15 +183,16 @@ Round1 最终把 `block_dim` 分为两个分支：
 
 ```text
 block_dim <= 2:
-    cycles = (h_1(dtype) + bytes_per_core / T_1(dtype)) * block_dim + H_1(dtype)
+    cycles = bytes_per_core * (block_dim / T_1(dtype) + h_1(dtype)) + H_1(dtype)
 
 block_dim > 2:
-    cycles = (h_2(dtype) + bytes_per_core / T_2(dtype)) * block_dim + H_2(dtype)
+    cycles = bytes_per_core * (block_dim / T_2(dtype) + h_2(dtype)) + H_2(dtype)
 ```
 
 因此在 `bytes_per_core` 固定且较大时，`block_dim > 2` 的单核
-`cycles` 对核数呈线性关系。`h_2` 是随核数线性增加的固定项，
-`H_2` 是不随核数变化的固定项。
+`cycles` 对核数呈线性关系。该线性项的斜率为
+`bytes_per_core / T_2`，`h_2` 表示与 `bytes_per_core` 相关但不随核数
+变化的斜率偏置，`H_2` 是不随字节数和核数变化的固定项。
 
 对应关系：
 
@@ -204,23 +205,25 @@ gt2: block_dim = 3..56
 
 对于某个 dtype 和某个分支：
 
-1. 对分支内所有样本构造特征
-   `[block_dim, 1, block_dim * bytes_per_core]`。
-2. 联合拟合 `h`、`H` 和 `1/T`。
-3. 对该分支的全部样本使用同一组参数预测。
+1. 固定每个 `block_dim`，对不同 `bytes_per_core` 拟合：
+   `cycles = slope(block_dim) * bytes_per_core + H(block_dim)`。
+2. 在每个分支内拟合 `slope(block_dim)` 与核数的线性关系：
+   `slope(block_dim) = block_dim / T + h`。
+3. `T = 1 / slope_slope`，`h = slope_intercept`。
+4. 分支 `H` 取该分支内各 `H(block_dim)` 的算术平均。
 
 ### 5.4 参数单位
 
 ```text
 H   : cycles
-h   : cycles/core-count
+h   : cycles/byte
 T   : bytes/cycle
 ```
 
 预测时推荐使用：
 
 ```python
-predicted = (h + bytes_per_core / T) * block_dim + H
+predicted = bytes_per_core * (block_dim / T + h) + H
 ```
 
 
@@ -353,8 +356,8 @@ JSON 保留建模公式、最终参数和整体误差指标，不再输出每个
 "formula": {
   "name": "arbitrary_dim_multicore_1d_contiguous_base",
   "split_block_dim": 2,
-  "le2": "cycles = (h_1(dtype) + bytes_per_core / T_1(dtype)) * block_dim + H_1(dtype)",
-  "gt2": "cycles = (h_2(dtype) + bytes_per_core / T_2(dtype)) * block_dim + H_2(dtype)",
+  "le2": "cycles = bytes_per_core * (block_dim / T_1(dtype) + h_1(dtype)) + H_1(dtype)",
+  "gt2": "cycles = bytes_per_core * (block_dim / T_2(dtype) + h_2(dtype)) + H_2(dtype)",
   "metric": "cycles is single-core/per-block cycles",
   "bytes_definition": "bytes_per_core = logical_total_bytes / block_dim",
   "fitting_method": "..."
@@ -394,10 +397,10 @@ JSON 保留建模公式、最终参数和整体误差指标，不再输出每个
 | 字段 | 含义 |
 | --- | --- |
 | `T_1` | `block_dim<=2` 分支平均搬运速率，单位 bytes/cycle |
-| `h_1` | `block_dim<=2` 分支随核数线性增加的固定项，单位 cycles/core-count |
+| `h_1` | `block_dim<=2` 分支字节斜率偏置，单位 cycles/byte |
 | `H_1` | `block_dim<=2` 分支不随核数变化的固定项，单位 cycles |
 | `T_2` | `block_dim>2` 分支平均搬运速率，单位 bytes/cycle |
-| `h_2` | `block_dim>2` 分支随核数线性增加的固定项，单位 cycles/core-count |
+| `h_2` | `block_dim>2` 分支字节斜率偏置，单位 cycles/byte |
 | `H_2` | `block_dim>2` 分支不随核数变化的固定项，单位 cycles |
 
 ## 9. Predictions CSV
@@ -508,9 +511,9 @@ GM/UB contiguous
 branch = "le2" if block_dim <= 2 else "gt2"
 params = model["parameters"][dtype]
 if branch == "le2":
-    cycles = (params["h_1"] + bytes_per_core / params["T_1"]) * block_dim + params["H_1"]
+    cycles = bytes_per_core * (block_dim / params["T_1"] + params["h_1"]) + params["H_1"]
 else:
-    cycles = (params["h_2"] + bytes_per_core / params["T_2"]) * block_dim + params["H_2"]
+    cycles = bytes_per_core * (block_dim / params["T_2"] + params["h_2"]) + params["H_2"]
 ```
 
 不能直接用于：

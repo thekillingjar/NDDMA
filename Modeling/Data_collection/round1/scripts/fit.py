@@ -167,11 +167,8 @@ def predict(params: dict[str, object], block_dim: int, bytes_per_core: float) ->
         suffix = "1"
     else:
         suffix = "2"
-    base = (
-        float(params[f"h_{suffix}"])
-        + bytes_per_core / float(params[f"T_{suffix}"])
-    )
-    return block_dim * base + float(params[f"H_{suffix}"])
+    slope = block_dim / float(params[f"T_{suffix}"]) + float(params[f"h_{suffix}"])
+    return bytes_per_core * slope + float(params[f"H_{suffix}"])
 
 
 def summarize_metrics(rows: list[dict[str, object]]) -> dict[str, float | int]:
@@ -201,14 +198,28 @@ def summarize_metrics(rows: list[dict[str, object]]) -> dict[str, float | int]:
 def fit_branch(
     points: list[dict[str, object]], branch_name: str
 ) -> dict[str, object]:
-    matrix = []
-    target = []
-    for point in points:
-        block_dim = float(point["block_dim"])
-        bytes_per_core = float(point["bytes_per_core"])
-        matrix.append([block_dim, 1.0, block_dim * bytes_per_core])
-        target.append(float(point["actual"]))
-    h, fixed_cycles, cycles_per_byte = solve(matrix, target)
+    block_fits = []
+    for block_dim in sorted({int(point["block_dim"]) for point in points}):
+        block_points = [
+            point for point in points if int(point["block_dim"]) == block_dim
+        ]
+        slope, fixed_cycles = solve(
+            [[float(point["bytes_per_core"]), 1.0] for point in block_points],
+            [float(point["actual"]) for point in block_points],
+        )
+        block_fits.append({
+            "block_dim": block_dim,
+            "slope": slope,
+            "H": fixed_cycles,
+            "sample_count": len(block_points),
+        })
+
+    cycles_per_byte_per_block, h = solve(
+        [[float(row["block_dim"]), 1.0] for row in block_fits],
+        [float(row["slope"]) for row in block_fits],
+    )
+    fixed_cycles = sum(float(row["H"]) for row in block_fits) / len(block_fits)
+    cycles_per_byte = cycles_per_byte_per_block
     if cycles_per_byte <= 0:
         raise ValueError(
             f"{branch_name} fitted cycles_per_byte must be positive, "
@@ -291,12 +302,13 @@ def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
         "formula": {
             "name": "arbitrary_dim_multicore_1d_contiguous_base",
             "split_block_dim": SPLIT_BLOCK_DIM,
-            "le2": "cycles = (h_1(dtype) + bytes_per_core / T_1(dtype)) * block_dim + H_1(dtype)",
-            "gt2": "cycles = (h_2(dtype) + bytes_per_core / T_2(dtype)) * block_dim + H_2(dtype)",
+            "le2": "cycles = bytes_per_core * (block_dim / T_1(dtype) + h_1(dtype)) + H_1(dtype)",
+            "gt2": "cycles = bytes_per_core * (block_dim / T_2(dtype) + h_2(dtype)) + H_2(dtype)",
             "metric": "cycles is single-core/per-block cycles",
             "bytes_definition": "bytes_per_core = logical_total_bytes / block_dim",
             "fitting_method": (
-                "jointly fit h, H and 1/T across block_dim and bytes_per_core "
+                "stage 1 fits cycles = slope(block_dim) * bytes_per_core + H(block_dim) "
+                "for each dtype/block_dim; stage 2 fits slope(block_dim) = block_dim / T + h "
                 "within each dtype/branch"
             ),
         },
