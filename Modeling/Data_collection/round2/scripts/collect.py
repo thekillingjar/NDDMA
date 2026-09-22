@@ -29,6 +29,7 @@ INPUT_STRIDES = (2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048)
 OUTPUT_STRIDES = (2, 4, 6, 8, 10, 12, 14, 16, 32)
 BYTES_PER_CORE = (64, 128, 512, 1024, 4096, 16384)
 BASE_PAIRS = ((1, 1), (1, 2), (1, 16))
+MULTICORE_OS2_INPUT_STRIDES = (2, 4, 8, 16, 32, 64, 128, 256)
 OUTPUT_VALIDATION_PAIRS = ((2, 4), (32, 16), (128, 32))
 GUARD_ELEMS = 64
 MAX_GM_SPAN_BYTES = 4 * 1024 * 1024
@@ -157,7 +158,7 @@ def build_rows(repeat: int, execution_repeat_count: int) -> list[dict[str, str]]
                     add("F", dtype, k, b, i, o)
                 for i in INPUT_STRIDES[:5]:
                     add("G", dtype, k, b, i, 1)
-                for i in INPUT_STRIDES[:5]:
+                for i in MULTICORE_OS2_INPUT_STRIDES:
                     add("H", dtype, k, b, i, 2)
                 for i, o in OUTPUT_VALIDATION_PAIRS:
                     add("I", dtype, k, b, i, o)

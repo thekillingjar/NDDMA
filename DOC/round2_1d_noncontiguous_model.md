@@ -81,7 +81,7 @@ N_1 = N_base + rho*(N_G+N_GU), block_dim>2
 
 ## 数据集
 
-当前 factor 总计 6717 行，默认写入：
+当前 factor 总计 7221 行，默认写入：
 
 ```text
 Modeling/Ana/round2/round2_1d_noncontiguous_factor.csv
@@ -95,7 +95,7 @@ B: 单核 UB 非连续输出 stride，参与 N_GU
 C: 单核 GM/UB 联合非连续，拟合 N_GU
 F: 多核验证配置，base 参数继承 Round1
 G: 多核 GM 非连续输入校准
-H: 多核 GM/UB 联合非连续校准
+H: 多核 GM/UB 联合非连续校准，包含 os=2 下 input_stride=2/4/8/16/32/64/128/256
 I/J: 多核验证配置
 ```
 
@@ -167,7 +167,7 @@ c1, c2, c3, c4
 
 ## 图解释
 
-`draw` 生成每种 dtype 五类图：
+`draw` 生成每种 dtype 七类图：
 
 ```text
 Modeling/Ana/round2/figures/
@@ -175,7 +175,9 @@ round2_1d_noncontiguous_actual_vs_predicted_<dtype>.svg
 round2_1d_noncontiguous_residual_<dtype>.svg
 round2_1d_input_stride_vs_cycles_<dtype>.svg
 round2_1d_is1_output_stride_vs_cycles_<dtype>.svg
+round2_1d_os1_output_dim_vs_cycles_<dtype>.svg
 round2_1d_os2_output_dim_vs_cycles_<dtype>.svg
+round2_1d_os2_rho_vs_cores_<dtype>.svg
 ```
 
 第一类图横轴为 `logical_total_bytes`，纵轴为 cycles，黑点是实测值，蓝色空心点是预测值。
@@ -205,6 +207,24 @@ predicted_cycles - actual_cycles
 `output_stride=1`，图中在 `output_stride=1` 处使用继承的 Round1
 `base_cycles` 增加空心基准点，`output_stride>=2` 的实心点为实测值。
 
-第五类图固定单核 `output_stride=2`，横轴为 `output_dim`，纵轴为
+第五类图固定单核 `output_stride=1`，横轴为 `output_dim`，纵轴为
 `actual_cycles`，颜色区分不同 `input_stride`。其中 `input_stride=1`
-来自 B 组，`input_stride>=2` 来自 C 组。
+来自 F 组单核连续基准数据，`input_stride>=2` 来自 A 组。为避免横轴
+低维度区域标签重叠，`output_dim<512` 的刻度只显示一个数字，其余低维度
+刻度保留网格和刻度线。
+
+第六类图固定单核 `output_stride=2`，横轴为 `output_dim`，纵轴为
+`actual_cycles`，颜色区分不同 `input_stride`。其中 `input_stride=1`
+来自 B 组，`input_stride>=2` 来自 C 组。为避免横轴低维度区域标签重叠，
+`output_dim<512` 的刻度只显示一个数字，其余低维度刻度保留网格和刻度线。
+
+第七类图固定 `output_stride=2`，横轴为核数 `block_dim`，纵轴为：
+
+```text
+(N_act - N_base) / (N_G + N_GU)
+```
+
+颜色区分 `input_stride=1/2/4/16/64/128/256`。其中 `input_stride=1`
+来自 F 组的连续输入、非连续输出多核数据；其余 `input_stride` 来自 H 组
+多核 GM/UB 联合非连续校准数据。同一个 `input_stride/block_dim` 下不同
+数据量的原始点会保留，连线使用这些点的中位数。

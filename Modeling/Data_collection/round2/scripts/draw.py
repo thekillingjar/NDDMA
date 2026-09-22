@@ -16,6 +16,16 @@ DTYPES = ("int8_t", "int16_t", "int32_t", "int64_t")
 DTYPE_SIZES = {"int8_t": 1, "int16_t": 2, "int32_t": 4, "int64_t": 8}
 INPUT_STRIDE_LABEL_MIN = {"int8_t": 128, "int16_t": 64, "int32_t": 256, "int64_t": 128}
 INPUT_STRIDE_EXTRA_LABELS = {"int32_t": {32}, "int64_t": {16}}
+RHO_PLOT_INPUT_STRIDES = (1, 2, 4, 16, 64, 128, 256)
+RHO_PLOT_COLORS = {
+    1: "#b91c1c",
+    2: "#0369a1",
+    4: "#15803d",
+    16: "#7c3aed",
+    64: "#c2410c",
+    128: "#0f766e",
+    256: "#be185d",
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -369,13 +379,18 @@ def os2_output_dim_vs_cycles_svg(
         f'<text x="{left + plot_w/2}" y="{height - 24}" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600">output_dim</text>',
         f'<rect x="{left}" y="{top}" width="{plot_w}" height="{plot_h}" fill="none" stroke="#555"/>',
     ]
+    pre_512_labels = [dim for dim in dims if dim < 512]
+    labeled_pre_512 = max(pre_512_labels) if pre_512_labels else None
     for dim in dims:
         x = px(dim)
         parts.extend([
             f'<line x1="{x:.2f}" y1="{top}" x2="{x:.2f}" y2="{top + plot_h}" stroke="#f3f4f6"/>',
             f'<line x1="{x:.2f}" y1="{top + plot_h}" x2="{x:.2f}" y2="{top + plot_h + 6}" stroke="#555"/>',
-            f'<text class="x-output-dim-label" x="{x:.2f}" y="{top + plot_h + 30}" text-anchor="middle" font-family="sans-serif" font-size="17">{dim}</text>',
         ])
+        if dim >= 512 or dim == labeled_pre_512:
+            parts.append(
+                f'<text class="x-output-dim-label" x="{x:.2f}" y="{top + plot_h + 30}" text-anchor="middle" font-family="sans-serif" font-size="17">{dim}</text>'
+            )
     for index in range(6):
         fraction = index / 5
         y_value = y_min + fraction * (y_max - y_min)
@@ -423,6 +438,267 @@ def os2_output_dim_vs_cycles_svg(
     output.write_text("\n".join(parts) + "\n", encoding="utf-8")
 
 
+def os1_output_dim_vs_cycles_svg(
+    dtype: str,
+    rows: list[dict[str, str]],
+    output: Path,
+) -> None:
+    selected = [
+        row for row in rows
+        if row["dtype"] == dtype
+        and (
+            row["group"] == "A"
+            or (
+                row["group"] == "F"
+                and int(float(row["input_stride"])) == 1
+            )
+        )
+        and int(float(row["block_dim"])) == 1
+        and int(float(row["output_stride"])) == 1
+    ]
+    if not selected:
+        return
+
+    curves: dict[float, list[dict[str, str]]] = {}
+    for row in selected:
+        curves.setdefault(float(row["input_stride"]), []).append(row)
+    for curve_rows in curves.values():
+        curve_rows.sort(key=lambda row: output_dim(dtype, row))
+
+    width, height = 1220, 700
+    left, top, right, bottom = 105, 50, 310, 92
+    plot_w, plot_h = width - left - right, height - top - bottom
+    dims = sorted({output_dim(dtype, row) for row in selected})
+    cycles = [float(row["actual_cycles"]) for row in selected]
+    x_min, x_max = min(dims), max(dims)
+    y_min, y_max = min(cycles), max(cycles)
+    y_pad = max((y_max - y_min) * 0.05, 1.0)
+    y_min = max(0.0, y_min - y_pad)
+    y_max += y_pad
+    palette = (
+        "#b91c1c", "#0369a1", "#15803d", "#7c3aed", "#c2410c", "#0f766e",
+        "#be185d", "#4338ca", "#4d7c0f", "#a16207", "#0e7490", "#6d28d9",
+        "#374151",
+    )
+
+    def px(value: float) -> float:
+        return left + (value - x_min) / max(1.0, x_max - x_min) * plot_w
+
+    def py(value: float) -> float:
+        return top + (y_max - value) / max(1.0, y_max - y_min) * plot_h
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}">',
+        f'<defs><clipPath id="os1-output-dim-clip"><rect x="{left}" y="{top}" width="{plot_w}" height="{plot_h}"/></clipPath></defs>',
+        '<rect width="100%" height="100%" fill="white"/>',
+        f'<text x="{left + plot_w/2}" y="29" text-anchor="middle" font-family="sans-serif" font-size="20">{dtype}: output stride=1, output dim vs actual cycles</text>',
+        f'<text x="24" y="{top + plot_h/2}" text-anchor="middle" transform="rotate(-90 24 {top + plot_h/2})" font-family="sans-serif" font-size="18" font-weight="600">actual cycles</text>',
+        f'<text x="{left + plot_w/2}" y="{height - 24}" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600">output_dim</text>',
+        f'<rect x="{left}" y="{top}" width="{plot_w}" height="{plot_h}" fill="none" stroke="#555"/>',
+    ]
+    pre_512_labels = [dim for dim in dims if dim < 512]
+    labeled_pre_512 = max(pre_512_labels) if pre_512_labels else None
+    for dim in dims:
+        x = px(dim)
+        parts.extend([
+            f'<line x1="{x:.2f}" y1="{top}" x2="{x:.2f}" y2="{top + plot_h}" stroke="#f3f4f6"/>',
+            f'<line x1="{x:.2f}" y1="{top + plot_h}" x2="{x:.2f}" y2="{top + plot_h + 6}" stroke="#555"/>',
+        ])
+        if dim >= 512 or dim == labeled_pre_512:
+            parts.append(
+                f'<text class="x-output-dim-label" x="{x:.2f}" y="{top + plot_h + 30}" text-anchor="middle" font-family="sans-serif" font-size="17">{dim}</text>'
+            )
+    for index in range(6):
+        fraction = index / 5
+        y_value = y_min + fraction * (y_max - y_min)
+        y = py(y_value)
+        parts.extend([
+            f'<line x1="{left}" y1="{y:.2f}" x2="{left + plot_w}" y2="{y:.2f}" stroke="#e5e7eb"/>',
+            f'<line x1="{left - 6}" y1="{y:.2f}" x2="{left}" y2="{y:.2f}" stroke="#555"/>',
+            f'<text x="{left - 12}" y="{y + 6:.2f}" text-anchor="end" font-family="sans-serif" font-size="17">{y_value:.5g}</text>',
+        ])
+
+    parts.append('<g clip-path="url(#os1-output-dim-clip)">')
+    for curve_index, input_stride in enumerate(sorted(curves)):
+        color = palette[curve_index % len(palette)]
+        curve_rows = curves[input_stride]
+        points = " ".join(
+            f'{px(output_dim(dtype, row)):.2f},{py(float(row["actual_cycles"])):.2f}'
+            for row in curve_rows
+        )
+        parts.append(
+            f'<polyline points="{points}" fill="none" stroke="{color}" stroke-width="1.8"/>'
+        )
+        for row in curve_rows:
+            dim = output_dim(dtype, row)
+            parts.append(
+                f'<circle cx="{px(dim):.2f}" cy="{py(float(row["actual_cycles"])):.2f}" r="3" fill="{color}"><title>input_stride={input_stride:.0f}; output_dim={dim}; actual={float(row["actual_cycles"]):.4g}</title></circle>'
+            )
+    parts.append("</g>")
+
+    legend_x = left + plot_w + 35
+    legend_y = top + 15
+    parts.append(
+        f'<text x="{legend_x}" y="{legend_y}" font-family="sans-serif" font-size="16" font-weight="bold">input_stride</text>'
+    )
+    for curve_index, input_stride in enumerate(sorted(curves)):
+        color = palette[curve_index % len(palette)]
+        column, row_index = divmod(curve_index, 12)
+        x = legend_x + column * 112
+        y = legend_y + 28 + row_index * 27
+        parts.extend([
+            f'<line x1="{x}" y1="{y - 5}" x2="{x + 24}" y2="{y - 5}" stroke="{color}" stroke-width="2.5"/>',
+            f'<text x="{x + 32}" y="{y}" font-family="sans-serif" font-size="14">{input_stride:.0f}</text>',
+        ])
+    parts.append("</svg>")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text("\n".join(parts) + "\n", encoding="utf-8")
+
+
+def os2_rho_vs_cores_svg(
+    dtype: str,
+    rows: list[dict[str, str]],
+    output: Path,
+) -> None:
+    target_strides = set(RHO_PLOT_INPUT_STRIDES)
+    points_by_stride: dict[int, list[tuple[int, float]]] = {}
+    for row in rows:
+        if row["dtype"] != dtype or int(float(row["output_stride"])) != 2:
+            continue
+        input_stride = int(float(row["input_stride"]))
+        if input_stride not in target_strides:
+            continue
+        if input_stride == 1 and row["group"] != "F":
+            continue
+        if input_stride != 1 and row["group"] != "H":
+            continue
+        denominator = float(row["N_G"]) + float(row["N_GU"])
+        if abs(denominator) < 1e-12:
+            continue
+        block_dim = int(float(row["block_dim"]))
+        ratio = (float(row["actual_cycles"]) - float(row["base_cycles"])) / denominator
+        points_by_stride.setdefault(input_stride, []).append((block_dim, ratio))
+
+    if not points_by_stride:
+        return
+
+    def median(values: list[float]) -> float:
+        ordered = sorted(values)
+        middle = len(ordered) // 2
+        if len(ordered) % 2:
+            return ordered[middle]
+        return (ordered[middle - 1] + ordered[middle]) / 2.0
+
+    median_by_stride: dict[int, list[tuple[int, float]]] = {}
+    for input_stride, points in points_by_stride.items():
+        values_by_core: dict[int, list[float]] = {}
+        for block_dim, ratio in points:
+            values_by_core.setdefault(block_dim, []).append(ratio)
+        median_by_stride[input_stride] = [
+            (block_dim, median(values))
+            for block_dim, values in sorted(values_by_core.items())
+        ]
+
+    block_dims = sorted({
+        block_dim
+        for points in points_by_stride.values()
+        for block_dim, _ in points
+    })
+    ratios = [
+        ratio
+        for points in points_by_stride.values()
+        for _, ratio in points
+    ]
+    x_min, x_max = min(block_dims), max(block_dims)
+    y_min, y_max = min(ratios), max(ratios)
+    y_pad = max((y_max - y_min) * 0.08, 0.05)
+    y_min -= y_pad
+    y_max += y_pad
+
+    width, height = 1220, 700
+    left, top, right, bottom = 105, 50, 310, 92
+    plot_w, plot_h = width - left - right, height - top - bottom
+
+    def px(value: float) -> float:
+        return left + (value - x_min) / max(1.0, x_max - x_min) * plot_w
+
+    def py(value: float) -> float:
+        return top + (y_max - value) / max(1.0, y_max - y_min) * plot_h
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}">',
+        f'<defs><clipPath id="os2-rho-clip"><rect x="{left}" y="{top}" width="{plot_w}" height="{plot_h}"/></clipPath></defs>',
+        '<rect width="100%" height="100%" fill="white"/>',
+        f'<text x="{left + plot_w/2}" y="29" text-anchor="middle" font-family="sans-serif" font-size="20">{dtype}: os=2, rho observation vs cores</text>',
+        f'<text x="24" y="{top + plot_h/2}" text-anchor="middle" transform="rotate(-90 24 {top + plot_h/2})" font-family="sans-serif" font-size="18" font-weight="600">(N_act-N_base)/(N_G+N_GU)</text>',
+        f'<text x="{left + plot_w/2}" y="{height - 24}" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600">block_dim</text>',
+        f'<rect x="{left}" y="{top}" width="{plot_w}" height="{plot_h}" fill="none" stroke="#555"/>',
+    ]
+    for block_dim in block_dims:
+        x = px(block_dim)
+        parts.extend([
+            f'<line x1="{x:.2f}" y1="{top}" x2="{x:.2f}" y2="{top + plot_h}" stroke="#f3f4f6"/>',
+            f'<line x1="{x:.2f}" y1="{top + plot_h}" x2="{x:.2f}" y2="{top + plot_h + 6}" stroke="#555"/>',
+            f'<text x="{x:.2f}" y="{top + plot_h + 30}" text-anchor="middle" font-family="sans-serif" font-size="17">{block_dim}</text>',
+        ])
+    for index in range(6):
+        fraction = index / 5
+        y_value = y_min + fraction * (y_max - y_min)
+        y = py(y_value)
+        parts.extend([
+            f'<line x1="{left}" y1="{y:.2f}" x2="{left + plot_w}" y2="{y:.2f}" stroke="#e5e7eb"/>',
+            f'<line x1="{left - 6}" y1="{y:.2f}" x2="{left}" y2="{y:.2f}" stroke="#555"/>',
+            f'<text x="{left - 12}" y="{y + 6:.2f}" text-anchor="end" font-family="sans-serif" font-size="17">{y_value:.5g}</text>',
+        ])
+    if y_min < 1.0 < y_max:
+        parts.append(
+            f'<line x1="{left}" y1="{py(1.0):.2f}" x2="{left + plot_w}" y2="{py(1.0):.2f}" stroke="#9ca3af" stroke-dasharray="6 5"/>'
+        )
+
+    parts.append('<g clip-path="url(#os2-rho-clip)">')
+    for input_stride in RHO_PLOT_INPUT_STRIDES:
+        if input_stride not in points_by_stride:
+            continue
+        color = RHO_PLOT_COLORS[input_stride]
+        median_points = " ".join(
+            f"{px(block_dim):.2f},{py(ratio):.2f}"
+            for block_dim, ratio in median_by_stride[input_stride]
+        )
+        parts.append(
+            f'<polyline points="{median_points}" fill="none" stroke="{color}" stroke-width="2.5"/>'
+        )
+        for block_dim, ratio in points_by_stride[input_stride]:
+            parts.append(
+                f'<circle cx="{px(block_dim):.2f}" cy="{py(ratio):.2f}" r="3" fill="{color}" fill-opacity="0.35"><title>input_stride={input_stride}; block_dim={block_dim}; ratio={ratio:.5g}</title></circle>'
+            )
+        for block_dim, ratio in median_by_stride[input_stride]:
+            parts.append(
+                f'<circle cx="{px(block_dim):.2f}" cy="{py(ratio):.2f}" r="4" fill="{color}"><title>input_stride={input_stride}; block_dim={block_dim}; median ratio={ratio:.5g}</title></circle>'
+            )
+    parts.append("</g>")
+
+    legend_x = left + plot_w + 35
+    legend_y = top + 15
+    parts.append(
+        f'<text x="{legend_x}" y="{legend_y}" font-family="sans-serif" font-size="16" font-weight="bold">input_stride</text>'
+    )
+    legend_index = 0
+    for input_stride in RHO_PLOT_INPUT_STRIDES:
+        if input_stride not in points_by_stride:
+            continue
+        color = RHO_PLOT_COLORS[input_stride]
+        x = legend_x
+        y = legend_y + 28 + legend_index * 27
+        legend_index += 1
+        parts.extend([
+            f'<line x1="{x}" y1="{y - 5}" x2="{x + 24}" y2="{y - 5}" stroke="{color}" stroke-width="2.5"/>',
+            f'<text x="{x + 32}" y="{y}" font-family="sans-serif" font-size="14">{input_stride}</text>',
+        ])
+    parts.append("</svg>")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text("\n".join(parts) + "\n", encoding="utf-8")
+
+
 def main() -> int:
     args = parse_args()
     input_dir = Path(args.input_dir).resolve()
@@ -443,10 +719,20 @@ def main() -> int:
             rows,
             output_dir / f"round2_1d_is1_output_stride_vs_cycles_{dtype}.svg",
         )
+        os1_output_dim_vs_cycles_svg(
+            dtype,
+            rows,
+            output_dir / f"round2_1d_os1_output_dim_vs_cycles_{dtype}.svg",
+        )
         os2_output_dim_vs_cycles_svg(
             dtype,
             rows,
             output_dir / f"round2_1d_os2_output_dim_vs_cycles_{dtype}.svg",
+        )
+        os2_rho_vs_cores_svg(
+            dtype,
+            rows,
+            output_dir / f"round2_1d_os2_rho_vs_cores_{dtype}.svg",
         )
     print(f"[INFO] wrote plots to {output_dir}")
     return 0
