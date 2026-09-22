@@ -117,4 +117,18 @@ error_cycles
 Modeling/Ana/round4/figures/
 round4_2d_ub_contiguous_ng2_<dtype>_actual_vs_predicted.svg
 round4_2d_ub_contiguous_ng2_<dtype>_residual.svg
+round4_2d_ub_contiguous_ng2_<dtype>_observed_ng2_vs_m.svg
+round4_2d_ub_contiguous_ng2_<dtype>_error_vs_bytes.svg
 ```
+
+`observed_ng2_vs_m` 横轴为 `M`，纵轴为：
+
+```text
+(N2 - N_base) / N_G1
+```
+
+不同外层 `is2` 使用不同颜色；同一 `is2/M` 下不同 `N/block_dim/is1`
+的原始点保留，连线使用这些点的中位数。
+
+`error_vs_bytes` 横轴为 `bytes_per_core`，纵轴为
+`predicted_cycles - actual_cycles`，不同 `block_dim` 使用不同颜色。
