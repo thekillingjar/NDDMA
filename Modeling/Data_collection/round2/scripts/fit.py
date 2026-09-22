@@ -15,6 +15,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 MODELING_DIR = SCRIPT_DIR.parents[2]
 DEFAULT_ANA_DIR = MODELING_DIR / "Ana" / "round2"
 DEFAULT_DATA_DIR = DEFAULT_ANA_DIR / "collection"
+DEFAULT_ROUND1_MODEL = MODELING_DIR / "Ana" / "round1" / "round1_1d_single_multi_core_model.json"
 MODEL_FILENAME = "round2_1d_noncontiguous_model.json"
 PREDICTIONS_FILENAME = "round2_1d_noncontiguous_predictions.csv"
 DTYPES = ("int8_t", "int16_t", "int32_t", "int64_t")
@@ -33,6 +34,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--data-dir", default=str(DEFAULT_DATA_DIR))
     parser.add_argument("--measurement-csv", default="")
     parser.add_argument("--output-dir", default=str(DEFAULT_ANA_DIR))
+    parser.add_argument("--round1-model", default=str(DEFAULT_ROUND1_MODEL))
     return parser.parse_args()
 
 
@@ -181,32 +183,14 @@ def calc_metrics(rows: list[dict[str, object]]) -> dict[str, float | int]:
     }
 
 
-def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
+def fit_model(
+    rows: list[dict[str, object]],
+    round1_parameters: dict[str, dict[str, float]],
+) -> dict[str, object]:
     params: dict[str, dict[str, object]] = {}
     for dtype in DTYPES:
         dtype_rows = [row for row in rows if row["dtype"] == dtype]
-        base_rows = [
-            row for row in dtype_rows
-            if row["group"] == "F" and row["input_stride"] == 1
-            and row["output_stride"] == 1
-        ]
-        branch_base: dict[str, object] = {}
-        for segment in ("le2", "gt2"):
-            selected = [row for row in base_rows if branch(int(row["block_dim"])) == segment]
-            coefficients = solve(
-                [[1.0, float(row["bytes_per_core"])] for row in selected],
-                [float(row["actual"]) for row in selected],
-            )
-            branch_base[segment] = {
-                "alpha": coefficients[0],
-                "T_bytes_per_cycle": 1.0 / coefficients[1],
-            }
-        base = {
-            "T_1": float(branch_base["le2"]["T_bytes_per_cycle"]),
-            "H_1": float(branch_base["le2"]["alpha"]),
-            "T_2": float(branch_base["gt2"]["T_bytes_per_cycle"]),
-            "H_2": float(branch_base["gt2"]["alpha"]),
-        }
+        base = round1_parameters[dtype]
 
         ng_rows = [
             row for row in dtype_rows
@@ -306,7 +290,8 @@ def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
                 "s": "min(input_stride*dtype_size,128)",
                 "os_gate": "min(1,output_stride-1)",
             },
-            "fit_order": ["base", "N_G", "N_GU", "multicore_rho"],
+            "fit_order": ["inherit_round1_base", "N_G", "N_GU", "multicore_rho"],
+            "base_source": "round1_1d_single_multi_core_model.json",
         },
         "parameters": params,
         "metrics": {
@@ -359,7 +344,22 @@ def main() -> int:
     rows = aggregate(row for path in files for row in read_rows(path))
     if not rows:
         raise SystemExit("[ERROR] no Round2 1D measurements found")
-    model = fit_model(rows)
+    round1_model_path = Path(args.round1_model).resolve()
+    if not round1_model_path.is_file():
+        raise SystemExit(f"[ERROR] round1 model JSON not found: {round1_model_path}")
+    try:
+        round1_model = json.loads(round1_model_path.read_text(encoding="utf-8"))
+        round1_parameters = round1_model["parameters"]
+        for dtype in DTYPES:
+            values = round1_parameters[dtype]
+            for key in ("T_1", "H_1", "T_2", "H_2"):
+                float(values[key])
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+        raise SystemExit(
+            f"[ERROR] invalid round1 model JSON: {round1_model_path}: {error}"
+        ) from error
+    model = fit_model(rows, round1_parameters)
+    model["formula"]["base_source"] = str(round1_model_path)
     output_dir = Path(args.output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     model_path = output_dir / MODEL_FILENAME
