@@ -167,7 +167,7 @@ c1, c2, c3, c4
 
 ## 图解释
 
-`draw` 生成每种 dtype 四类图：
+`draw` 生成每种 dtype 五类图：
 
 ```text
 Modeling/Ana/round2/figures/
@@ -175,6 +175,7 @@ round2_1d_noncontiguous_actual_vs_predicted_<dtype>.svg
 round2_1d_noncontiguous_residual_<dtype>.svg
 round2_1d_input_stride_vs_cycles_<dtype>.svg
 round2_1d_is1_output_stride_vs_cycles_<dtype>.svg
+round2_1d_os2_output_dim_vs_cycles_<dtype>.svg
 ```
 
 第一类图横轴为 `logical_total_bytes`，纵轴为 cycles，黑点是实测值，蓝色空心点是预测值。
@@ -203,3 +204,7 @@ predicted_cycles - actual_cycles
 `logical_total_bytes`，颜色区分不同数据量；由于 B 组没有采集
 `output_stride=1`，图中在 `output_stride=1` 处使用继承的 Round1
 `base_cycles` 增加空心基准点，`output_stride>=2` 的实心点为实测值。
+
+第五类图固定单核 `output_stride=2`，横轴为 `output_dim`，纵轴为
+`actual_cycles`，颜色区分不同 `input_stride`。其中 `input_stride=1`
+来自 B 组，`input_stride>=2` 来自 C 组。

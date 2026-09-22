@@ -317,6 +317,112 @@ def output_stride_vs_cycles_svg(
     output.write_text("\n".join(parts) + "\n", encoding="utf-8")
 
 
+def os2_output_dim_vs_cycles_svg(
+    dtype: str,
+    rows: list[dict[str, str]],
+    output: Path,
+) -> None:
+    selected = [
+        row for row in rows
+        if row["dtype"] == dtype
+        and row["group"] in {"B", "C"}
+        and int(float(row["block_dim"])) == 1
+        and int(float(row["output_stride"])) == 2
+    ]
+    if not selected:
+        return
+
+    curves: dict[float, list[dict[str, str]]] = {}
+    for row in selected:
+        curves.setdefault(float(row["input_stride"]), []).append(row)
+    for curve_rows in curves.values():
+        curve_rows.sort(key=lambda row: output_dim(dtype, row))
+
+    width, height = 1220, 700
+    left, top, right, bottom = 105, 50, 310, 92
+    plot_w, plot_h = width - left - right, height - top - bottom
+    dims = sorted({output_dim(dtype, row) for row in selected})
+    cycles = [float(row["actual_cycles"]) for row in selected]
+    x_min, x_max = min(dims), max(dims)
+    y_min, y_max = min(cycles), max(cycles)
+    y_pad = max((y_max - y_min) * 0.05, 1.0)
+    y_min = max(0.0, y_min - y_pad)
+    y_max += y_pad
+    palette = (
+        "#b91c1c", "#0369a1", "#15803d", "#7c3aed", "#c2410c", "#0f766e",
+        "#be185d", "#4338ca", "#4d7c0f", "#a16207", "#0e7490", "#6d28d9",
+        "#374151",
+    )
+
+    def px(value: float) -> float:
+        return left + (value - x_min) / max(1.0, x_max - x_min) * plot_w
+
+    def py(value: float) -> float:
+        return top + (y_max - value) / max(1.0, y_max - y_min) * plot_h
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}">',
+        f'<defs><clipPath id="os2-output-dim-clip"><rect x="{left}" y="{top}" width="{plot_w}" height="{plot_h}"/></clipPath></defs>',
+        '<rect width="100%" height="100%" fill="white"/>',
+        f'<text x="{left + plot_w/2}" y="29" text-anchor="middle" font-family="sans-serif" font-size="20">{dtype}: output stride=2, output dim vs actual cycles</text>',
+        f'<text x="24" y="{top + plot_h/2}" text-anchor="middle" transform="rotate(-90 24 {top + plot_h/2})" font-family="sans-serif" font-size="18" font-weight="600">actual cycles</text>',
+        f'<text x="{left + plot_w/2}" y="{height - 24}" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600">output_dim</text>',
+        f'<rect x="{left}" y="{top}" width="{plot_w}" height="{plot_h}" fill="none" stroke="#555"/>',
+    ]
+    for dim in dims:
+        x = px(dim)
+        parts.extend([
+            f'<line x1="{x:.2f}" y1="{top}" x2="{x:.2f}" y2="{top + plot_h}" stroke="#f3f4f6"/>',
+            f'<line x1="{x:.2f}" y1="{top + plot_h}" x2="{x:.2f}" y2="{top + plot_h + 6}" stroke="#555"/>',
+            f'<text class="x-output-dim-label" x="{x:.2f}" y="{top + plot_h + 30}" text-anchor="middle" font-family="sans-serif" font-size="17">{dim}</text>',
+        ])
+    for index in range(6):
+        fraction = index / 5
+        y_value = y_min + fraction * (y_max - y_min)
+        y = py(y_value)
+        parts.extend([
+            f'<line x1="{left}" y1="{y:.2f}" x2="{left + plot_w}" y2="{y:.2f}" stroke="#e5e7eb"/>',
+            f'<line x1="{left - 6}" y1="{y:.2f}" x2="{left}" y2="{y:.2f}" stroke="#555"/>',
+            f'<text x="{left - 12}" y="{y + 6:.2f}" text-anchor="end" font-family="sans-serif" font-size="17">{y_value:.5g}</text>',
+        ])
+
+    parts.append('<g clip-path="url(#os2-output-dim-clip)">')
+    for curve_index, input_stride in enumerate(sorted(curves)):
+        color = palette[curve_index % len(palette)]
+        curve_rows = curves[input_stride]
+        points = " ".join(
+            f'{px(output_dim(dtype, row)):.2f},{py(float(row["actual_cycles"])):.2f}'
+            for row in curve_rows
+        )
+        parts.append(
+            f'<polyline points="{points}" fill="none" stroke="{color}" stroke-width="1.8"/>'
+        )
+        for row in curve_rows:
+            dim = output_dim(dtype, row)
+            parts.append(
+                f'<circle cx="{px(dim):.2f}" cy="{py(float(row["actual_cycles"])):.2f}" r="3" fill="{color}"><title>input_stride={input_stride:.0f}; output_dim={dim}; actual={float(row["actual_cycles"]):.4g}</title></circle>'
+            )
+    parts.append("</g>")
+
+    legend_x = left + plot_w + 35
+    legend_y = top + 15
+    parts.append(
+        f'<text x="{legend_x}" y="{legend_y}" font-family="sans-serif" font-size="16" font-weight="bold">input_stride</text>'
+    )
+    for curve_index, input_stride in enumerate(sorted(curves)):
+        color = palette[curve_index % len(palette)]
+        column, row_index = divmod(curve_index, 12)
+        x = legend_x + column * 112
+        y = legend_y + 28 + row_index * 27
+        parts.extend([
+            f'<line x1="{x}" y1="{y - 5}" x2="{x + 24}" y2="{y - 5}" stroke="{color}" stroke-width="2.5"/>',
+            f'<text x="{x + 32}" y="{y}" font-family="sans-serif" font-size="14">{input_stride:.0f}</text>',
+        ])
+    parts.append("</svg>")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text("\n".join(parts) + "\n", encoding="utf-8")
+
+
 def main() -> int:
     args = parse_args()
     input_dir = Path(args.input_dir).resolve()
@@ -336,6 +442,11 @@ def main() -> int:
             dtype,
             rows,
             output_dir / f"round2_1d_is1_output_stride_vs_cycles_{dtype}.svg",
+        )
+        os2_output_dim_vs_cycles_svg(
+            dtype,
+            rows,
+            output_dir / f"round2_1d_os2_output_dim_vs_cycles_{dtype}.svg",
         )
     print(f"[INFO] wrote plots to {output_dir}")
     return 0
