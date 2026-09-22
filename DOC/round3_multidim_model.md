@@ -119,6 +119,13 @@ n1_terms_json
 
 ```text
 Modeling/Ana/round3/figures/
-round3_d<dim>_<dtype>_actual_vs_predicted.svg
 round3_d<dim>_<dtype>_residual.svg
 ```
+
+`round3_d<dim>_<dtype>_residual.svg` 横轴为 `data_volume_bytes`，纵轴为：
+
+```text
+(predicted_cycles - actual_cycles) / actual_cycles
+```
+
+不同 `layout_pattern` 场景使用不同颜色标注。
