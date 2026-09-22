@@ -14,7 +14,16 @@ DEFAULT_OUTPUT_DIR = MODELING_DIR / "Ana" / "round1" / "figures"
 MODEL_FILENAME = "round1_1d_single_multi_core_model.json"
 PREDICTIONS_FILENAME = "round1_1d_single_core_predictions.csv"
 DTYPES = ("int8_t", "int16_t", "int32_t", "int64_t")
-SHAPE_COLORS = {"min": "#0369a1", "max": "#b91c1c"}
+DTYPE_SIZES = {"int8_t": 1, "int16_t": 2, "int32_t": 4, "int64_t": 8}
+SHAPE_COLOR = "#b91c1c"
+RELATION_BLOCK_DIMS = (1, 2, 4, 8, 32)
+BLOCK_COLORS = {
+    1: "#0369a1",
+    2: "#15803d",
+    4: "#b91c1c",
+    8: "#7c3aed",
+    32: "#c2410c",
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -34,7 +43,6 @@ def triangle_points(x: float, y: float, size: float) -> str:
 
 def svg_for_shape(
     dtype: str,
-    shape_label: str,
     bytes_per_core: float,
     rows: list[dict[str, str]],
     output: Path,
@@ -71,7 +79,7 @@ def svg_for_shape(
         f'<text class="tick" x="{left-10}" y="{py(y_min)+5}" text-anchor="end">{y_min:.0f}</text>',
         f'<text class="tick" x="{left-10}" y="{py(y_max)+5}" text-anchor="end">{y_max:.0f}</text>',
     ]
-    color = SHAPE_COLORS[shape_label]
+    color = SHAPE_COLOR
     actual_points = [
         f'{px(float(row["block_dim"])):.2f},{py(float(row["actual_cycles"])):.2f}'
         for row in series_rows
@@ -91,7 +99,7 @@ def svg_for_shape(
         actual_value = float(row["actual_cycles"])
         predicted_value = float(row["predicted_cycles"])
         title = (
-            f'{shape_label} bytes_per_core={bytes_per_core:.0f}; '
+            f'single-core cycles={bytes_per_core:.0f}; '
             f'block_dim={x_value:.0f}'
         )
         parts.append(
@@ -104,7 +112,7 @@ def svg_for_shape(
     legend_x = left + plot_w - 190
     legend_y = top + plot_h - 58
     parts.extend([
-        f'<text class="legend" x="{legend_x}" y="{legend_y}">{shape_label} bytes/core={bytes_per_core:.0f}</text>',
+        f'<text class="legend" x="{legend_x}" y="{legend_y}">single-core cycles={bytes_per_core:.0f}</text>',
         f'<polygon class="actual" points="{triangle_points(legend_x + 7, legend_y + 22, 5.2)}" fill="{color}"/><text class="legend" x="{legend_x + 20}" y="{legend_y + 27}">actual</text>',
         f'<circle class="predicted" cx="{legend_x + 7}" cy="{legend_y + 48}" r="3.8" stroke="{color}"/><text class="legend" x="{legend_x + 20}" y="{legend_y + 53}">predicted</text>',
         "</svg>",
@@ -113,21 +121,111 @@ def svg_for_shape(
     output.write_text("\n".join(parts) + "\n", encoding="utf-8")
 
 
-def selected_shape_rows(rows: list[dict[str, str]]) -> list[tuple[str, float, list[dict[str, str]]]]:
+def selected_shape_rows(rows: list[dict[str, str]]) -> list[tuple[float, list[dict[str, str]]]]:
     if not rows:
         return []
     bytes_values = sorted({float(row["bytes_per_core"]) for row in rows})
-    selected = [("min", bytes_values[0])]
-    if bytes_values[-1] != bytes_values[0]:
-        selected.append(("max", bytes_values[-1]))
+    bytes_value = bytes_values[-1]
     return [
         (
-            label,
             bytes_value,
             [row for row in rows if float(row["bytes_per_core"]) == bytes_value],
         )
-        for label, bytes_value in selected
     ]
+
+
+def output_dim_for_row(dtype: str, row: dict[str, str]) -> float:
+    text = str(row.get("output_dims", "")).strip()
+    if text:
+        return float(text)
+    return float(row["bytes_per_core"]) / DTYPE_SIZES[dtype]
+
+
+def svg_for_output_dim_relation(
+    dtype: str,
+    rows: list[dict[str, str]],
+    output: Path,
+) -> None:
+    series = []
+    for block_dim in RELATION_BLOCK_DIMS:
+        series_rows = sorted(
+            [
+                row for row in rows
+                if int(row["block_dim"]) == block_dim
+            ],
+            key=lambda row: output_dim_for_row(dtype, row),
+        )
+        if series_rows:
+            series.append((block_dim, series_rows))
+    if not series:
+        return
+
+    width, height = 900, 560
+    left, top, right, bottom = 95, 24, 34, 86
+    plot_w, plot_h = width - left - right, height - top - bottom
+    xs = [
+        output_dim_for_row(dtype, row)
+        for _, series_rows in series
+        for row in series_rows
+    ]
+    ys = [
+        float(row["actual_cycles"])
+        for _, series_rows in series
+        for row in series_rows
+    ]
+    x_min, x_max = min(xs), max(xs)
+    y_min, y_max = min(ys), max(ys)
+    y_pad = max((y_max - y_min) * 0.08, 1.0)
+    y_min -= y_pad
+    y_max += y_pad
+
+    def px(value: float) -> float:
+        return left + (value - x_min) / max(1.0, x_max - x_min) * plot_w
+
+    def py(value: float) -> float:
+        return top + (y_max - value) / max(1.0, y_max - y_min) * plot_h
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
+        "<style>text{font-family:Arial,sans-serif;fill:#1f2937}.axis{stroke:#374151}.tick{font-size:15px}.axis-label{font-size:19px;font-weight:600}.legend{font-size:16px}.line{fill:none;stroke-width:2;opacity:.9}.point{stroke:#111827;stroke-width:1}</style>",
+        f'<line class="axis" x1="{left}" y1="{top}" x2="{left}" y2="{top+plot_h}"/><line class="axis" x1="{left}" y1="{top+plot_h}" x2="{left+plot_w}" y2="{top+plot_h}"/>',
+        f'<text class="axis-label" x="{left+plot_w/2}" y="{height-24}" text-anchor="middle">output_dim</text>',
+        f'<text class="axis-label" x="24" y="{top+plot_h/2}" text-anchor="middle" transform="rotate(-90 24 {top+plot_h/2})">single-core cycles</text>',
+        f'<text class="tick" x="{left}" y="{top+plot_h+24}">{x_min:.0f}</text>',
+        f'<text class="tick" x="{left+plot_w}" y="{top+plot_h+24}" text-anchor="end">{x_max:.0f}</text>',
+        f'<text class="tick" x="{left-10}" y="{py(y_min)+5}" text-anchor="end">{y_min:.0f}</text>',
+        f'<text class="tick" x="{left-10}" y="{py(y_max)+5}" text-anchor="end">{y_max:.0f}</text>',
+    ]
+    for block_dim, series_rows in series:
+        color = BLOCK_COLORS[block_dim]
+        points = [
+            f'{px(output_dim_for_row(dtype, row)):.2f},{py(float(row["actual_cycles"])):.2f}'
+            for row in series_rows
+        ]
+        parts.append(
+            f'<polyline class="line" stroke="{color}" points="{" ".join(points)}"/>'
+        )
+        for row in series_rows:
+            x_value = output_dim_for_row(dtype, row)
+            y_value = float(row["actual_cycles"])
+            parts.append(
+                f'<circle class="point" cx="{px(x_value)}" cy="{py(y_value)}" r="3.8" fill="{color}"><title>block_dim={block_dim}; output_dim={x_value:.0f}; actual={y_value:.4g}</title></circle>'
+            )
+
+    legend_x = left + plot_w - 130
+    legend_y = top + plot_h - 118
+    for index, (block_dim, _) in enumerate(series):
+        y = legend_y + index * 22
+        color = BLOCK_COLORS[block_dim]
+        parts.append(
+            f'<line class="line" x1="{legend_x}" y1="{y}" x2="{legend_x + 22}" y2="{y}" stroke="{color}"/>'
+        )
+        parts.append(
+            f'<text class="legend" x="{legend_x + 30}" y="{y + 5}">block_dim={block_dim}</text>'
+        )
+    parts.append("</svg>")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text("\n".join(parts) + "\n", encoding="utf-8")
 
 
 def main() -> int:
@@ -137,16 +235,23 @@ def main() -> int:
     prediction_path = input_dir / PREDICTIONS_FILENAME
     with prediction_path.open(newline="", encoding="utf-8") as file_obj:
         rows = list(csv.DictReader(file_obj))
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for old_plot in output_dir.glob("round1_1d_single_core_*.svg"):
+        old_plot.unlink()
     for dtype in DTYPES:
         dtype_rows = [row for row in rows if row["dtype"] == dtype]
-        for label, bytes_value, shape_rows in selected_shape_rows(dtype_rows):
+        for bytes_value, shape_rows in selected_shape_rows(dtype_rows):
             svg_for_shape(
                 dtype,
-                label,
                 bytes_value,
                 shape_rows,
-                output_dir / f"round1_1d_single_core_{dtype}_{label}.svg",
+                output_dir / f"round1_1d_single_core_{dtype}_max.svg",
             )
+        svg_for_output_dim_relation(
+            dtype,
+            dtype_rows,
+            output_dir / f"round1_1d_single_core_{dtype}_output_dim.svg",
+        )
     print(f"[INFO] wrote plots to {output_dir}")
     return 0
 
