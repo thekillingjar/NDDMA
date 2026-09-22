@@ -192,4 +192,5 @@ predicted_cycles - actual_cycles
 
 为避免横轴低 stride 区域标签重叠，`int8_t/int16_t/int32_t/int64_t`
 分别只从 `input_stride=128/64/256/128` 开始标记横轴数字；更小 stride
-保留网格和刻度线但不显示数字。
+保留网格和刻度线但不显示数字。例外是保留拐点标记：
+`int32_t` 额外标记 `32`，`int64_t` 额外标记 `16`。

@@ -15,6 +15,7 @@ PREDICTIONS_FILENAME = "round2_1d_noncontiguous_predictions.csv"
 DTYPES = ("int8_t", "int16_t", "int32_t", "int64_t")
 DTYPE_SIZES = {"int8_t": 1, "int16_t": 2, "int32_t": 4, "int64_t": 8}
 INPUT_STRIDE_LABEL_MIN = {"int8_t": 128, "int16_t": 64, "int32_t": 256, "int64_t": 128}
+INPUT_STRIDE_EXTRA_LABELS = {"int32_t": {32}, "int64_t": {16}}
 
 
 def parse_args() -> argparse.Namespace:
@@ -138,13 +139,14 @@ def input_stride_vs_cycles_svg(
         f'<rect x="{left}" y="{top}" width="{plot_w}" height="{plot_h}" fill="none" stroke="#555"/>',
     ]
     min_labeled_stride = INPUT_STRIDE_LABEL_MIN[dtype]
+    extra_labeled_strides = INPUT_STRIDE_EXTRA_LABELS.get(dtype, set())
     for stride in strides:
         x = px(stride)
         parts.extend([
             f'<line x1="{x:.2f}" y1="{top}" x2="{x:.2f}" y2="{top + plot_h}" stroke="#f3f4f6"/>',
             f'<line x1="{x:.2f}" y1="{top + plot_h}" x2="{x:.2f}" y2="{top + plot_h + 6}" stroke="#555"/>',
         ])
-        if stride >= min_labeled_stride:
+        if stride >= min_labeled_stride or int(stride) in extra_labeled_strides:
             parts.append(
                 f'<text class="x-stride-label" x="{x:.2f}" y="{top + plot_h + 30}" text-anchor="middle" font-family="sans-serif" font-size="17">{stride:.0f}</text>'
             )
