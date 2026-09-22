@@ -37,7 +37,7 @@ NDDMA2/Modeling/Ana/round1/
 ├── round1_1d_single_multi_core_model.json
 ├── round1_1d_single_core_predictions.csv
 ├── figures/
-│   └── round1_1d_single_core_<dtype>.svg
+│   └── round1_1d_single_core_<dtype>_<min|max>.svg
 └── collection/
     ├── build/
     ├── profiling_raw/
@@ -431,14 +431,18 @@ NDDMA2/Modeling/Ana/round1/round1_1d_single_core_predictions.csv
 
 ### 10.1 图文件
 
-四种 dtype 各生成一张：
+四种 dtype 的最小和最大 shape 分别生成一张：
 
 ```text
 NDDMA2/Modeling/Ana/round1/figures/
-round1_1d_single_core_int8_t.svg
-round1_1d_single_core_int16_t.svg
-round1_1d_single_core_int32_t.svg
-round1_1d_single_core_int64_t.svg
+round1_1d_single_core_int8_t_min.svg
+round1_1d_single_core_int8_t_max.svg
+round1_1d_single_core_int16_t_min.svg
+round1_1d_single_core_int16_t_max.svg
+round1_1d_single_core_int32_t_min.svg
+round1_1d_single_core_int32_t_max.svg
+round1_1d_single_core_int64_t_min.svg
+round1_1d_single_core_int64_t_max.svg
 ```
 
 ### 10.2 坐标轴
@@ -455,11 +459,10 @@ block_dim
 cycles
 ```
 
-每种 dtype 只绘制两组 shape：
+每张图只绘制一个固定 `bytes_per_core` 的 shape：
 
 ```text
-min bytes_per_core
-max bytes_per_core
+min bytes_per_core 或 max bytes_per_core
 ```
 
 这样可以直接观察固定单核数据量时，单核 cycles 随设置的
@@ -467,10 +470,11 @@ max bytes_per_core
 
 ### 10.3 图中元素
 
-- 实线/实心点：`actual_cycles`
-- 虚线/空心点：`predicted_cycles`
-- 蓝色：最小 `bytes_per_core`
-- 红色：最大 `bytes_per_core`
+- 实线/三角形：`actual_cycles`
+- 虚线/圆形：`predicted_cycles`
+- 图例位于右下角
+- 蓝色图：最小 `bytes_per_core`
+- 红色图：最大 `bytes_per_core`
 
 注意：Round1 的 `cycles` 口径是单核/每 block cycles，不是总 cycles。
 

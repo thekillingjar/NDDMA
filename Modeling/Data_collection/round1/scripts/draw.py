@@ -24,31 +24,30 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def svg_for_dtype(dtype: str, rows: list[dict[str, str]], output: Path) -> None:
+def triangle_points(x: float, y: float, size: float) -> str:
+    return (
+        f"{x:.2f},{y - size:.2f} "
+        f"{x - size:.2f},{y + size:.2f} "
+        f"{x + size:.2f},{y + size:.2f}"
+    )
+
+
+def svg_for_shape(
+    dtype: str,
+    shape_label: str,
+    bytes_per_core: float,
+    rows: list[dict[str, str]],
+    output: Path,
+) -> None:
     width, height = 900, 560
-    left, top, right, bottom = 85, 35, 30, 78
+    left, top, right, bottom = 95, 24, 34, 86
     plot_w, plot_h = width - left - right, height - top - bottom
     if not rows:
         return
-    bytes_values = sorted({float(row["bytes_per_core"]) for row in rows})
-    selected = [bytes_values[0]]
-    if bytes_values[-1] != bytes_values[0]:
-        selected.append(bytes_values[-1])
-    series = []
-    for index, bytes_value in enumerate(selected):
-        label = "min" if index == 0 else "max"
-        series_rows = sorted(
-            [
-                row for row in rows
-                if float(row["bytes_per_core"]) == bytes_value
-            ],
-            key=lambda row: int(row["block_dim"]),
-        )
-        series.append((label, bytes_value, series_rows))
-
-    xs = [float(row["block_dim"]) for _, _, series_rows in series for row in series_rows]
-    actual = [float(row["actual_cycles"]) for _, _, series_rows in series for row in series_rows]
-    predicted = [float(row["predicted_cycles"]) for _, _, series_rows in series for row in series_rows]
+    series_rows = sorted(rows, key=lambda row: int(row["block_dim"]))
+    xs = [float(row["block_dim"]) for row in series_rows]
+    actual = [float(row["actual_cycles"]) for row in series_rows]
+    predicted = [float(row["predicted_cycles"]) for row in series_rows]
     x_min, x_max = min(xs), max(xs)
     y_min, y_max = min(actual + predicted), max(actual + predicted)
     y_pad = max((y_max - y_min) * 0.08, 1.0)
@@ -63,52 +62,72 @@ def svg_for_dtype(dtype: str, rows: list[dict[str, str]], output: Path) -> None:
 
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
-        "<style>text{font-family:Arial,sans-serif;font-size:13px;fill:#1f2937}.axis{stroke:#374151}.actual{fill:#111827}.predicted{fill:#fff;stroke-width:2}.line{fill:none;stroke-width:1.5;opacity:.85}</style>",
-        f'<text x="{width/2}" y="22" text-anchor="middle">Round1 1D single-core cycles vs block_dim {dtype}: min/max shape</text>',
+        "<style>text{font-family:Arial,sans-serif;fill:#1f2937}.axis{stroke:#374151}.tick{font-size:15px}.axis-label{font-size:19px;font-weight:600}.legend{font-size:16px}.actual{stroke:#111827;stroke-width:1.2}.predicted{fill:#fff;stroke-width:2.4}.line{fill:none;stroke-width:2;opacity:.9}</style>",
         f'<line class="axis" x1="{left}" y1="{top}" x2="{left}" y2="{top+plot_h}"/><line class="axis" x1="{left}" y1="{top+plot_h}" x2="{left+plot_w}" y2="{top+plot_h}"/>',
-        f'<text x="{left+plot_w/2}" y="{height-20}" text-anchor="middle">block_dim</text>',
-        f'<text x="18" y="{top+plot_h/2}" text-anchor="middle" transform="rotate(-90 18 {top+plot_h/2})">single-core cycles</text>',
-        f'<text x="{left}" y="{top+plot_h+22}">{x_min:.0f}</text>',
-        f'<text x="{left+plot_w}" y="{top+plot_h+22}" text-anchor="end">{x_max:.0f}</text>',
-        f'<text x="{left-8}" y="{py(y_min)+4}" text-anchor="end">{y_min:.0f}</text>',
-        f'<text x="{left-8}" y="{py(y_max)+4}" text-anchor="end">{y_max:.0f}</text>',
+        f'<text class="axis-label" x="{left+plot_w/2}" y="{height-24}" text-anchor="middle">block_dim</text>',
+        f'<text class="axis-label" x="24" y="{top+plot_h/2}" text-anchor="middle" transform="rotate(-90 24 {top+plot_h/2})">single-core cycles</text>',
+        f'<text class="tick" x="{left}" y="{top+plot_h+24}">{x_min:.0f}</text>',
+        f'<text class="tick" x="{left+plot_w}" y="{top+plot_h+24}" text-anchor="end">{x_max:.0f}</text>',
+        f'<text class="tick" x="{left-10}" y="{py(y_min)+5}" text-anchor="end">{y_min:.0f}</text>',
+        f'<text class="tick" x="{left-10}" y="{py(y_max)+5}" text-anchor="end">{y_max:.0f}</text>',
     ]
-    for label, bytes_value, series_rows in series:
-        color = SHAPE_COLORS[label]
-        actual_points = [
-            f'{px(float(row["block_dim"])):.2f},{py(float(row["actual_cycles"])):.2f}'
-            for row in series_rows
-        ]
-        predicted_points = [
-            f'{px(float(row["block_dim"])):.2f},{py(float(row["predicted_cycles"])):.2f}'
-            for row in series_rows
-        ]
-        parts.append(
-            f'<polyline class="line" stroke="{color}" points="{" ".join(actual_points)}"/>'
+    color = SHAPE_COLORS[shape_label]
+    actual_points = [
+        f'{px(float(row["block_dim"])):.2f},{py(float(row["actual_cycles"])):.2f}'
+        for row in series_rows
+    ]
+    predicted_points = [
+        f'{px(float(row["block_dim"])):.2f},{py(float(row["predicted_cycles"])):.2f}'
+        for row in series_rows
+    ]
+    parts.append(
+        f'<polyline class="line" stroke="{color}" points="{" ".join(actual_points)}"/>'
+    )
+    parts.append(
+        f'<polyline class="line" stroke="{color}" stroke-dasharray="6 5" points="{" ".join(predicted_points)}"/>'
+    )
+    for row in series_rows:
+        x_value = float(row["block_dim"])
+        actual_value = float(row["actual_cycles"])
+        predicted_value = float(row["predicted_cycles"])
+        title = (
+            f'{shape_label} bytes_per_core={bytes_per_core:.0f}; '
+            f'block_dim={x_value:.0f}'
         )
         parts.append(
-            f'<polyline class="line" stroke="{color}" stroke-dasharray="5 4" points="{" ".join(predicted_points)}"/>'
+            f'<polygon class="actual" points="{triangle_points(px(x_value), py(actual_value), 5.2)}" fill="{color}"><title>{title}; actual={actual_value:.4g}</title></polygon>'
         )
-        for row in series_rows:
-            x_value = float(row["block_dim"])
-            actual_value = float(row["actual_cycles"])
-            predicted_value = float(row["predicted_cycles"])
-            title = f'{label} bytes_per_core={bytes_value:.0f}; block_dim={x_value:.0f}'
-            parts.append(
-                f'<circle class="actual" cx="{px(x_value)}" cy="{py(actual_value)}" r="3" fill="{color}"><title>{title}; actual={actual_value:.4g}</title></circle>'
-            )
-            parts.append(
-                f'<circle class="predicted" cx="{px(x_value)}" cy="{py(predicted_value)}" r="3" stroke="{color}"><title>{title}; predicted={predicted_value:.4g}</title></circle>'
-            )
+        parts.append(
+            f'<circle class="predicted" cx="{px(x_value)}" cy="{py(predicted_value)}" r="3.8" stroke="{color}"><title>{title}; predicted={predicted_value:.4g}</title></circle>'
+        )
+
+    legend_x = left + plot_w - 190
+    legend_y = top + plot_h - 58
     parts.extend([
-        f'<line class="line" x1="{left+plot_w-170}" y1="{top+24}" x2="{left+plot_w-140}" y2="{top+24}" stroke="{SHAPE_COLORS["min"]}"/><text x="{left+plot_w-132}" y="{top+29}">min bytes/core</text>',
-        f'<line class="line" x1="{left+plot_w-170}" y1="{top+47}" x2="{left+plot_w-140}" y2="{top+47}" stroke="{SHAPE_COLORS["max"]}"/><text x="{left+plot_w-132}" y="{top+52}">max bytes/core</text>',
-        f'<circle class="actual" cx="{left+plot_w-170}" cy="{top+70}" r="3"/><text x="{left+plot_w-160}" y="{top+75}">actual</text>',
-        f'<circle class="predicted" cx="{left+plot_w-95}" cy="{top+70}" r="3" stroke="#374151"/><text x="{left+plot_w-85}" y="{top+75}">predicted</text>',
+        f'<text class="legend" x="{legend_x}" y="{legend_y}">{shape_label} bytes/core={bytes_per_core:.0f}</text>',
+        f'<polygon class="actual" points="{triangle_points(legend_x + 7, legend_y + 22, 5.2)}" fill="{color}"/><text class="legend" x="{legend_x + 20}" y="{legend_y + 27}">actual</text>',
+        f'<circle class="predicted" cx="{legend_x + 7}" cy="{legend_y + 48}" r="3.8" stroke="{color}"/><text class="legend" x="{legend_x + 20}" y="{legend_y + 53}">predicted</text>',
         "</svg>",
     ])
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text("\n".join(parts) + "\n", encoding="utf-8")
+
+
+def selected_shape_rows(rows: list[dict[str, str]]) -> list[tuple[str, float, list[dict[str, str]]]]:
+    if not rows:
+        return []
+    bytes_values = sorted({float(row["bytes_per_core"]) for row in rows})
+    selected = [("min", bytes_values[0])]
+    if bytes_values[-1] != bytes_values[0]:
+        selected.append(("max", bytes_values[-1]))
+    return [
+        (
+            label,
+            bytes_value,
+            [row for row in rows if float(row["bytes_per_core"]) == bytes_value],
+        )
+        for label, bytes_value in selected
+    ]
 
 
 def main() -> int:
@@ -119,8 +138,15 @@ def main() -> int:
     with prediction_path.open(newline="", encoding="utf-8") as file_obj:
         rows = list(csv.DictReader(file_obj))
     for dtype in DTYPES:
-        svg_for_dtype(dtype, [row for row in rows if row["dtype"] == dtype],
-                      output_dir / f"round1_1d_single_core_{dtype}.svg")
+        dtype_rows = [row for row in rows if row["dtype"] == dtype]
+        for label, bytes_value, shape_rows in selected_shape_rows(dtype_rows):
+            svg_for_shape(
+                dtype,
+                label,
+                bytes_value,
+                shape_rows,
+                output_dir / f"round1_1d_single_core_{dtype}_{label}.svg",
+            )
     print(f"[INFO] wrote plots to {output_dir}")
     return 0
 
