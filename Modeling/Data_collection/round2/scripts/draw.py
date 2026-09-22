@@ -196,6 +196,127 @@ def input_stride_vs_cycles_svg(
     output.write_text("\n".join(parts) + "\n", encoding="utf-8")
 
 
+def output_stride_vs_cycles_svg(
+    dtype: str,
+    rows: list[dict[str, str]],
+    output: Path,
+) -> None:
+    selected = [
+        row for row in rows
+        if row["dtype"] == dtype
+        and row["group"] == "B"
+        and int(float(row["block_dim"])) == 1
+        and int(float(row["input_stride"])) == 1
+        and int(float(row["output_stride"])) > 1
+    ]
+    if not selected:
+        return
+
+    curves: dict[float, list[dict[str, str]]] = {}
+    for row in selected:
+        curves.setdefault(float(row["logical_total_bytes"]), []).append(row)
+    for curve_rows in curves.values():
+        curve_rows.sort(key=lambda row: float(row["output_stride"]))
+
+    width, height = 1220, 700
+    left, top, right, bottom = 105, 50, 310, 92
+    plot_w, plot_h = width - left - right, height - top - bottom
+    strides = sorted({1.0} | {float(row["output_stride"]) for row in selected})
+    cycles = [float(row["actual_cycles"]) for row in selected]
+    base_cycles_by_bytes = {
+        logical_bytes: float(curve_rows[0]["base_cycles"])
+        for logical_bytes, curve_rows in curves.items()
+    }
+    cycles.extend(base_cycles_by_bytes.values())
+    x_min, x_max = min(strides), max(strides)
+    y_min, y_max = min(cycles), max(cycles)
+    y_pad = max((y_max - y_min) * 0.05, 1.0)
+    y_min = max(0.0, y_min - y_pad)
+    y_max += y_pad
+    palette = (
+        "#b91c1c", "#0369a1", "#15803d", "#7c3aed", "#c2410c", "#0f766e",
+        "#be185d", "#4338ca", "#4d7c0f", "#a16207", "#0e7490", "#6d28d9",
+        "#374151",
+    )
+
+    def px(value: float) -> float:
+        return left + (value - x_min) / max(1.0, x_max - x_min) * plot_w
+
+    def py(value: float) -> float:
+        return top + (y_max - value) / max(1.0, y_max - y_min) * plot_h
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}">',
+        f'<defs><clipPath id="sweep-clip"><rect x="{left}" y="{top}" width="{plot_w}" height="{plot_h}"/></clipPath></defs>',
+        '<rect width="100%" height="100%" fill="white"/>',
+        f'<text x="{left + plot_w/2}" y="29" text-anchor="middle" font-family="sans-serif" font-size="20">{dtype}: input stride=1, output stride vs actual cycles</text>',
+        f'<text x="24" y="{top + plot_h/2}" text-anchor="middle" transform="rotate(-90 24 {top + plot_h/2})" font-family="sans-serif" font-size="18" font-weight="600">actual cycles</text>',
+        f'<text x="{left + plot_w/2}" y="{height - 24}" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="600">output stride</text>',
+        f'<rect x="{left}" y="{top}" width="{plot_w}" height="{plot_h}" fill="none" stroke="#555"/>',
+    ]
+    for stride in strides:
+        x = px(stride)
+        parts.extend([
+            f'<line x1="{x:.2f}" y1="{top}" x2="{x:.2f}" y2="{top + plot_h}" stroke="#f3f4f6"/>',
+            f'<line x1="{x:.2f}" y1="{top + plot_h}" x2="{x:.2f}" y2="{top + plot_h + 6}" stroke="#555"/>',
+            f'<text class="x-stride-label" x="{x:.2f}" y="{top + plot_h + 30}" text-anchor="middle" font-family="sans-serif" font-size="17">{stride:.0f}</text>',
+        ])
+    for index in range(6):
+        fraction = index / 5
+        y_value = y_min + fraction * (y_max - y_min)
+        y = py(y_value)
+        parts.extend([
+            f'<line x1="{left}" y1="{y:.2f}" x2="{left + plot_w}" y2="{y:.2f}" stroke="#e5e7eb"/>',
+            f'<line x1="{left - 6}" y1="{y:.2f}" x2="{left}" y2="{y:.2f}" stroke="#555"/>',
+            f'<text x="{left - 12}" y="{y + 6:.2f}" text-anchor="end" font-family="sans-serif" font-size="17">{y_value:.5g}</text>',
+        ])
+
+    parts.append('<g clip-path="url(#sweep-clip)">')
+    for curve_index, logical_bytes in enumerate(sorted(curves)):
+        color = palette[curve_index % len(palette)]
+        curve_rows = curves[logical_bytes]
+        points = [f'{px(1.0):.2f},{py(base_cycles_by_bytes[logical_bytes]):.2f}']
+        points.extend(
+            f'{px(float(row["output_stride"])):.2f},{py(float(row["actual_cycles"])):.2f}'
+            for row in curve_rows
+        )
+        parts.append(
+            f'<polyline points="{" ".join(points)}" fill="none" stroke="{color}" stroke-width="1.8"/>'
+        )
+        parts.append(
+            f'<circle cx="{px(1.0):.2f}" cy="{py(base_cycles_by_bytes[logical_bytes]):.2f}" r="4" fill="white" stroke="{color}" stroke-width="2"><title>output_dim={output_dim(dtype, curve_rows[0])}; output_stride=1; base={base_cycles_by_bytes[logical_bytes]:.4g}</title></circle>'
+        )
+        for row in curve_rows:
+            parts.append(
+                f'<circle cx="{px(float(row["output_stride"])):.2f}" cy="{py(float(row["actual_cycles"])):.2f}" r="3" fill="{color}"><title>output_dim={output_dim(dtype, row)}; output_stride={float(row["output_stride"]):.0f}; actual={float(row["actual_cycles"]):.4g}</title></circle>'
+            )
+    parts.append("</g>")
+
+    parts.extend([
+        f'<circle cx="{left + 16}" cy="{top + 22}" r="4" fill="white" stroke="#374151" stroke-width="2"/>',
+        f'<text x="{left + 30}" y="{top + 27}" font-family="sans-serif" font-size="15">os=1: base anchor; os&gt;=2: measured</text>',
+    ])
+    legend_x = left + plot_w + 35
+    legend_y = top + 15
+    parts.append(
+        f'<text x="{legend_x}" y="{legend_y}" font-family="sans-serif" font-size="16" font-weight="bold">logical bytes</text>'
+    )
+    for curve_index, logical_bytes in enumerate(sorted(curves)):
+        color = palette[curve_index % len(palette)]
+        column, row_index = divmod(curve_index, 12)
+        x = legend_x + column * 136
+        y = legend_y + 28 + row_index * 27
+        shape = output_dim(dtype, curves[logical_bytes][0])
+        parts.extend([
+            f'<line x1="{x}" y1="{y - 5}" x2="{x + 24}" y2="{y - 5}" stroke="{color}" stroke-width="2.5"/>',
+            f'<circle cx="{x + 12}" cy="{y - 5}" r="3" fill="{color}"/>',
+            f'<text x="{x + 32}" y="{y}" font-family="sans-serif" font-size="14">{logical_bytes:.0f} B (d={shape})</text>',
+        ])
+    parts.append("</svg>")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text("\n".join(parts) + "\n", encoding="utf-8")
+
+
 def main() -> int:
     args = parse_args()
     input_dir = Path(args.input_dir).resolve()
@@ -210,6 +331,11 @@ def main() -> int:
             dtype,
             rows,
             output_dir / f"round2_1d_input_stride_vs_cycles_{dtype}.svg",
+        )
+        output_stride_vs_cycles_svg(
+            dtype,
+            rows,
+            output_dir / f"round2_1d_is1_output_stride_vs_cycles_{dtype}.svg",
         )
     print(f"[INFO] wrote plots to {output_dir}")
     return 0
