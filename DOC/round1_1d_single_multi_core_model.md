@@ -125,8 +125,8 @@ logical_total_bytes  = 所有核的逻辑总搬运量
 bytes_per_core
 ```
 
-不是 `logical_total_bytes`。拟合时总 cycles 还会除以 `block_dim`，
-得到单个核的归一化 base 开销；预测总 cycles 时再乘回 `block_dim`。
+不是 `logical_total_bytes`。模型同时区分每核固定开销 `h` 和不随核数
+变化的全局固定开销 `H`。
 
 ### 4.4 Factor 文件
 
@@ -155,12 +155,11 @@ r1_1d_single_core_int32_t_b16384_c8
 
 ### 5.1 每个 dtype、每个核数的局部模型
 
-首先对每个 `(dtype, block_dim)` 独立拟合归一化后的周期：
+每个分支内联合拟合以下总周期模型：
 
 ```text
-cycles_per_block(dtype, block_dim, B)
-    = H(dtype, block_dim)
-    + B / T(dtype, block_dim)
+cycles(dtype, block_dim, B)
+    = (h(dtype) + B / T(dtype)) * block_dim + H(dtype)
 ```
 
 其中：
@@ -184,15 +183,15 @@ Round1 最终把 `block_dim` 分为两个分支：
 
 ```text
 block_dim <= 2:
-    cycles = block_dim * (H_1(dtype) + bytes_per_core / T_1(dtype))
+    cycles = (h_1(dtype) + bytes_per_core / T_1(dtype)) * block_dim + H_1(dtype)
 
 block_dim > 2:
-    cycles = block_dim * (H_2(dtype) + bytes_per_core / T_2(dtype))
+    cycles = (h_2(dtype) + bytes_per_core / T_2(dtype)) * block_dim + H_2(dtype)
 ```
 
 因此在 `bytes_per_core` 固定且较大时，`block_dim > 2` 的总
-`cycles` 对核数呈线性关系。`T_2/H_2` 表示每个核的归一化 base
-参数，而不是总周期参数。
+`cycles` 对核数呈线性关系。`h_2` 是每核固定开销，`H_2` 是不随
+核数变化的全局固定开销。
 
 对应关系：
 
@@ -205,26 +204,23 @@ gt2: block_dim = 3..56
 
 对于某个 dtype 和某个分支：
 
-1. 对分支内每个 `block_dim` 单独拟合 `H` 和 `T`。
-2. 对所有局部拟合结果的 `H` 取算术平均。
-3. 对所有局部拟合结果的 `T` 取算术平均。
-4. 使用这两个平均参数预测该分支的全部样本。
-
-注意：代码是分别平均 `H` 和 `T`，不是先平均
-`cycles_per_byte` 再求倒数。
+1. 对分支内所有样本构造特征
+   `[block_dim, 1, block_dim * bytes_per_core]`。
+2. 联合拟合 `h`、`H` 和 `1/T`。
+3. 对该分支的全部样本使用同一组参数预测。
 
 ### 5.4 参数单位
 
 ```text
 H   : cycles
+h   : cycles/core
 T   : bytes/cycle
 ```
 
 预测时推荐使用：
 
 ```python
-base_cycles = H + bytes_per_core / T
-predicted = block_dim * base_cycles
+predicted = (h + bytes_per_core / T) * block_dim + H
 ```
 
 
@@ -357,9 +353,9 @@ JSON 保留建模公式、最终参数和整体误差指标，不再输出每个
 "formula": {
   "name": "arbitrary_dim_multicore_1d_contiguous_base",
   "split_block_dim": 2,
-  "le2": "cycles = block_dim * (H_1(dtype) + bytes_per_core / T_1(dtype))",
-  "gt2": "cycles = block_dim * (H_2(dtype) + bytes_per_core / T_2(dtype))",
-  "normalized": "cycles_per_block = cycles / block_dim",
+  "le2": "cycles = (h_1(dtype) + bytes_per_core / T_1(dtype)) * block_dim + H_1(dtype)",
+  "gt2": "cycles = (h_2(dtype) + bytes_per_core / T_2(dtype)) * block_dim + H_2(dtype)",
+  "normalized": "cycles_per_block = h(dtype) + bytes_per_core / T(dtype) + H(dtype) / block_dim",
   "bytes_definition": "bytes_per_core = logical_total_bytes / block_dim",
   "fitting_method": "..."
 }
@@ -378,14 +374,16 @@ JSON 保留建模公式、最终参数和整体误差指标，不再输出每个
 
 ### 8.3 `parameters`
 
-每种 dtype 只包含与任意维度多核模型文档一致的四个最终参数：
+每种 dtype 保存两段公式的最终参数：
 
 ```json
 {
   "int32_t": {
     "T_1": 0.0,
+    "h_1": 0.0,
     "H_1": 0.0,
     "T_2": 0.0,
+    "h_2": 0.0,
     "H_2": 0.0
   }
 }
@@ -396,9 +394,11 @@ JSON 保留建模公式、最终参数和整体误差指标，不再输出每个
 | 字段 | 含义 |
 | --- | --- |
 | `T_1` | `block_dim<=2` 分支平均搬运速率，单位 bytes/cycle |
-| `H_1` | `block_dim<=2` 分支平均固定开销，单位 cycles |
+| `h_1` | `block_dim<=2` 分支每核固定开销，单位 cycles/core |
+| `H_1` | `block_dim<=2` 分支全局固定开销，单位 cycles |
 | `T_2` | `block_dim>2` 分支平均搬运速率，单位 bytes/cycle |
-| `H_2` | `block_dim>2` 分支平均固定开销，单位 cycles |
+| `h_2` | `block_dim>2` 分支每核固定开销，单位 cycles/core |
+| `H_2` | `block_dim>2` 分支全局固定开销，单位 cycles |
 
 ## 9. Predictions CSV
 
@@ -448,10 +448,10 @@ round1_1d_single_core_int64_t.svg
 logical total bytes
 ```
 
-纵轴：
+纵轴使用归一化后的单核周期：
 
 ```text
-cycles
+cycles_per_block = cycles / block_dim
 ```
 
 横轴选择逻辑总字节数，是为了在同一张图上观察不同 `block_dim`
@@ -459,8 +459,11 @@ cycles
 
 ### 10.3 图中元素
 
-- 黑色实心圆：`actual_cycles`
-- 蓝色空心圆：`predicted_cycles`
+- 黑色实心圆：`actual_cycles_per_block`
+- 蓝色空心圆：`predicted_cycles_per_block`
+
+注意：拟合模型和 JSON 的 `metrics` 使用总 `cycles` 计算误差；
+绘图仅将总周期除以 `block_dim`，用于观察单核 base 周期。
 
 预测点不是一条连续折线，因为不同核数使用不同的 `bytes_per_core`
 和分支参数；用散点可以避免把不同核数的预测错误连接起来。
@@ -508,9 +511,9 @@ GM/UB contiguous
 branch = "le2" if block_dim <= 2 else "gt2"
 params = model["parameters"][dtype]
 if branch == "le2":
-    cycles = block_dim * (params["H_1"] + bytes_per_core / params["T_1"])
+    cycles = (params["h_1"] + bytes_per_core / params["T_1"]) * block_dim + params["H_1"]
 else:
-    cycles = block_dim * (params["H_2"] + bytes_per_core / params["T_2"])
+    cycles = (params["h_2"] + bytes_per_core / params["T_2"]) * block_dim + params["H_2"]
 ```
 
 不能直接用于：

@@ -132,8 +132,17 @@ def solve(matrix: list[list[float]], target: list[float]) -> list[float]:
 def predict_base(params: dict[str, object], dtype: str, k: int, b: float) -> float:
     values = params[dtype] if dtype in params else params
     if k <= 2:
-        return float(values["H_1"]) + b / float(values["T_1"])
-    return float(values["H_2"]) + b / float(values["T_2"])
+        suffix = "1"
+    else:
+        suffix = "2"
+    if f"h_{suffix}" in values:
+        return (
+            float(values[f"h_{suffix}"])
+            + b / float(values[f"T_{suffix}"])
+            + float(values[f"H_{suffix}"]) / k
+        )
+    # Accept legacy Round1 models that used H as the per-core intercept.
+    return float(values[f"H_{suffix}"]) + b / float(values[f"T_{suffix}"])
 
 
 def s_value(dtype: str, input_stride: float) -> float:
@@ -280,7 +289,10 @@ def fit_model(
     return {
         "model": "NDDMA_ROUND2_1D_NONCONTIGUOUS_NG_NGU_MULTICORE",
         "formula": {
-            "base": "N_base = H_1 + B/T_1 (k<=2), else H_2 + B/T_2",
+            "base": (
+                "N_base = h_1 + B/T_1 + H_1/k (k<=2), else "
+                "h_2 + B/T_2 + H_2/k"
+            ),
             "N_G": "N_G=(a1+a2*B)*s",
             "N_GU": "N_GU=((b1+b2*s)+(b3+b4*s)*B)*min(1,os-1)",
             "rho": "rho=(c1+c2*s)+min(1,os-1)*(c3+c4*s)",
@@ -354,6 +366,9 @@ def main() -> int:
             values = round1_parameters[dtype]
             for key in ("T_1", "H_1", "T_2", "H_2"):
                 float(values[key])
+            if "h_1" in values or "h_2" in values:
+                for key in ("h_1", "h_2"):
+                    float(values[key])
     except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
         raise SystemExit(
             f"[ERROR] invalid round1 model JSON: {round1_model_path}: {error}"

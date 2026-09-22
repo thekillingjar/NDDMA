@@ -5,7 +5,7 @@
 Round2 将原始 NDDMA Round4 的一维非连续模型迁移到 NDDMA2，并补上多核拟合过程。
 本目录不依赖旧 `NDDMA` 路径，采集、拟合和绘图入口都在 `NDDMA2/Modeling/Data_collection/round2/scripts`。
 
-Round2 继承 Round1 的连续一维 base 参数 `T_1/H_1/T_2/H_2`，不再使用
+Round2 继承 Round1 的连续一维 base 参数 `T_1/h_1/H_1/T_2/h_2/H_2`，不再使用
 Round2 的 F 组重新拟合连续 base；Round2 只拟合非连续修正项和多核 `rho` 项。
 
 ## 运行指令
@@ -48,8 +48,8 @@ g = min(1, output_stride-1)
 连续基础项：
 
 ```text
-N_base = H_1 + B/T_1, block_dim<=2
-N_base = H_2 + B/T_2, block_dim>2
+N_base = h_1 + B/T_1 + H_1/block_dim, block_dim<=2
+N_base = h_2 + B/T_2 + H_2/block_dim, block_dim>2
 ```
 
 先拟合 GM 非连续项：
@@ -121,7 +121,7 @@ parameters.<dtype>.base
 连续基础项参数，与任意维多核模型文档一致：
 
 ```text
-T_1, H_1, T_2, H_2
+T_1, h_1, H_1, T_2, h_2, H_2
 ```
 
 这些参数直接继承自 Round1，不在 Round2 中重新拟合。
