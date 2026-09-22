@@ -167,12 +167,13 @@ c1, c2, c3, c4
 
 ## 图解释
 
-`draw` 生成每种 dtype 两张图：
+`draw` 生成每种 dtype 三类图：
 
 ```text
 Modeling/Ana/round2/figures/
 round2_1d_noncontiguous_actual_vs_predicted_<dtype>.svg
 round2_1d_noncontiguous_residual_<dtype>.svg
+round2_1d_input_stride_vs_cycles_<dtype>.svg
 ```
 
 第一类图横轴为 `logical_total_bytes`，纵轴为 cycles，黑点是实测值，蓝色空心点是预测值。
@@ -182,3 +183,9 @@ round2_1d_noncontiguous_residual_<dtype>.svg
 ```text
 predicted_cycles - actual_cycles
 ```
+
+第三类图学习原始 NDDMA Round4 的
+`round4_1d_input_stride_vs_cycles_<dtype>.svg` 风格：使用 A 组
+`block_dim=1/output_stride=1` 数据，横轴为 `input_stride`，纵轴为
+`actual_cycles`。每条曲线固定一个 `output_dim`，颜色区分不同
+`output_dim`。
