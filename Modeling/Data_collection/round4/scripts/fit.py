@@ -16,6 +16,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 MODELING_DIR = SCRIPT_DIR.parents[2]
 DEFAULT_ANA_DIR = MODELING_DIR / "Ana" / "round4"
 DEFAULT_DATA_DIR = DEFAULT_ANA_DIR / "collection"
+DEFAULT_ROUND2_MODEL = MODELING_DIR / "Ana" / "round2" / "round2_1d_noncontiguous_model.json"
 MODEL_FILENAME = "round4_2d_ub_contiguous_ng2_model.json"
 PREDICTIONS_FILENAME = "round4_2d_ub_contiguous_ng2_predictions.csv"
 DTYPES = ("int8_t", "int16_t", "int32_t", "int64_t")
@@ -26,30 +27,6 @@ METRIC_FIELDS = (
     "mte2_cycles", "nddma_mte2_cycles",
 )
 
-ONE_D = {
-    "int8_t": {"T_1": 11.7626, "H_1": 194.421, "T_2": 6.05735, "H_2": 373.274,
-               "a_1": 2.2901165, "a_2": 0.014561351, "b_1": -69.410121,
-               "b_2": -2.0861213, "b_3": 6.9111296, "b_4": -0.014567499,
-               "c_1": 2.2823982, "c_2": 0.0054381207, "c_3": -0.29869463,
-               "c_4": -0.0054311976},
-    "int16_t": {"T_1": 25.7579, "H_1": 204.604, "T_2": 13.259, "H_2": 399.909,
-                "a_1": 1.9720487, "a_2": 0.0073653238, "b_1": -65.754578,
-                "b_2": -1.7626747, "b_3": 3.4565828, "b_4": -0.0073719789,
-                "c_1": 1.6501023, "c_2": 0.016002982, "c_3": 0.33029872,
-                "c_4": -0.015981633},
-    "int32_t": {"T_1": 57.2624, "H_1": 235.137, "T_2": 29.4096, "H_2": 453.859,
-                "a_1": 1.2140303, "a_2": 0.0037227686, "b_1": 31.174096,
-                "b_2": -0.83730451, "b_3": 0.21970194, "b_4": -0.0032801415,
-                "c_1": 1.9774169, "c_2": 0.0056400644, "c_3": -0.61376163,
-                "c_4": 0.021569482},
-    "int64_t": {"T_1": 57.2346, "H_1": 243.205, "T_2": 29.3906, "H_2": 468.971,
-                "a_1": 1.7169033, "a_2": 0.0015857085, "b_1": 63.566231,
-                "b_2": -1.4367614, "b_3": 0.090304855, "b_4": -0.0012246069,
-                "c_1": 0.76071525, "c_2": 0.02630908, "c_3": 0.89945693,
-                "c_4": -0.015756802},
-}
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Fit NDDMA2 Round4 Round5 N_G2 2D UB-contiguous model."
@@ -57,6 +34,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--data-dir", default=str(DEFAULT_DATA_DIR))
     parser.add_argument("--measurement-csv", default="")
     parser.add_argument("--output-dir", default=str(DEFAULT_ANA_DIR))
+    parser.add_argument("--round2-model", default=str(DEFAULT_ROUND2_MODEL))
     return parser.parse_args()
 
 
@@ -115,17 +93,50 @@ def aggregate(rows: Iterable[dict[str, str]]) -> list[dict[str, str]]:
     return result
 
 
-def one_d_base(dtype: str, bytes_value: float, block_dim: int) -> float:
-    params = ONE_D[dtype]
-    if block_dim <= 2:
-        return float(params["H_1"]) + bytes_value / float(params["T_1"])
-    return float(params["H_2"]) + bytes_value / float(params["T_2"])
+def round2_parameters(round2: Mapping[str, object]) -> Mapping[str, object]:
+    return round2.get("parameters", round2.get("dtype_models", {}))
 
 
-def one_d_gm_correction(dtype: str, bytes_value: float, input_stride: int,
-                        block_dim: int) -> float:
-    params = ONE_D[dtype]
+def base_params(round2: Mapping[str, object], dtype: str, block_dim: int) -> Mapping[str, object]:
+    base = round2_parameters(round2)[dtype]["base"]
+    if "T_1" in base:
+        return base
+    return base["le2" if block_dim <= 2 else "gt2"]
+
+
+def one_d_base(round2: Mapping[str, object], dtype: str, bytes_value: float,
+               block_dim: int) -> float:
+    params = base_params(round2, dtype, block_dim)
+    if "T_1" in params:
+        if block_dim <= 2:
+            return (
+                bytes_value
+                * (float(block_dim) / float(params["T_1"]) + float(params.get("h_1", 0.0)))
+                + float(params["H_1"])
+            )
+        return (
+            bytes_value
+            * (float(block_dim) / float(params["T_2"]) + float(params.get("h_2", 0.0)))
+            + float(params["H_2"])
+        )
+    return float(params["alpha"]) + bytes_value / float(params["T_bytes_per_cycle"])
+
+
+def one_d_gm_correction(round2: Mapping[str, object], dtype: str, bytes_value: float,
+                        input_stride: int, block_dim: int) -> float:
+    params = round2_parameters(round2)[dtype]
     s = min(float(input_stride) * DTYPE_SIZES[dtype], LOW_BYTE_STRIDE_MAX)
+    if "N_G" in params:
+        ng = (
+            float(params["N_G"]["a1"])
+            + float(params["N_G"]["a2"]) * bytes_value
+        ) * s
+        if block_dim <= 2:
+            return ng
+        rho = params["rho"]
+        multiplier = float(rho["c1"]) + float(rho["c2"]) * s
+        return multiplier * ng
+
     ng = (float(params["a_1"]) + float(params["a_2"]) * bytes_value) * s
     if block_dim <= 2:
         return ng
@@ -172,7 +183,8 @@ def solve(matrix: list[list[float]], target: list[float]) -> list[float]:
     return [value / scale for value, scale in zip(rhs, scales)]
 
 
-def prepare(rows: Sequence[Mapping[str, str]]) -> list[dict[str, object]]:
+def prepare(rows: Sequence[Mapping[str, str]],
+            round2: Mapping[str, object]) -> list[dict[str, object]]:
     points = []
     for row in rows:
         dtype = row["dtype"]
@@ -182,8 +194,8 @@ def prepare(rows: Sequence[Mapping[str, str]]) -> list[dict[str, object]]:
         dtype_size = DTYPE_SIZES[dtype]
         total_bytes = float(m * n * dtype_size)
         inner_bytes = float(n * dtype_size)
-        n_base = one_d_base(dtype, total_bytes, block_dim)
-        n_g1 = one_d_gm_correction(dtype, inner_bytes, is1, block_dim)
+        n_base = one_d_base(round2, dtype, total_bytes, block_dim)
+        n_g1 = one_d_gm_correction(round2, dtype, inner_bytes, is1, block_dim)
         actual = actual_value(row)
         if abs(n_g1) <= 1e-12:
             raise ValueError(f"{row.get('token', '')}: inherited N_G1 is zero")
@@ -232,8 +244,22 @@ def calc_metrics(points: Sequence[Mapping[str, object]]) -> dict[str, float | in
     }
 
 
-def fit_model(rows: list[dict[str, str]]) -> dict[str, object]:
-    points = prepare(rows)
+def inherited_one_dimensional_parameters(round2: Mapping[str, object]) -> dict[str, object]:
+    parameters = round2_parameters(round2)
+    result = {}
+    for dtype in DTYPES:
+        values = parameters[dtype]
+        result[dtype] = {
+            "base": values["base"],
+            "N_G": values["N_G"],
+            "rho": values.get("rho", {}),
+        }
+    return result
+
+
+def fit_model(rows: list[dict[str, str]], round2: Mapping[str, object],
+              round2_model_source: str) -> dict[str, object]:
+    points = prepare(rows, round2)
     parameters: dict[str, dict[str, float]] = {}
     for dtype in DTYPES:
         selected = [point for point in points if point["dtype"] == dtype]
@@ -265,14 +291,16 @@ def fit_model(rows: list[dict[str, str]]) -> dict[str, object]:
         "model": "NDDMA_ROUND4_ROUND5_NG2_2D_UB_CONTIGUOUS",
         "formula": {
             "scope": "[M,N]/[is2,is1]/[N,1], is2<is1",
-            "N_base": "N_base(B,k), B=M*N*dtype_size",
-            "N_G1": "N_G1=N_1'(B1,is1,1,k), B1=N*dtype_size",
+            "N_base": "N_base=round2.base(dtype,B,k), B=M*N*dtype_size",
+            "N_G1": "N_G1=round2.N_G(dtype,B1,is1,k), B1=N*dtype_size, output_stride=1",
             "N_G2": "N_G2=(g10+g11_M*M)*is2+g00+g01_M*M",
             "prediction": "N_2=N_base+N_G1*N_G2",
+            "round4_fitted_parameters": "N_G2 only",
         },
+        "round2_model_source": round2_model_source,
         "parameters": {
             "N_G2": parameters,
-            "one_dimensional": ONE_D,
+            "one_dimensional": inherited_one_dimensional_parameters(round2),
         },
         "metrics": {
             "all": calc_metrics(points),
@@ -311,6 +339,28 @@ def write_predictions(path: Path, points: Sequence[Mapping[str, object]]) -> Non
 
 def main() -> int:
     args = parse_args()
+    round2_model_path = Path(args.round2_model).resolve()
+    if not round2_model_path.exists():
+        raise SystemExit(f"[ERROR] round2 model JSON not found: {round2_model_path}")
+    try:
+        round2 = json.loads(round2_model_path.read_text(encoding="utf-8"))
+        parameters = round2_parameters(round2)
+        for dtype in DTYPES:
+            values = parameters[dtype]
+            base = values["base"]
+            for key in ("T_1", "H_1", "T_2", "H_2"):
+                float(base[key])
+            for key in ("h_1", "h_2"):
+                if key in base:
+                    float(base[key])
+            for key in ("a1", "a2"):
+                float(values["N_G"][key])
+            for key in ("c1", "c2"):
+                float(values["rho"][key])
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+        raise SystemExit(
+            f"[ERROR] invalid round2 model JSON: {round2_model_path}: {error}"
+        ) from error
     files = ([Path(args.measurement_csv).resolve()] if args.measurement_csv
              else find_files(Path(args.data_dir).resolve()))
     if not files:
@@ -318,7 +368,7 @@ def main() -> int:
     rows = aggregate(row for path in files for row in read_rows(path))
     if not rows:
         raise SystemExit("[ERROR] no Round5 N_G2 2D UB-contiguous measurements found")
-    model = fit_model(rows)
+    model = fit_model(rows, round2, str(round2_model_path))
     output_dir = Path(args.output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     model_path = output_dir / MODEL_FILENAME

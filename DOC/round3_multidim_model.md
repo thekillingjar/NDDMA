@@ -58,6 +58,13 @@ python3 Modeling/Data_collection/round3/scripts/e2e.py fit \
 N_base = round2.base(dtype,total_bytes,block_dim)
 ```
 
+其中 `round2.base` 使用 Round1/Round2 当前的一维连续 base 形式：
+
+```text
+N_base = B*(block_dim/T_1+h_1)+H_1, block_dim<=2
+N_base = B*(block_dim/T_2+h_2)+H_2, block_dim>2
+```
+
 再把多维 stride 按 loop 轴拆成若干一维继承修正：
 
 ```text

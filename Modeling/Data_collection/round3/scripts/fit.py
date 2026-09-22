@@ -109,8 +109,16 @@ def one_d_base(round2: Mapping[str, object], dtype: str, bytes_value: float,
     params = base_params(round2, dtype, block_dim)
     if "T_1" in params:
         if block_dim <= 2:
-            return float(params["H_1"]) + bytes_value / float(params["T_1"])
-        return float(params["H_2"]) + bytes_value / float(params["T_2"])
+            return (
+                bytes_value
+                * (float(block_dim) / float(params["T_1"]) + float(params.get("h_1", 0.0)))
+                + float(params["H_1"])
+            )
+        return (
+            bytes_value
+            * (float(block_dim) / float(params["T_2"]) + float(params.get("h_2", 0.0)))
+            + float(params["H_2"])
+        )
     return float(params["alpha"]) + bytes_value / float(params["T_bytes_per_cycle"])
 
 

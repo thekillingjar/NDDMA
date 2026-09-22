@@ -21,15 +21,21 @@ block_dim     = [2,4,8,32,64]
 B  = M*N*dtype_size
 B1 = N*dtype_size
 
-N_base = N_base(B,k)
-N_G1   = N_1'(B1,is1,1,k)
+N_base = round2.base(dtype,B,k)
+N_G1   = round2.N_G(dtype,B1,is1,k)
 N_G2   = (g10+g11_M*M)*is2 + g00 + g01_M*M
 
 N_2 = N_base + N_G1*N_G2
 ```
 
-其中 `N_base`、`N_G1` 继承任意维统一一维项；Round4 只拟合二维外层
-乘子 `N_G2` 的四个参数。
+其中 `N_base`、`N_G1` 从 Round2 一维非连续模型 JSON 继承；Round4
+只拟合二维外层乘子 `N_G2` 的四个参数。继承的 `N_base` 使用当前
+Round1/Round2 base 形式：
+
+```text
+N_base = B*(block_dim/T_1+h_1)+H_1, block_dim<=2
+N_base = B*(block_dim/T_2+h_2)+H_2, block_dim>2
+```
 
 ## 运行
 
@@ -39,6 +45,19 @@ python3 Modeling/Data_collection/round4/scripts/e2e.py all --msprof-bin "$(which
 python3 Modeling/Data_collection/round4/scripts/e2e.py collect --msprof-bin "$(which msprof)"
 python3 Modeling/Data_collection/round4/scripts/e2e.py fit
 python3 Modeling/Data_collection/round4/scripts/e2e.py draw
+```
+
+默认继承的 Round2 模型：
+
+```text
+Modeling/Ana/round2/round2_1d_noncontiguous_model.json
+```
+
+如需指定其他 Round2 模型：
+
+```bash
+python3 Modeling/Data_collection/round4/scripts/e2e.py fit \
+  --round2-model /path/to/round2_1d_noncontiguous_model.json
 ```
 
 默认输出：
@@ -71,8 +90,10 @@ g00
 g01_M
 ```
 
-`parameters.one_dimensional` 保存该二维特化公式继承的一维基础项和
-GM 非连续修正项参数。
+`round2_model_source` 记录实际继承的 Round2 JSON 路径。
+
+`parameters.one_dimensional` 保存该二维特化公式继承的一维基础项、
+GM 非连续修正项参数和 `rho` 参数；这些参数不在 Round4 中重新拟合。
 
 ```text
 round4_2d_ub_contiguous_ng2_predictions.csv
