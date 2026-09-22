@@ -228,6 +228,101 @@ def svg_for_output_dim_relation(
     output.write_text("\n".join(parts) + "\n", encoding="utf-8")
 
 
+def svg_for_output_dim_fit_error(
+    dtype: str,
+    rows: list[dict[str, str]],
+    output: Path,
+) -> None:
+    series = []
+    for block_dim in RELATION_BLOCK_DIMS:
+        series_rows = sorted(
+            [
+                row for row in rows
+                if int(row["block_dim"]) == block_dim
+            ],
+            key=lambda row: output_dim_for_row(dtype, row),
+        )
+        if series_rows:
+            series.append((block_dim, series_rows))
+    if not series:
+        return
+
+    width, height = 900, 560
+    left, top, right, bottom = 95, 24, 34, 86
+    plot_w, plot_h = width - left - right, height - top - bottom
+    xs = [
+        output_dim_for_row(dtype, row)
+        for _, series_rows in series
+        for row in series_rows
+    ]
+    ys = [
+        (float(row["predicted_cycles"]) - float(row["actual_cycles"]))
+        / max(abs(float(row["actual_cycles"])), 1e-12)
+        for _, series_rows in series
+        for row in series_rows
+    ]
+    x_min, x_max = min(xs), max(xs)
+    y_min, y_max = min(ys + [0.0]), max(ys + [0.0])
+    y_pad = max((y_max - y_min) * 0.08, 0.01)
+    y_min -= y_pad
+    y_max += y_pad
+
+    def px(value: float) -> float:
+        return left + (value - x_min) / max(1.0, x_max - x_min) * plot_w
+
+    def py(value: float) -> float:
+        return top + (y_max - value) / max(1e-12, y_max - y_min) * plot_h
+
+    zero_y = py(0.0)
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
+        "<style>text{font-family:Arial,sans-serif;fill:#1f2937}.axis{stroke:#374151}.zero{stroke:#6b7280;stroke-dasharray:4 4}.tick{font-size:15px}.axis-label{font-size:19px;font-weight:600}.legend{font-size:16px}.line{fill:none;stroke-width:2;opacity:.9}.point{stroke:#111827;stroke-width:1}</style>",
+        f'<line class="axis" x1="{left}" y1="{top}" x2="{left}" y2="{top+plot_h}"/><line class="axis" x1="{left}" y1="{top+plot_h}" x2="{left+plot_w}" y2="{top+plot_h}"/>',
+        f'<line class="zero" x1="{left}" y1="{zero_y}" x2="{left+plot_w}" y2="{zero_y}"/>',
+        f'<text class="axis-label" x="{left+plot_w/2}" y="{height-24}" text-anchor="middle">output_dim</text>',
+        f'<text class="axis-label" x="24" y="{top+plot_h/2}" text-anchor="middle" transform="rotate(-90 24 {top+plot_h/2})">(pred-act)/act</text>',
+        f'<text class="tick" x="{left}" y="{top+plot_h+24}">{x_min:.0f}</text>',
+        f'<text class="tick" x="{left+plot_w}" y="{top+plot_h+24}" text-anchor="end">{x_max:.0f}</text>',
+        f'<text class="tick" x="{left-10}" y="{py(y_min)+5}" text-anchor="end">{y_min:.3f}</text>',
+        f'<text class="tick" x="{left-10}" y="{py(y_max)+5}" text-anchor="end">{y_max:.3f}</text>',
+    ]
+    for block_dim, series_rows in series:
+        color = BLOCK_COLORS[block_dim]
+        points = []
+        for row in series_rows:
+            x_value = output_dim_for_row(dtype, row)
+            actual = float(row["actual_cycles"])
+            predicted = float(row["predicted_cycles"])
+            ratio = (predicted - actual) / max(abs(actual), 1e-12)
+            points.append(f"{px(x_value):.2f},{py(ratio):.2f}")
+        parts.append(
+            f'<polyline class="line" stroke="{color}" points="{" ".join(points)}"/>'
+        )
+        for row in series_rows:
+            x_value = output_dim_for_row(dtype, row)
+            actual = float(row["actual_cycles"])
+            predicted = float(row["predicted_cycles"])
+            ratio = (predicted - actual) / max(abs(actual), 1e-12)
+            parts.append(
+                f'<circle class="point" cx="{px(x_value)}" cy="{py(ratio)}" r="3.8" fill="{color}"><title>block_dim={block_dim}; output_dim={x_value:.0f}; error_ratio={ratio:.4g}</title></circle>'
+            )
+
+    legend_x = left + plot_w - 130
+    legend_y = top + plot_h - 118
+    for index, (block_dim, _) in enumerate(series):
+        y = legend_y + index * 22
+        color = BLOCK_COLORS[block_dim]
+        parts.append(
+            f'<line class="line" x1="{legend_x}" y1="{y}" x2="{legend_x + 22}" y2="{y}" stroke="{color}"/>'
+        )
+        parts.append(
+            f'<text class="legend" x="{legend_x + 30}" y="{y + 5}">block_dim={block_dim}</text>'
+        )
+    parts.append("</svg>")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text("\n".join(parts) + "\n", encoding="utf-8")
+
+
 def main() -> int:
     args = parse_args()
     input_dir = Path(args.input_dir).resolve()
@@ -251,6 +346,11 @@ def main() -> int:
             dtype,
             dtype_rows,
             output_dir / f"round1_1d_single_core_{dtype}_output_dim.svg",
+        )
+        svg_for_output_dim_fit_error(
+            dtype,
+            dtype_rows,
+            output_dir / f"round1_1d_single_core_{dtype}_output_dim_error.svg",
         )
     print(f"[INFO] wrote plots to {output_dir}")
     return 0

@@ -437,12 +437,16 @@ NDDMA2/Modeling/Ana/round1/round1_1d_single_core_predictions.csv
 NDDMA2/Modeling/Ana/round1/figures/
 round1_1d_single_core_int8_t_max.svg
 round1_1d_single_core_int8_t_output_dim.svg
+round1_1d_single_core_int8_t_output_dim_error.svg
 round1_1d_single_core_int16_t_max.svg
 round1_1d_single_core_int16_t_output_dim.svg
+round1_1d_single_core_int16_t_output_dim_error.svg
 round1_1d_single_core_int32_t_max.svg
 round1_1d_single_core_int32_t_output_dim.svg
+round1_1d_single_core_int32_t_output_dim_error.svg
 round1_1d_single_core_int64_t_max.svg
 round1_1d_single_core_int64_t_output_dim.svg
+round1_1d_single_core_int64_t_output_dim_error.svg
 ```
 
 ### 10.2 坐标轴
@@ -495,6 +499,20 @@ round1_1d_single_core_<dtype>_output_dim.svg
 
 `output_dim` 关系图中，不同 `block_dim` 使用不同颜色；点和线都只表示
 `actual_cycles`。
+
+拟合效果图文件名为：
+
+```text
+round1_1d_single_core_<dtype>_output_dim_error.svg
+```
+
+该图横轴为 `output_dim`，纵轴为：
+
+```text
+(predicted_cycles - actual_cycles) / actual_cycles
+```
+
+同样只绘制 `block_dim=1,2,4,8,32`，不同 `block_dim` 使用不同颜色。
 
 ### 10.4 判断方法
 
