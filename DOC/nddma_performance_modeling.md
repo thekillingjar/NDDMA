@@ -8,32 +8,21 @@
 
 #### 1.1 建模思路
 
-首先，我们在不同block_dim对情况下观察数据量(B在一维情况下等于output_dim)和cycles(N_{base})的关系，如图所示，在固定的block_dim的情况下，$B$与$N_{base}$呈现线性关系。
+首先，我们在不同block_dim对情况下观察数据量(B在一维情况下等于output_dim)和cycles(N_{base})的关系，如图1所示，在固定的block_dim的情况下，$B$与$N_{base}$呈现线性关系。
   <table>
     <tr>
-      <td><img src="figures/img1.svg" alt="图1" width="400"></td>
-      <td><img src="figures/img2.svg" alt="图2" width="400"></td>
+      <td align="center"><img src="figures/round1/round1_1d_single_core_int8_t_output_dim.svg" alt="图1" width="400"></td>
+      <td align="center"><img src="figures/round1/round1_1d_single_core_int16_t_output_dim.svg" alt="图2" width="400"></td>
     </tr>
     <tr>
-      <td><img src="figures/img3.svg" alt="图3" width="400"></td>
-      <td><img src="figures/img4.svg" alt="图4" width="400"></td>
+      <td align="center"><img src="figures/round1/round1_1d_single_core_int32_t_output_dim.svg" alt="图3" width="400"></td>
+      <td align="center"><img src="figures/round1/round1_1d_single_core_int64_t_output_dim.svg" alt="图4" width="400"></td>
     </tr>
   </table>
 
-  如果想每张图下面有标题：
 
-  <table>
-    <tr>
-      <td align="center"><img src="figures/img1.svg" width="400"><br>图1</td>
-      <td align="center"><img src="figures/img2.svg" width="400"><br>图2</td>
-    </tr>
-    <tr>
-      <td align="center"><img src="figures/img3.svg" width="400"><br>图3</td>
-      <td align="center"><img src="figures/img4.svg" width="400"><br>图4</td>
-    </tr>
-  </table>
 并且如图2所示，我们在固定的B=61440的情况下，$block\_dim$和$N_{base}$在$block\_dim=2$处分段，并且两段都呈现出了近似线性的关系。
-
+![round1_1d_single_core_int8_t_max](figures/round1/round1_1d_single_core_int8_t_max.svg)
 于是我们将其建模成1.2的形式
 
 #### 1.2 建模形式
@@ -93,7 +82,10 @@ block_dim = 1..56
 ```
 
 #### 1.4 整体效果
-
+<td align="center"><img src="figures/round1/round1_1d_single_core_int8_t_output_dim_error.svg" alt="图1"><br></td>
+<td align="center"><img src="figures/round1/round1_1d_single_core_int16_t_output_dim_error.svg" alt="图1"><br></td>
+<td align="center"><img src="figures/round1/round1_1d_single_core_int32_t_output_dim_error.svg" alt="图1"><br></td>
+<td align="center"><img src="figures/round1/round1_1d_single_core_int64_t_output_dim_error.svg" alt="图1"><br></td>
 
 ### 2 一维度多核非连续模型
 
@@ -101,13 +93,37 @@ block_dim = 1..56
 
 我们继承round1所建模的一维度多核连续模型$N_{base}$，我们首先分析单核情况下，GM连续和UB非连续分别对整体性能造成的影响。如图所示，GM非连续呈现出roofline的形式，并且在$input\_stride*dtype\_size=128$的位置发生分段，于是我们直接对$s=min(input\_stride, 128)$拟合出的$N_{G}$作为$N_{base}$的GM非连续惩罚项。
 
-为了对$N_G$进行建模，我们采集数据绘制了在不同的$input\_stride$下D(output_dim)与cycles对关系，如图所示，发现在相同的$input\_stride$下，D与cycles呈现线性关系，于是我们分两段拟合$N_G(D, input\_stride)$，即首先固定input\_stride，拟合slope*D+d,然后再分别拟合slop和d与input\_stride的线性关系，最终建模形式如2.2所示。
 
+  <td align="center"><img src="figures/round2/round2_1d_input_stride_vs_cycles_int8_t.svg" alt="图1"></td>
+  <td align="center"><img src="figures/round2/round2_1d_input_stride_vs_cycles_int8_t.svg" alt="图2"></td>
+
+  <td align="center"><img src="figures/round2/round2_1d_input_stride_vs_cycles_int8_t.svg" alt="图3"></td>
+  <td align="center"><img src="figures/round2/round2_1d_input_stride_vs_cycles_int8_t.svg" alt="图4"></td>
+
+
+为了对$N_G$进行建模，我们采集数据绘制了在不同的$input\_stride$下D(output_dim)与cycles对关系，如图所示，发现在相同的$input\_stride$下，D与cycles呈现线性关系，于是我们分两段拟合$N_G(D, input\_stride)$，即首先固定input\_stride，拟合slope*D+d,然后再分别拟合slop和d与input\_stride的线性关系，最终建模形式如2.2所示。
+  <td align="center"><img src="figures/round2/round2_1d_os1_output_dim_vs_cycles_int8_t.svg" alt="图1"></td>
+  <td align="center"><img src="figures/round2/round2_1d_os1_output_dim_vs_cycles_int16_t.svg" alt="图2"></td>
+
+  <td align="center"><img src="figures/round2/round2_1d_os1_output_dim_vs_cycles_int32_t.svg" alt="图3"></td>
+  <td align="center"><img src="figures/round2/round2_1d_os1_output_dim_vs_cycles_int64_t.svg" alt="图4"></td>
 我们接下来对UB非连续的建模，发现UB连续和非连续表现出不同的常数影响，于是我们可以直接将其与GM/UB同时非连续同一建模，因为UB=1时只有一个$N_G$惩罚项。如图所示，我们在$os=2$下，发现出现与上述$N_G$相似的情况，也采用相似的方式进行建模$N_{GU}$。
+
+  <td align="center"><img src="figures/round2/round2_1d_is1_output_stride_vs_cycles_int8_t.svg" alt="图1"></td>
+  <td align="center"><img src="figures/round2/round2_1d_is1_output_stride_vs_cycles_int16_t.svg" alt="图2"></td>
+
+  <td align="center"><img src="figures/round2/round2_1d_is1_output_stride_vs_cycles_int32_t.svg" alt="图3"></td>
+  <td align="center"><img src="figures/round2/round2_1d_is1_output_stride_vs_cycles_int64_t.svg" alt="图4"></td>
 
 当然我们为了避免公式的复杂性，对建模公式进行了部分参数的删除以简化建模。
 
 最后，我们引入多核惩罚项，如图所示，我们分析在UB非连续，不同input\_stride情况下，block\_dim和$\rho=(N_{act}-N_{base})/(N_G+N_{GU})$的关系，发现随着input\_stride增加增加，在block_dim=2处分段，与多核连续相似。因此我们构建$\rho$与input\_stride的线性模型。
+  <td align="center"><img src="figures/round2/round2_1d_os2_output_dim_vs_cycles_int8_t.svg" alt="图1"></td>
+  <td align="center"><img src="figures/round2/round2_1d_os2_output_dim_vs_cycles_int16_t.svg" alt="图2"></td>
+
+  <td align="center"><img src="figures/round2/round2_1d_os2_output_dim_vs_cycles_int32_t.svg" alt="图3"></td>
+  <td align="center"><img src="figures/round2/round2_1d_os2_output_dim_vs_cycles_int64_t.svg" alt="图4"></td>
+
 #### 2.2 建模形式
 ```math
 N_1'(B,is,os,k)=
@@ -203,6 +219,11 @@ BYTES_PER_CORE = 64, 128, 512, 1024, 4096, 16384
 
 #### 2.4 整体效果
 
+  <td align="center"><img src="figures/round2/round2_1d_noncontiguous_residual_int8_t.svg" alt="图1"></td>
+  <td align="center"><img src="figures/round2/round2_1d_noncontiguous_residual_int16_t.svg" alt="图2"></td>
+
+  <td align="center"><img src="figures/round2/round2_1d_noncontiguous_residual_int32_t.svg" alt="图3"></td>
+  <td align="center"><img src="figures/round2/round2_1d_noncontiguous_residual_int64_t.svg" alt="图4"></td>
 
 
 ### 3 多维度模型
@@ -343,6 +364,27 @@ layout 维度：
 | 5D | 3477 | 2922 | 2304 | 1686 |
 
 #### 3.4 整体效果
+#### 3.4.1 d3
+  <td align="center"><img src="figures/round3/round3_d3_int8_t_residual.svg" alt="图1"></td>
+  <td align="center"><img src="figures/round3/round3_d3_int16_t_residual.svg" alt="图2"></td>
+
+  <td align="center"><img src="figures/round3/round3_d3_int32_t_residual.svg" alt="图3"></td>
+  <td align="center"><img src="figures/round3/round3_d3_int64_t_residual.svg" alt="图4"></td>
+
+#### 3.4.2 d4
+  <td align="center"><img src="figures/round3/round3_d4_int8_t_residual.svg" alt="图1"></td>
+  <td align="center"><img src="figures/round3/round3_d4_int16_t_residual.svg" alt="图2"></td>
+
+  <td align="center"><img src="figures/round3/round3_d4_int32_t_residual.svg" alt="图3"></td>
+  <td align="center"><img src="figures/round3/round3_d4_int64_t_residual.svg" alt="图4"></td>
+
+
+#### 3.4.3 d5
+  <td align="center"><img src="figures/round3/round3_d5_int8_t_residual.svg" alt="图1"></td>
+  <td align="center"><img src="figures/round3/round3_d5_int16_t_residual.svg" alt="图2"></td>
+
+  <td align="center"><img src="figures/round3/round3_d5_int32_t_residual.svg" alt="图3"></td>
+  <td align="center"><img src="figures/round3/round3_d5_int64_t_residual.svg" alt="图4"></td>
 
 ### 4 二维转置模型
 
@@ -467,3 +509,8 @@ guard = 64 elems
 | `high_stride_validation` | `is1*dtype_size > 128`，用于高 stride 外推验证 | 20510 |
 
 #### 4.3 整体效果
+  <td align="center"><img src="figures/round4/round4_2d_ub_contiguous_ng2_int8_t_error_vs_bytes.svg" alt="图1"></td>
+  <td align="center"><img src="figures/round4/round4_2d_ub_contiguous_ng2_int8_t_error_vs_bytes.svg" alt="图2"></td>
+
+  <td align="center"><img src="figures/round4/round4_2d_ub_contiguous_ng2_int8_t_error_vs_bytes.svg" alt="图3"></td>
+  <td align="center"><img src="figures/round4/round4_2d_ub_contiguous_ng2_int8_t_error_vs_bytes.svg" alt="图4"></td>
