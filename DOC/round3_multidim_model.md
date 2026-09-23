@@ -85,8 +85,8 @@ B_0 = B
 is_hat_0 = is0
 os_hat_0 = os0
 
-is_hat_j = max(is_j - sum_{t=0}^{j-1}(ls_t*is_t) + 1, 1), j>=1
-os_hat_j = max(os_j - sum_{t=0}^{j-1}(ls_t*os_t) + 1, 1), j>=1
+is_hat_j = abs(is_j - sum_{t=0}^{j-1}(ls_t*is_t)) + 1, j>=1
+os_hat_j = abs(os_j - sum_{t=0}^{j-1}(ls_t*os_t)) + 1, j>=1
 ```
 
 每一维使用 Round2 JSON 中的一维多核修正项：

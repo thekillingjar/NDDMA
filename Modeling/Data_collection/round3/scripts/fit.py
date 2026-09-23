@@ -193,10 +193,8 @@ def inherited_terms(
                 int(loop_sizes[lower]) * int(output_stride[lower])
                 for lower in range(axis)
             )
-            input_delta = max(
-                int(input_stride[axis]) - expected_input + 1, 1)
-            output_delta = max(
-                int(output_stride[axis]) - expected_output + 1, 1)
+            input_delta = abs(int(input_stride[axis]) - expected_input) + 1
+            output_delta = abs(int(output_stride[axis]) - expected_output) + 1
         term_bytes = term_elems * DTYPE_SIZES[dtype]
         correction = one_d_correction(
             round2, dtype, term_bytes, input_delta, output_delta, block_dim)
@@ -280,8 +278,8 @@ def fit_model(
                 "B_core*(block_dim/T_2+h_2)+H_2 for k>2"
             ),
             "axis_bytes": "B_j = B / prod_{t=0}^{j-1}(ls_t)",
-            "effective_input_stride": "is_hat_j = max(is_j - sum_{t=0}^{j-1}(ls_t*is_t) + 1, 1), j>=1; is_hat_0=is_0",
-            "effective_output_stride": "os_hat_j = max(os_j - sum_{t=0}^{j-1}(ls_t*os_t) + 1, 1), j>=1; os_hat_0=os_0",
+            "effective_input_stride": "is_hat_j = abs(is_j - sum_{t=0}^{j-1}(ls_t*is_t)) + 1, j>=1; is_hat_0=is_0",
+            "effective_output_stride": "os_hat_j = abs(os_j - sum_{t=0}^{j-1}(ls_t*os_t)) + 1, j>=1; os_hat_0=os_0",
             "per_axis": "N_1'=N_G+N_GU for k<=2; N_1'=(N_G+N_GU)*rho for k>2",
             "N_G": "N_G=(a1+a2*B_j)*s",
             "N_GU": "N_GU=((b1+b2*s)+(b3+b4*s)*B_j)*min(1,os_hat_j-1)",
