@@ -1,0 +1,77 @@
+{
+  "formula": "N=N_base(B)+sum_k N_1'(B/prod_{j<k}ls_j,|is_k-sum_{j<k}ls_j*is_j|+1,|os_k-sum_{j<k}ls_j*os_j|+1)",
+  "formula_source": "DOC/round3_multidim_model.json",
+  "dtype": "int32_t",
+  "dtype_size": 4,
+  "dim": 3,
+  "block_dim": 72,
+  "kernel_repeat": 72,
+  "api_order": {
+    "output_dims": "12x32x32",
+    "input_stride": "512x65536x2097152",
+    "output_stride": "1024x32x1"
+  },
+  "loop_axis_order": {
+    "loop_sizes": "32x32x12",
+    "input_stride": "2097152x65536x512",
+    "output_stride": "1x32x1024"
+  },
+  "total_elems": 12288,
+  "data_volume_bytes": 49152,
+  "n_base_cycles_per_kernel_repeat": 3897.3465774479077,
+  "n_base_cycles": 280608.95357624936,
+  "n1_total_cycles_per_kernel_repeat": 67683.39112950666,
+  "n1_total_cycles": 4873204.161324481,
+  "predicted_cycles_per_kernel_repeat": 71580.73770695458,
+  "predicted_cycles": 5153813.11490073,
+  "terms": [
+    {
+      "axis": 0,
+      "loop_size": 32,
+      "term_elems": 12288,
+      "data_volume_bytes": 49152,
+      "input_stride": 2097152,
+      "output_stride": 1,
+      "expected_contiguous_input_stride": 0,
+      "expected_contiguous_output_stride": 0,
+      "input_stride_delta": 2097152,
+      "output_stride_delta": 1,
+      "s_bytes": 128.0,
+      "output_gap_indicator": 0.0,
+      "n1_cycles_per_kernel_repeat": 64435.63777408458,
+      "n1_cycles": 4639365.91973409
+    },
+    {
+      "axis": 1,
+      "loop_size": 32,
+      "term_elems": 384,
+      "data_volume_bytes": 1536,
+      "input_stride": 65536,
+      "output_stride": 32,
+      "expected_contiguous_input_stride": 67108864,
+      "expected_contiguous_output_stride": 32,
+      "input_stride_delta": 67043329,
+      "output_stride_delta": 1,
+      "s_bytes": 128.0,
+      "output_gap_indicator": 0.0,
+      "n1_cycles_per_kernel_repeat": 2310.9268034127913,
+      "n1_cycles": 166386.72984572098
+    },
+    {
+      "axis": 2,
+      "loop_size": 12,
+      "term_elems": 12,
+      "data_volume_bytes": 48,
+      "input_stride": 512,
+      "output_stride": 1024,
+      "expected_contiguous_input_stride": 69206016,
+      "expected_contiguous_output_stride": 1056,
+      "input_stride_delta": 69205505,
+      "output_stride_delta": 33,
+      "s_bytes": 128.0,
+      "output_gap_indicator": 1.0,
+      "n1_cycles_per_kernel_repeat": 936.8265520092995,
+      "n1_cycles": 67451.51174466957
+    }
+  ]
+}
