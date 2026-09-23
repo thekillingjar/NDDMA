@@ -32,8 +32,13 @@ def draw(rows: list[dict[str, str]], output: Path, title: str, residual: bool) -
     plot_w, plot_h = width - left - right, height - top - bottom
     xs = [float(row["logical_total_bytes"]) for row in rows]
     if residual:
-        ys = [float(row["error_cycles"]) for row in rows]
-        ylabel = "predicted - actual cycles"
+        ys = [
+            (float(row["predicted_cycles"]) - float(row["actual_cycles"]))
+            / float(row["actual_cycles"])
+            for row in rows
+            if float(row["actual_cycles"]) != 0.0
+        ]
+        ylabel = "(predicted - actual) / actual"
     else:
         ys = [float(row["actual_cycles"]) for row in rows] + [
             float(row["predicted_cycles"]) for row in rows
@@ -41,7 +46,7 @@ def draw(rows: list[dict[str, str]], output: Path, title: str, residual: bool) -
         ylabel = "cycles"
     x_min, x_max = min(xs), max(xs)
     y_min, y_max = min(ys), max(ys)
-    pad = max((y_max - y_min) * 0.08, 1.0)
+    pad = max((y_max - y_min) * 0.08, 0.01 if residual else 1.0)
     y_min -= pad
     y_max += pad
 
@@ -67,8 +72,8 @@ def draw(rows: list[dict[str, str]], output: Path, title: str, residual: bool) -
         f'<text x="18" y="{top+plot_h/2}" text-anchor="middle" transform="rotate(-90 18 {top+plot_h/2})">{ylabel}</text>',
         f'<text x="{left}" y="{top+plot_h+22}">{x_min:.0f}</text>',
         f'<text x="{left+plot_w}" y="{top+plot_h+22}" text-anchor="end">{x_max:.0f}</text>',
-        f'<text x="{left-8}" y="{py(y_min)+4}" text-anchor="end">{y_min:.0f}</text>',
-        f'<text x="{left-8}" y="{py(y_max)+4}" text-anchor="end">{y_max:.0f}</text>',
+        f'<text x="{left-8}" y="{py(y_min)+4}" text-anchor="end">{y_min:.4g}</text>',
+        f'<text x="{left-8}" y="{py(y_max)+4}" text-anchor="end">{y_max:.4g}</text>',
     ]
     if residual and y_min < 0 < y_max:
         parts.append(f'<line x1="{left}" y1="{py(0):.2f}" x2="{left+plot_w}" y2="{py(0):.2f}" stroke="#9ca3af"/>')
@@ -76,9 +81,13 @@ def draw(rows: list[dict[str, str]], output: Path, title: str, residual: bool) -
         block_dim = int(row["block_dim"])
         x = px(float(row["logical_total_bytes"]))
         if residual:
+            actual = float(row["actual_cycles"])
+            if actual == 0.0:
+                continue
+            relative_error = (float(row["predicted_cycles"]) - actual) / actual
             parts.append(
-                f'<circle class="error" cx="{x:.2f}" cy="{py(float(row["error_cycles"])):.2f}" '
-                f'r="3" fill="{color(block_dim)}"><title>k={block_dim}; error={row["error_cycles"]}</title></circle>'
+                f'<circle class="error" cx="{x:.2f}" cy="{py(relative_error):.2f}" '
+                f'r="3" fill="{color(block_dim)}"><title>k={block_dim}; rel_error={relative_error:.5g}</title></circle>'
             )
         else:
             parts.append(f'<circle class="actual" cx="{x:.2f}" cy="{py(float(row["actual_cycles"])):.2f}" r="3"/>')
@@ -197,10 +206,15 @@ def error_vs_bytes(rows: list[dict[str, str]], output: Path, title: str) -> None
     left, top, right, bottom = 95, 42, 260, 82
     plot_w, plot_h = width - left - right, height - top - bottom
     xs = [float(row["bytes_per_core"]) for row in rows]
-    ys = [float(row["error_cycles"]) for row in rows]
+    ys = [
+        (float(row["predicted_cycles"]) - float(row["actual_cycles"]))
+        / float(row["actual_cycles"])
+        for row in rows
+        if float(row["actual_cycles"]) != 0.0
+    ]
     x_min, x_max = min(xs), max(xs)
     y_min, y_max = min(ys), max(ys)
-    y_pad = max((y_max - y_min) * 0.08, 1.0)
+    y_pad = max((y_max - y_min) * 0.08, 0.01)
     y_min -= y_pad
     y_max += y_pad
     block_dims = sorted({int(float(row["block_dim"])) for row in rows})
@@ -217,7 +231,7 @@ def error_vs_bytes(rows: list[dict[str, str]], output: Path, title: str) -> None
         f'<defs><clipPath id="error-bytes-clip"><rect x="{left}" y="{top}" width="{plot_w}" height="{plot_h}"/></clipPath></defs>',
         '<rect width="100%" height="100%" fill="white"/>',
         f'<text x="{left + plot_w/2}" y="28" text-anchor="middle" font-family="sans-serif" font-size="18">{title}</text>',
-        f'<text x="22" y="{top + plot_h/2}" text-anchor="middle" transform="rotate(-90 22 {top + plot_h/2})" font-family="sans-serif" font-size="15">predicted - actual cycles</text>',
+        f'<text x="22" y="{top + plot_h/2}" text-anchor="middle" transform="rotate(-90 22 {top + plot_h/2})" font-family="sans-serif" font-size="15">(predicted - actual) / actual</text>',
         f'<text x="{left + plot_w/2}" y="{height - 22}" text-anchor="middle" font-family="sans-serif" font-size="15">bytes_per_core</text>',
         f'<rect x="{left}" y="{top}" width="{plot_w}" height="{plot_h}" fill="none" stroke="#555"/>',
     ]
@@ -241,10 +255,14 @@ def error_vs_bytes(rows: list[dict[str, str]], output: Path, title: str) -> None
         )
     parts.append('<g clip-path="url(#error-bytes-clip)">')
     for row in rows:
+        actual = float(row["actual_cycles"])
+        if actual == 0.0:
+            continue
         block_dim = int(float(row["block_dim"]))
         color = colors[block_dim]
+        relative_error = (float(row["predicted_cycles"]) - actual) / actual
         parts.append(
-            f'<circle cx="{px(float(row["bytes_per_core"])):.2f}" cy="{py(float(row["error_cycles"])):.2f}" r="3.5" fill="{color}" fill-opacity="0.58"><title>k={block_dim}; bytes={float(row["bytes_per_core"]):.0f}; M={row["m"]}; is2={row["is2"]}; error={float(row["error_cycles"]):.5g}</title></circle>'
+            f'<circle cx="{px(float(row["bytes_per_core"])):.2f}" cy="{py(relative_error):.2f}" r="3.5" fill="{color}" fill-opacity="0.58"><title>k={block_dim}; bytes={float(row["bytes_per_core"]):.0f}; M={row["m"]}; is2={row["is2"]}; rel_error={relative_error:.5g}</title></circle>'
         )
     parts.append("</g>")
 
@@ -285,7 +303,7 @@ def main() -> int:
         error_vs_bytes(
             selected,
             output_dir / f"round4_2d_ub_contiguous_ng2_{dtype}_error_vs_bytes.svg",
-            f"Round4 Round5 N_G2 2D UB-contiguous {dtype}: error vs bytes",
+            f"Round4 Round5 N_G2 2D UB-contiguous {dtype}: relative error vs bytes",
         )
     print(f"[INFO] wrote plots to {output_dir}")
     return 0

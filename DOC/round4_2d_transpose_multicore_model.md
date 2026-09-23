@@ -131,4 +131,4 @@ round4_2d_ub_contiguous_ng2_<dtype>_error_vs_bytes.svg
 的原始点保留，连线使用这些点的中位数。
 
 `error_vs_bytes` 横轴为 `bytes_per_core`，纵轴为
-`predicted_cycles - actual_cycles`，不同 `block_dim` 使用不同颜色。
+`(predicted_cycles - actual_cycles) / actual_cycles`，不同 `block_dim` 使用不同颜色。
