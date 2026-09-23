@@ -182,7 +182,7 @@ def make_row(index: int, dtype: str, dims: Sequence[int],
         "input_stride_pattern": layout,
         "output_stride_pattern": layout if layout == "continuous" else "continuous",
         "layout_pattern": layout,
-        "parent_model": "round2_1d_noncontiguous_model",
+        "parent_model": "NDDMA/Modeling/DOC/任意维度多核模型.md",
         "notes": "Round3 multidimensional extension dataset migrated from legacy NDDMA round6/round7 plus 2D transpose.",
         "source_round": source_round,
     })

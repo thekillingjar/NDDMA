@@ -16,7 +16,6 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 MODELING_DIR = SCRIPT_DIR.parents[2]
 DEFAULT_ANA_DIR = MODELING_DIR / "Ana" / "round3"
 DEFAULT_DATA_DIR = DEFAULT_ANA_DIR / "collection"
-DEFAULT_ROUND2_MODEL = MODELING_DIR / "Ana" / "round2" / "round2_1d_noncontiguous_model.json"
 MODEL_FILENAME = "round3_multidim_model.json"
 PREDICTIONS_FILENAME = "round3_multidim_predictions.csv"
 DTYPE_SIZES = {"int8_t": 1, "int16_t": 2, "int32_t": 4, "int64_t": 8}
@@ -24,6 +23,41 @@ METRIC_FIELDS = (
     "actual_y", "nddma_mte2_cycles_per_block", "mte2_cycles_per_block",
     "mte2_cycles", "nddma_mte2_cycles",
 )
+PARAMETER_SOURCE = "NDDMA/Modeling/DOC/任意维度多核模型.md section 6"
+UNIFIED_PARAMETERS = {
+    "int8_t": {
+        "T_1": 11.7626, "H_1": 194.421, "T_2": 6.05735, "H_2": 373.274,
+        "a_1": 2.2901165, "a_2": 0.014561351,
+        "b_1": -69.410121, "b_2": -2.0861213,
+        "b_3": 6.9111296, "b_4": -0.014567499,
+        "c_1": 2.2823982, "c_2": 0.0054381207,
+        "c_3": -0.29869463, "c_4": -0.0054311976,
+    },
+    "int16_t": {
+        "T_1": 25.7579, "H_1": 204.604, "T_2": 13.259, "H_2": 399.909,
+        "a_1": 1.9720487, "a_2": 0.0073653238,
+        "b_1": -65.754578, "b_2": -1.7626747,
+        "b_3": 3.4565828, "b_4": -0.0073719789,
+        "c_1": 1.6501023, "c_2": 0.016002982,
+        "c_3": 0.33029872, "c_4": -0.015981633,
+    },
+    "int32_t": {
+        "T_1": 57.2624, "H_1": 235.137, "T_2": 29.4096, "H_2": 453.859,
+        "a_1": 1.2140303, "a_2": 0.0037227686,
+        "b_1": 31.174096, "b_2": -0.83730451,
+        "b_3": 0.21970194, "b_4": -0.0032801415,
+        "c_1": 1.9774169, "c_2": 0.0056400644,
+        "c_3": -0.61376163, "c_4": 0.021569482,
+    },
+    "int64_t": {
+        "T_1": 57.2346, "H_1": 243.205, "T_2": 29.3906, "H_2": 468.971,
+        "a_1": 1.7169033, "a_2": 0.0015857085,
+        "b_1": 63.566231, "b_2": -1.4367614,
+        "b_3": 0.090304855, "b_4": -0.0012246069,
+        "c_1": 0.76071525, "c_2": 0.02630908,
+        "c_3": 0.89945693, "c_4": -0.015756802,
+    },
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -33,7 +67,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--data-dir", default=str(DEFAULT_DATA_DIR))
     parser.add_argument("--measurement-csv", default="")
     parser.add_argument("--output-dir", default=str(DEFAULT_ANA_DIR))
-    parser.add_argument("--round2-model", default=str(DEFAULT_ROUND2_MODEL))
     return parser.parse_args()
 
 
@@ -93,55 +126,33 @@ def product_int(values: Iterable[int]) -> int:
     return result
 
 
-def round2_parameters(round2: Mapping[str, object]) -> Mapping[str, object]:
-    return round2.get("parameters", round2.get("dtype_models", {}))
+def one_d_base(dtype: str, bytes_value: float, block_dim: int) -> float:
+    params = UNIFIED_PARAMETERS[dtype]
+    if block_dim <= 2:
+        return bytes_value / params["T_1"] + params["H_1"]
+    return bytes_value / params["T_2"] + params["H_2"]
 
 
-def base_params(round2: Mapping[str, object], dtype: str, block_dim: int) -> Mapping[str, object]:
-    base = round2_parameters(round2)[dtype]["base"]
-    if "T_1" in base:
-        return base
-    return base["le2" if block_dim <= 2 else "gt2"]
-
-
-def one_d_base(round2: Mapping[str, object], dtype: str, bytes_value: float,
-               block_dim: int) -> float:
-    params = base_params(round2, dtype, block_dim)
-    if "T_1" in params:
-        if block_dim <= 2:
-            return (
-                bytes_value
-                * (float(block_dim) / float(params["T_1"]) + float(params.get("h_1", 0.0)))
-                + float(params["H_1"])
-            )
-        return (
-            bytes_value
-            * (float(block_dim) / float(params["T_2"]) + float(params.get("h_2", 0.0)))
-            + float(params["H_2"])
-        )
-    return float(params["alpha"]) + bytes_value / float(params["T_bytes_per_cycle"])
-
-
-def one_d_correction(round2: Mapping[str, object], dtype: str, bytes_value: float,
-                     input_stride: int, output_stride: int, block_dim: int) -> float:
-    model = round2_parameters(round2)[dtype]
+def one_d_correction(dtype: str, bytes_value: float, input_stride: int,
+                     output_stride: int, block_dim: int) -> float:
+    params = UNIFIED_PARAMETERS[dtype]
     s = min(float(input_stride) * DTYPE_SIZES[dtype], 128.0)
     gate = min(1.0, max(0.0, float(output_stride - 1)))
-    ng = (float(model["N_G"]["a1"]) + float(model["N_G"]["a2"]) * bytes_value) * s
-    ngu = ((float(model["N_GU"]["b1"]) + float(model["N_GU"]["b2"]) * s)
-           + (float(model["N_GU"]["b3"]) + float(model["N_GU"]["b4"]) * s)
-           * bytes_value) * gate
+    ng = (params["a_1"] + params["a_2"] * bytes_value) * s
+    ngu = (
+        (params["b_1"] + params["b_2"] * s)
+        + (params["b_3"] + params["b_4"] * s) * bytes_value
+    ) * gate
     if block_dim <= 2:
         return ng + ngu
-    rho = model["rho"]
     multiplier = (
-        float(rho["c1"]) + float(rho["c2"]) * s
-        + gate * (float(rho["c3"]) + float(rho["c4"]) * s)
+        params["c_1"] + params["c_2"] * s
+        + gate * (params["c_3"] + params["c_4"] * s)
     )
     return multiplier * (ng + ngu)
 
 
-def inherited_terms(round2: Mapping[str, object], row: Mapping[str, str]) -> tuple[float, list[dict[str, float | int]]]:
+def unified_terms(row: Mapping[str, str]) -> tuple[float, list[dict[str, float | int]]]:
     dim = int(row["dim"])
     dtype = row["dtype"]
     block_dim = int(row.get("block_dim") or 1)
@@ -153,7 +164,7 @@ def inherited_terms(round2: Mapping[str, object], row: Mapping[str, str]) -> tup
     output_stride = tuple(reversed(output_stride_api))
     total_elems = product_int(loop_sizes)
     total_bytes = total_elems * DTYPE_SIZES[dtype]
-    n_base = one_d_base(round2, dtype, total_bytes, block_dim)
+    n_base = one_d_base(dtype, total_bytes, block_dim)
     terms: list[dict[str, float | int]] = []
     inner_product = 1
     for axis, loop_size in enumerate(loop_sizes):
@@ -174,8 +185,7 @@ def inherited_terms(round2: Mapping[str, object], row: Mapping[str, str]) -> tup
             output_delta = abs(int(output_stride[axis]) - expected_output) + 1
         term_bytes = term_elems * DTYPE_SIZES[dtype]
         correction = one_d_correction(
-            round2, dtype, term_bytes, input_delta, output_delta, block_dim
-        )
+            dtype, term_bytes, input_delta, output_delta, block_dim)
         terms.append({
             "axis": axis,
             "loop_size": int(loop_size),
@@ -205,10 +215,10 @@ def metrics(points: Sequence[Mapping[str, object]]) -> dict[str, float | int]:
     }
 
 
-def fit_model(rows: list[dict[str, str]], round2: Mapping[str, object]) -> dict[str, object]:
+def fit_model(rows: list[dict[str, str]]) -> dict[str, object]:
     points: list[dict[str, object]] = []
     for row in rows:
-        n_base, terms = inherited_terms(round2, row)
+        n_base, terms = unified_terms(row)
         t1_sum = sum(float(term["t1_cycles"]) for term in terms)
         actual = actual_value(row)
         points.append({
@@ -243,19 +253,23 @@ def fit_model(rows: list[dict[str, str]], round2: Mapping[str, object]) -> dict[
         for dtype in sorted({str(point["dtype"]) for point in points})
     }
     return {
-        "model": "NDDMA_ROUND3_MULTIDIM_EXTENSION_2D_3D_4D_5D",
+        "model": "NDDMA2_ROUND3_ARBITRARY_DIMENSION_MULTICORE_UNIFIED",
         "formula": {
-            "source": "inherits the arbitrary-dimensional multicore unified formula",
-            "n_base": "N_base = round1/round2.base(dtype,B,block_dim), B=prod(loop_sizes)*dtype_size",
+            "source": "NDDMA arbitrary-dimensional multicore unified formula",
+            "n_base": "N_base=B/T_1+H_1 for k<=2; B/T_2+H_2 for k>2",
             "axis_bytes": "B_j = B / prod_{t=0}^{j-1}(ls_t)",
             "effective_input_stride": "is_hat_j = abs(is_j - sum_{t=0}^{j-1}(ls_t*is_t)) + 1, j>=1; is_hat_0=is_0",
             "effective_output_stride": "os_hat_j = abs(os_j - sum_{t=0}^{j-1}(ls_t*os_t)) + 1, j>=1; os_hat_0=os_0",
-            "per_axis": "T_axis = round2.N_1_prime(dtype,B_j,is_hat_j,os_hat_j,block_dim)",
-            "prediction": "N_D = N_base + sum_j(T_axis)",
-            "round3_fitted_parameters": "none",
+            "per_axis": "N_1'=N_G+N_GU for k<=2; N_1'=(N_G+N_GU)*rho for k>2",
+            "N_G": "N_G=(a_1+a_2*B_j)*s",
+            "N_GU": "N_GU=((b_1+b_2*s)+(b_3+b_4*s)*B_j)*min(1,os_hat_j-1)",
+            "rho": "rho=(c_1+c_2*s)+min(1,os_hat_j-1)*(c_3+c_4*s)",
+            "prediction": "N_D = N_base + sum_j(N_1'(B_j,is_hat_j,os_hat_j,k))",
+            "round3_fitted_parameters": "none; parameters are fixed from the document",
             "dimensions": [2, 3, 4, 5],
         },
-        "round2_model_source": str(DEFAULT_ROUND2_MODEL),
+        "parameter_source": PARAMETER_SOURCE,
+        "parameters": UNIFIED_PARAMETERS,
         "fit_scope": {
             "sample_count": len(points),
             "dimensions": sorted({int(point["dim"]) for point in points}),
@@ -284,10 +298,6 @@ def write_predictions(path: Path, points: Sequence[Mapping[str, object]]) -> Non
 
 def main() -> int:
     args = parse_args()
-    round2_model_path = Path(args.round2_model).resolve()
-    if not round2_model_path.exists():
-        raise SystemExit(f"[ERROR] round2 model JSON not found: {round2_model_path}")
-    round2 = json.loads(round2_model_path.read_text(encoding="utf-8"))
     files = ([Path(args.measurement_csv).resolve()] if args.measurement_csv
              else find_files(Path(args.data_dir).resolve()))
     if not files:
@@ -295,14 +305,13 @@ def main() -> int:
     rows = aggregate(row for path in files for row in read_rows(path))
     if not rows:
         raise SystemExit("[ERROR] no 2D/3D/4D/5D measurements found")
-    model = fit_model(rows, round2)
+    model = fit_model(rows)
     output_dir = Path(args.output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     model_path = output_dir / MODEL_FILENAME
     model_without_predictions = {
         key: value for key, value in model.items() if key != "predictions"
     }
-    model_without_predictions["round2_model_source"] = str(round2_model_path)
     model_path.write_text(json.dumps(model_without_predictions, indent=2) + "\n", encoding="utf-8")
     write_predictions(output_dir / PREDICTIONS_FILENAME, model["predictions"])
     print(f"[INFO] fitted {len(rows)} multidimensional points")

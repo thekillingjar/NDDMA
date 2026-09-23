@@ -3,8 +3,9 @@
 ## 目标
 
 Round3 用于 2D/3D/4D/5D 多维 NDDMA 建模。它采用原始
-`任意维度多核模型.md` 中的多维统一公式，继承 Round1/Round2 的
-一维 `N_base + N_G + N_GU + rho` 参数。本轮不重新拟合额外缩放参数。
+`NDDMA/Modeling/DOC/任意维度多核模型.md` 中的多维统一公式，直接使用
+该文档第 6 节的一维多核参数表。本轮不读取 Round2 JSON，也不重新拟合
+额外缩放参数。
 
 ## 数据集来源
 
@@ -37,17 +38,10 @@ python3 Modeling/Data_collection/round3/scripts/e2e.py fit
 python3 Modeling/Data_collection/round3/scripts/e2e.py draw
 ```
 
-拟合依赖 Round2 的 JSON：
+拟合参数固定来自 `NDDMA/Modeling/DOC/任意维度多核模型.md` 第 6 节：
 
 ```text
-Modeling/Ana/round2/round2_1d_noncontiguous_model.json
-```
-
-如需指定：
-
-```bash
-python3 Modeling/Data_collection/round3/scripts/e2e.py fit \
-  --round2-model Modeling/Ana/round2/round2_1d_noncontiguous_model.json
+T_1, H_1, T_2, H_2, a_1, a_2, b_1, b_2, b_3, b_4, c_1, c_2, c_3, c_4
 ```
 
 ## 建模形式
@@ -66,11 +60,11 @@ output_stride = [os0, os1, ..., os{D-1}]
 B = product(ls_j) * dtype_size
 ```
 
-连续基础项只计算一次，使用 Round1/Round2 当前 base 形式：
+连续基础项只计算一次，使用文档的一维多核基础项：
 
 ```text
-N_base = B*(block_dim/T_1+h_1)+H_1, block_dim<=2
-N_base = B*(block_dim/T_2+h_2)+H_2, block_dim>2
+N_base = B/T_1+H_1, block_dim<=2
+N_base = B/T_2+H_2, block_dim>2
 ```
 
 第 `j` 维修正项使用去掉更内侧 `0..j-1` 维后的数据量：
@@ -90,10 +84,10 @@ is_hat_j = abs(is_j - sum_{t=0}^{j-1}(ls_t*is_t)) + 1, j>=1
 os_hat_j = abs(os_j - sum_{t=0}^{j-1}(ls_t*os_t)) + 1, j>=1
 ```
 
-每一维使用 Round2 的一维非连续修正项：
+每一维使用文档的一维多核修正项：
 
 ```text
-T_axis_j = round2.N_1_prime(dtype,B_j,is_hat_j,os_hat_j,block_dim)
+T_axis_j = N_1_prime(dtype,B_j,is_hat_j,os_hat_j,block_dim)
 ```
 
 其中：
@@ -112,7 +106,7 @@ N_D = N_base + sum_j(T_axis_j)
 因此 JSON 中可以清楚区分：
 
 ```text
-Round2 继承参数: base, N_G, N_GU, rho
+文档继承参数: T_1/H_1/T_2/H_2, N_G, N_GU, rho
 Round3 新拟合参数: none
 ```
 

@@ -22,7 +22,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--data-dir", default="")
     parser.add_argument("--measurement-csv", default="")
     parser.add_argument("--model-output-dir", default="")
-    parser.add_argument("--round2-model", default="")
     parser.add_argument("--msprof-bin", default="")
     parser.add_argument("--factor-csv", default="")
     parser.add_argument("--run-output-dir", default="")
@@ -39,8 +38,6 @@ def invoke(script: Path, args: argparse.Namespace, data_dir: str = "",
         command.append(f"--input-dir={data_dir}")
     if args.measurement_csv and script == FIT:
         command.append(f"--measurement-csv={args.measurement_csv}")
-    if args.round2_model and script == FIT:
-        command.append(f"--round2-model={args.round2_model}")
     if output_dir:
         command.append(f"--output-dir={output_dir}")
     if args.msprof_bin and collect_options:
