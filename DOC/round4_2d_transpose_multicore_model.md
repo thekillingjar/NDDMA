@@ -2,8 +2,9 @@
 
 ## 定位
 
-Round4 采用原始 NDDMA Round5 的 `N_G2` 二维 UB 连续特化模型，用于
-`[M,N]/[is2,is1]/[N,1]` 场景。
+Round4 采用当前 HW_GE_ATT Round5 v4 端到端 generated 的
+`group_g_gm_outer_stride_sensitivity` 数据网格，用于拟合 `N_G2` 二维外层 stride 乘子。
+场景仍为 `[M,N]/[is2,is1]/[N,1]`。
 
 适用配置：
 
@@ -11,8 +12,8 @@ Round4 采用原始 NDDMA Round5 的 `N_G2` 二维 UB 连续特化模型，用�
 output_dims   = [M,N]
 input_stride  = [is2,is1]
 output_stride = [N,1]
-is2 < is1
-block_dim     = [2,4,8,32,64]
+is2*M <= is1
+block_dim     = 1
 ```
 
 ## 公式
@@ -127,8 +128,8 @@ round4_2d_ub_contiguous_ng2_<dtype>_error_vs_bytes.svg
 (N2 - N_base) / N_G1
 ```
 
-不同外层 `is2` 使用不同颜色；同一 `is2/M` 下不同 `N/block_dim/is1`
+不同外层 `is2` 使用不同颜色；同一 `is2/M` 下不同 `N/is1`
 的原始点保留，连线使用这些点的中位数。
 
 `error_vs_bytes` 横轴为 `bytes_per_core`，纵轴为
-`(predicted_cycles - actual_cycles) / actual_cycles`，不同 `block_dim` 使用不同颜色。
+`(predicted_cycles - actual_cycles) / actual_cycles`。当前 aligned 数据固定 `block_dim=1`。

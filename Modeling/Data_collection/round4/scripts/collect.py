@@ -25,11 +25,11 @@ DEFAULT_FACTOR_CSV = DEFAULT_ANA_DIR / "round4_2d_ub_contiguous_ng2_factor.csv"
 
 DTYPE_SIZES = {"int8_t": 1, "int16_t": 2, "int32_t": 4, "int64_t": 8}
 DTYPES = tuple(DTYPE_SIZES)
-BLOCK_DIMS = (2, 4, 8, 32, 64)
-M_VALUES = (2, 4, 8, 16, 32, 64, 128, 256)
-N_VALUES = (8, 16, 32, 64, 128, 512, 2048)
-INPUT_STRIDES = (2, 4, 8, 16, 32, 64, 128, 256, 1024)
-OUTER_INPUT_STRIDES = (1, 2, 4, 8, 16, 32)
+BLOCK_DIMS = (1,)
+M_VALUES = (2, 3, 4, 8, 16, 32, 64, 128, 156, 256)
+N_VALUES = (8, 16, 32, 64, 128, 512, 1024, 2048, 4196, 10001, 20001, 30001, 42302)
+INPUT_STRIDES = (2, 4, 8, 16, 32, 64, 128, 256, 1024, 2048, 3333, 4444)
+OUTER_INPUT_STRIDES = (2, 4, 6, 8, 16)
 MAX_GM_SPAN_BYTES = 4 * 1024 * 1024
 MAX_UB_SPAN_BYTES = 256 * 1024
 GUARD_ELEMS = 64
@@ -64,7 +64,7 @@ CSV_COLUMNS = (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Generate and collect NDDMA2 Round4 Round5 N_G2 2D UB-contiguous data."
+        description="Generate and collect NDDMA2 Round4 data aligned to Round5 v4 E2E group G."
     )
     parser.add_argument("--factor-csv", default=str(DEFAULT_FACTOR_CSV))
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR))
@@ -102,26 +102,26 @@ def build_row(index: int, dtype: str, block_dim: int, m: int, n: int,
     ub_span = span_elems((m, n), (n, 1))
     total_elems = m * n
     total_bytes = total_elems * size
-    token = f"r4_ng2_{dtype}_k{block_dim}_m{m}_n{n}_i{is2}x{is1}"
+    token = f"r5g_{dtype}_m{m}_n{n}_i0{is2}_i1{is1}"
     return {
         "experiment_idx": str(index),
         "token": token,
         "config_id": token,
-        "round_id": "r4_round5_ng2_2d_ub_contiguous",
+        "round_id": "v4_round5_transpose_repeat_with_input_stride",
         "sample_id": token,
         "execution_repeat_count": str(execution_repeat_count),
-        "sensitivity_id": "R4G",
-        "sensitivity_key": "group_g_round5_ng2_2d_ub_contiguous",
-        "sensitivity_name": "round5_ng2_2d_ub_contiguous",
-        "stage_define": "29",
+        "sensitivity_id": "R5G",
+        "sensitivity_key": "group_g_gm_outer_stride_sensitivity",
+        "sensitivity_name": "gm_outer_stride_sensitivity",
+        "stage_define": "27",
         "group_id": "G",
-        "group_name": "group_g_round5_ng2_2d_ub_contiguous",
-        "fit_stage": "round5_ng2",
-        "parent_model": "unified_1d_base_plus_gm_correction",
-        "model_target": "N2=N_base(B,k)+N_G1(B1,is1,k)*N_G2(M,is2)",
-        "metric_target": "nddma_mte2_cycles_per_block",
-        "scan_variable": "block_dim,M,N,is2,is1",
-        "controlled_variables": "dim=2,enable_store=0,output=[M,N],input=[is2,is1],output_stride=[N,1],is2<is1",
+        "group_name": "group_g_gm_outer_stride_sensitivity",
+        "fit_stage": "gm_outer_stride_sensitivity",
+        "parent_model": "none",
+        "model_target": "measure whether GM outer stride is2 changes cycles",
+        "metric_target": "nddma_mte2_cycles_per_block/repeat",
+        "scan_variable": "is2 with fixed dtype,is1,M,N",
+        "controlled_variables": "block_dim=1,enable_store=0,identical GM/UB address sets",
         "dtype": dtype,
         "dtype_size": str(size),
         "dim": "2",
@@ -131,10 +131,10 @@ def build_row(index: int, dtype: str, block_dim: int, m: int, n: int,
         "output_dims": f"{m}x{n}",
         "input_stride": f"{is2}x{is1}",
         "output_stride": f"{n}x1",
-        "input_stride_axis": "0,1",
-        "input_stride_multiplier": f"{is2},{is1}",
-        "output_stride_axis": "0",
-        "output_stride_multiplier": str(n),
+        "input_stride_axis": "1",
+        "input_stride_multiplier": str(is1),
+        "output_stride_axis": "1",
+        "output_stride_multiplier": "1",
         "src_offset_elem": "0",
         "dst_offset_elem": "0",
         "src_align_mod32": "0",
@@ -147,17 +147,17 @@ def build_row(index: int, dtype: str, block_dim: int, m: int, n: int,
         "logical_total_bytes": str(total_bytes * block_dim),
         "gm_span_elems": str(gm_span),
         "ub_span_elems": str(ub_span),
-        "input_stride_pattern": "api_is2_is1_ub_contiguous",
-        "output_stride_pattern": "api_N_1_contiguous",
-        "layout_pattern": "round5_ng2_2d_ub_contiguous",
-        "notes": "NDDMA2 Round4 adopts legacy Round5 N_G2 2D UB-contiguous specialization.",
-        "fit_role": "calibration" if is1 * size <= 128 else "high_stride_validation",
+        "input_stride_pattern": "api_gm_two_stride_noncontiguous",
+        "output_stride_pattern": "api_contiguous",
+        "layout_pattern": "gm_outer_stride_sensitivity",
+        "notes": "Aligned to HW_GE_ATT Round5 v4 E2E group G gm_outer_stride_sensitivity.",
+        "fit_role": "diagnostic",
         "bytes_region": "safety_filtered",
-        "shape_policy": "M_N_is1_cross_block_dim_with_span_filter",
-        "model_family": "ROUND5_NG2_2D_UB_CONTIGUOUS",
+        "shape_policy": "is2_in_2_4_6_8_16_and_is2_times_M_le_is1",
+        "model_family": "PAIRED_2D_LEADING_UNIT_AXIS_VS_1D",
         "data_split": "G",
-        "shape_family_id": f"m{m}_n{n}_i{is2}x{is1}",
-        "input_layout_policy": "api_is2_is1",
+        "shape_family_id": f"m{m}_n{n}_i1{is1}",
+        "input_layout_policy": "api_is0_is1",
         "output_layout_policy": "api_N_1",
         "input_span_elems": str(gm_span),
         "output_span_elems": str(ub_span),
@@ -177,8 +177,8 @@ def build_row(index: int, dtype: str, block_dim: int, m: int, n: int,
         "ng2_input_stride": str(is2),
         "inner_input_stride": str(is1),
         "s_byte_stride": str(min(is1 * size, 128)),
-        "pair_role": "round5_ng2",
-        "address_set_id": f"{dtype}_k{block_dim}_m{m}_n{n}_i{is2}x{is1}",
+        "pair_role": "gm_outer_stride_sensitivity",
+        "address_set_id": f"{dtype}_m{m}_n{n}_i1{is1}",
         "api_output_dims": f"{m}x{n}",
         "api_input_stride": f"{is2}x{is1}",
         "api_output_stride": f"{n}x1",
@@ -193,7 +193,7 @@ def build_rows(execution_repeat_count: int) -> list[dict[str, str]]:
     for dtype, block_dim, m, n, is2, is1 in product(
             DTYPES, BLOCK_DIMS, M_VALUES, N_VALUES, OUTER_INPUT_STRIDES,
             INPUT_STRIDES):
-        if is2 >= is1:
+        if is2 * m > is1:
             continue
         if safe(dtype, m, n, is2, is1):
             rows.append(build_row(
