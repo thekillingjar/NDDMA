@@ -78,6 +78,14 @@ def aggregate_rows(rows: Iterable[dict[str, str]]) -> list[dict[str, object]]:
     grouped: dict[str, list[tuple[dict[str, str], float]]] = defaultdict(list)
     valid_block_dims = {str(value) for value in BLOCK_DIMS}
     for row in rows:
+        if row.get("fit_role") not in ("fit", ""):
+            continue
+        if row.get("sensitivity_key") not in (
+            "",
+            "group_a_stage1_linear_fit",
+            "group_c_t_alpha_block_model",
+        ):
+            continue
         if row.get("dim") != "1":
             continue
         if row.get("block_dim") not in valid_block_dims:
@@ -107,6 +115,8 @@ def aggregate_rows(rows: Iterable[dict[str, str]]) -> list[dict[str, object]]:
             "logical_total_bytes": float(
                 row.get("logical_total_bytes") or row["total_bytes"]
             ),
+            "group_id": row.get("group_id", ""),
+            "sensitivity_key": row.get("sensitivity_key", ""),
             "actual": actual,
         })
     return result
@@ -163,12 +173,8 @@ def branch_for_block_dim(block_dim: int) -> str:
 
 
 def predict(params: dict[str, object], block_dim: int, bytes_per_core: float) -> float:
-    if block_dim <= SPLIT_BLOCK_DIM:
-        suffix = "1"
-    else:
-        suffix = "2"
-    slope = block_dim / float(params[f"T_{suffix}"]) + float(params[f"h_{suffix}"])
-    return bytes_per_core * slope + float(params[f"H_{suffix}"])
+    suffix = "1" if block_dim <= SPLIT_BLOCK_DIM else "2"
+    return bytes_per_core / float(params[f"T_{suffix}"]) + float(params[f"H_{suffix}"])
 
 
 def summarize_metrics(rows: list[dict[str, object]]) -> dict[str, float | int]:
@@ -198,35 +204,17 @@ def summarize_metrics(rows: list[dict[str, object]]) -> dict[str, float | int]:
 def fit_branch(
     points: list[dict[str, object]], branch_name: str
 ) -> dict[str, object]:
-    block_fits = []
-    for block_dim in sorted({int(point["block_dim"]) for point in points}):
-        block_points = [
-            point for point in points if int(point["block_dim"]) == block_dim
-        ]
-        slope, fixed_cycles = solve(
-            [[float(point["bytes_per_core"]), 1.0] for point in block_points],
-            [float(point["actual"]) for point in block_points],
-        )
-        block_fits.append({
-            "block_dim": block_dim,
-            "slope": slope,
-            "H": fixed_cycles,
-            "sample_count": len(block_points),
-        })
-
-    cycles_per_byte_per_block, h = solve(
-        [[float(row["block_dim"]), 1.0] for row in block_fits],
-        [float(row["slope"]) for row in block_fits],
+    if not points:
+        raise ValueError(f"{branch_name} has no fitting samples")
+    cycles_per_byte, fixed_cycles = solve(
+        [[float(point["bytes_per_core"]), 1.0] for point in points],
+        [float(point["actual"]) for point in points],
     )
-    fixed_cycles = sum(float(row["H"]) for row in block_fits) / len(block_fits)
-    cycles_per_byte = cycles_per_byte_per_block
     if cycles_per_byte <= 0:
         raise ValueError(
-            f"{branch_name} fitted cycles_per_byte must be positive, "
-            f"got {cycles_per_byte}"
+            f"{branch_name} fitted cycles_per_byte must be positive, got {cycles_per_byte}"
         )
     return {
-        "h": h,
         "H": fixed_cycles,
         "T": 1.0 / cycles_per_byte,
     }
@@ -246,6 +234,8 @@ def write_predictions(
         output_rows.append({
             "token": point["token"],
             "dtype": dtype,
+            "group_id": point["group_id"],
+            "sensitivity_key": point["sensitivity_key"],
             "block_dim": point["block_dim"],
             "bytes_per_core": point["bytes_per_core"],
             "logical_total_bytes": point["logical_total_bytes"],
@@ -282,10 +272,8 @@ def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
         }
         parameters[dtype] = {
             "T_1": float(branches["le2"]["T"]),
-            "h_1": float(branches["le2"]["h"]),
             "H_1": float(branches["le2"]["H"]),
             "T_2": float(branches["gt2"]["T"]),
-            "h_2": float(branches["gt2"]["h"]),
             "H_2": float(branches["gt2"]["H"]),
         }
 
@@ -298,18 +286,21 @@ def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
         metric_rows.append({**row, "branch": branch_name, "predicted": predicted})
 
     return {
-        "model": "NDDMA_ROUND1_1D_PIECEWISE_SINGLE_MULTI_CORE",
+        "model": "NDDMA_ROUND1_1D_PIECEWISE_D_OVER_T_PLUS_H",
         "formula": {
             "name": "arbitrary_dim_multicore_1d_contiguous_base",
             "split_block_dim": SPLIT_BLOCK_DIM,
-            "le2": "cycles = bytes_per_core * (block_dim / T_1(dtype) + h_1(dtype)) + H_1(dtype)",
-            "gt2": "cycles = bytes_per_core * (block_dim / T_2(dtype) + h_2(dtype)) + H_2(dtype)",
+            "le2": "cycles = bytes_per_core / T_1(dtype) + H_1(dtype)",
+            "gt2": "cycles = bytes_per_core / T_2(dtype) + H_2(dtype)",
             "metric": "cycles is single-core/per-block cycles",
             "bytes_definition": "bytes_per_core = logical_total_bytes / block_dim",
+            "fitting_dataset": (
+                "HW_GE_ATT round2 group A stage1 representative points plus "
+                "group C all-block-dim points"
+            ),
             "fitting_method": (
-                "stage 1 fits cycles = slope(block_dim) * bytes_per_core + H(block_dim) "
-                "for each dtype/block_dim; stage 2 fits slope(block_dim) = block_dim / T + h "
-                "within each dtype/branch"
+                "joint least-squares fit of cycles = bytes_per_core / T + H "
+                "for each dtype and branch"
             ),
         },
         "parameters": parameters,

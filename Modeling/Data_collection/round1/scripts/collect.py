@@ -21,8 +21,8 @@ ANALYSIS_SCRIPT = HARNESS_DIR / "analyze_profiling_with_params.py"
 DEFAULT_ANA_DIR = MODELING_DIR / "Ana" / "round1"
 DEFAULT_OUTPUT_DIR = DEFAULT_ANA_DIR / "collection"
 DEFAULT_FACTOR_CSV = DEFAULT_ANA_DIR / "round1_1d_single_core_factor.csv"
-ROUND_ID = "r1_1d_single_core"
-GROUP_ID = "R1_1D"
+ROUND_ID = "r1_1d_round2_compatible"
+GROUP_ID = "R2_AC_1D"
 DTYPE_SIZES = {"int8_t": 1, "int16_t": 2, "int32_t": 4, "int64_t": 8}
 DTYPES = ("int8_t", "int16_t", "int32_t", "int64_t")
 C_X_BY_DTYPE = {
@@ -31,6 +31,13 @@ C_X_BY_DTYPE = {
     "int16_t": (4096, 8192, 16384, 32768, 49152, 61440, 90112, 130048),
     "int8_t": (4096, 8192, 16384, 32768, 49152, 61440),
 }
+B_X_BY_DTYPE = {
+    "int64_t": (4096, 6144, 8192, 12288, 16384, 24576, 32768, 40960, 49152, 57344, 61440, 73728, 90112, 106496, 122880, 147456, 163840, 180224, 212992, 229376, 256000),
+    "int32_t": (4096, 6144, 8192, 12288, 16384, 24576, 32768, 40960, 49152, 57344, 61440, 73728, 90112, 106496, 122880, 147456, 163840, 180224, 212992, 229376, 256000),
+    "int16_t": (4096, 6144, 8192, 12288, 16384, 24576, 32768, 40960, 49152, 57344, 61440, 73728, 90112, 106496, 122880, 130048),
+    "int8_t": (4096, 6144, 8192, 12288, 16384, 24576, 32768, 40960, 49152, 57344, 61440),
+}
+B_BLOCK_DIMS = (1, 2, 4, 8, 16, 32, 56)
 BLOCK_DIMS = tuple(range(1, 57))
 
 
@@ -59,31 +66,38 @@ def join_dims(values: Iterable[int]) -> str:
 def generate_factor(path: Path, kernel_repeat: int, execution_repeat_count: int) -> None:
     rows = []
     index = 1
-    for dtype in DTYPES:
-        dtype_size = DTYPE_SIZES[dtype]
-        for bytes_per_core in C_X_BY_DTYPE[dtype]:
-            output_dims = bytes_per_core // dtype_size
-            for block_dim in BLOCK_DIMS:
-                logical_total_bytes = bytes_per_core * block_dim
-                token = f"{ROUND_ID}_{dtype}_b{bytes_per_core}_c{block_dim}"
-                rows.append({
+    groups = (
+        ("A", "group_a_stage1_linear_fit", "stage1_linear_fit",
+         "stage1_representative_block_linear_fit", B_X_BY_DTYPE, B_BLOCK_DIMS),
+        ("C", "group_c_t_alpha_block_model", "t_alpha_block_model",
+         "all_block_dim_t_alpha_model_fit", C_X_BY_DTYPE, BLOCK_DIMS),
+    )
+    for group_id, sensitivity_key, group_name, sensitivity_name, x_by_dtype, block_dims in groups:
+        for dtype in DTYPES:
+            dtype_size = DTYPE_SIZES[dtype]
+            for bytes_per_core in x_by_dtype[dtype]:
+                output_dims = bytes_per_core // dtype_size
+                for block_dim in block_dims:
+                    logical_total_bytes = bytes_per_core * block_dim
+                    token = f"{ROUND_ID}_{group_id.lower()}_{dtype}_b{bytes_per_core}_c{block_dim}"
+                    rows.append({
                 "experiment_idx": str(index),
                 "token": token,
                 "round_id": ROUND_ID,
                 "sample_id": token,
                 "execution_repeat_index": "",
                 "execution_repeat_count": str(execution_repeat_count),
-                "sensitivity_id": GROUP_ID,
-                "sensitivity_key": "round1_1d_single_core",
-                "sensitivity_name": "single_core_single_dimensional_contiguous",
-                "stage_define": "1",
-                "group_id": "A",
-                "group_name": "round1_1d_single_core",
-                "model_target": "cycles = bytes_per_core * (block_dim / T + h) + H",
+                "sensitivity_id": f"{GROUP_ID}_{group_id}",
+                "sensitivity_key": sensitivity_key,
+                "sensitivity_name": sensitivity_name,
+                "stage_define": "1" if group_id == "A" else "3",
+                "group_id": group_id,
+                "group_name": group_name,
+                "model_target": "cycles = bytes_per_core / T + H",
                 "metric_target": "nddma_mte2_cycles_per_block",
                 "scan_variable": "dtype,logical_total_bytes",
                 "controlled_variables": (
-                    "dim=1,block_dim=1..56,input_stride=1,output_stride=1,"
+                    f"dim=1,block_dim={','.join(str(value) for value in block_dims)},input_stride=1,output_stride=1,"
                     "GM/UB contiguous,src/dst aligned"
                 ),
                 "dtype": dtype,
@@ -114,13 +128,13 @@ def generate_factor(path: Path, kernel_repeat: int, execution_repeat_count: int)
                 "input_stride_pattern": "contiguous",
                 "output_stride_pattern": "contiguous",
                 "layout_pattern": "contiguous",
-                "notes": "NDDMA2 Round1 C-group 1D contiguous T/H fit sample.",
+                "notes": f"NDDMA2 Round1 uses HW_GE_ATT round2 {group_id}-group 1D contiguous fit sample.",
                 "fit_role": "fit",
-                "bytes_region": "single_core_1d",
+                "bytes_region": "stage1_representative" if group_id == "A" else "t_alpha_block_model",
                 "shape_policy": "dim1",
                 "model_family": "contiguous_baseline",
-                })
-                index += 1
+                    })
+                    index += 1
 
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as file_obj:
