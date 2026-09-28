@@ -1,100 +1,93 @@
 {
-  "model": "NDDMA_ROUND1_1D_PIECEWISE_SINGLE_MULTI_CORE",
+  "model": "NDDMA_ROUND1_1D_PIECEWISE_D_OVER_T_PLUS_H",
   "formula": {
     "name": "arbitrary_dim_multicore_1d_contiguous_base",
     "split_block_dim": 2,
-    "le2": "cycles = bytes_per_core * (block_dim / T_1(dtype) + h_1(dtype)) + H_1(dtype)",
-    "gt2": "cycles = bytes_per_core * (block_dim / T_2(dtype) + h_2(dtype)) + H_2(dtype)",
+    "le2": "cycles = bytes_per_core / T_1(dtype) + H_1(dtype)",
+    "gt2": "cycles = bytes_per_core / T_2(dtype) + H_2(dtype)",
     "metric": "cycles is single-core/per-block cycles",
     "bytes_definition": "bytes_per_core = logical_total_bytes / block_dim",
-    "fitting_method": "stage 1 fits cycles = slope(block_dim) * bytes_per_core + H(block_dim) for each dtype/block_dim; stage 2 fits slope(block_dim) = block_dim / T + h within each dtype/branch"
+    "fitting_dataset": "HW_GE_ATT round2 group A stage1 representative points plus group C all-block-dim points",
+    "fitting_method": "joint least-squares fit of cycles = bytes_per_core / T + H for each dtype and branch"
   },
   "parameters": {
     "int8_t": {
-      "T_1": 1664.631575779405,
-      "h_1": 0.08864126859227574,
-      "H_1": 196.4534389149764,
-      "T_2": 3944.3139710718124,
-      "h_2": 0.1654812704249,
-      "H_2": 396.14759250875153
+      "T_1": 11.327817220308393,
+      "H_1": 190.33335449266934,
+      "T_2": 5.723067131319318,
+      "H_2": 389.5696038543981
     },
     "int16_t": {
-      "T_1": 1291.1690862687306,
-      "h_1": 0.042600188603245714,
-      "H_1": 224.93486514550912,
-      "T_2": 2402.561329653458,
-      "h_2": 0.07751956213136743,
-      "H_2": 329.84030485994435
+      "T_1": 22.99725520843406,
+      "H_1": 213.5858142953419,
+      "T_2": 11.023346790251614,
+      "H_2": 324.03384844786996
     },
     "int32_t": {
-      "T_1": 3320.1055966535696,
-      "h_1": 0.021709948095215523,
-      "H_1": 252.9496324336999,
-      "T_2": 1860.8625787997864,
-      "h_2": 0.03595594998482286,
-      "H_2": 224.12026612395255
+      "T_1": 44.23633355317752,
+      "H_1": 222.5968386796509,
+      "T_2": 19.101733422279235,
+      "H_2": 207.46638592025968
     },
     "int64_t": {
-      "T_1": 3333.8966373053267,
-      "h_1": 0.02173704819091243,
-      "H_1": 259.50543154767024,
-      "T_2": 1869.4587834557735,
-      "h_2": 0.035965659111100216,
-      "H_2": 249.9741695636949
+      "T_1": 44.202331223756445,
+      "H_1": 228.28117447214527,
+      "T_2": 19.099076888040145,
+      "H_2": 229.84301587078667
     }
   },
   "metrics": {
     "all": {
-      "count": 1904,
-      "rmse_cycles": 247.3540409801467,
-      "mae_cycles": 174.29742904472607,
-      "mape_percent": 6.513778027174815,
-      "max_absolute_error_cycles": 1750.4527779584205
+      "count": 2387,
+      "rmse_cycles": 693.1368609272514,
+      "mae_cycles": 357.52186889107264,
+      "mape_percent": 8.282724759599901,
+      "max_absolute_error_cycles": 4262.037799304204
     },
     "by_dtype": {
       "int8_t": {
-        "count": 336,
-        "rmse_cycles": 191.052450079728,
-        "mae_cycles": 103.29137177807468,
-        "mape_percent": 2.137389899896488,
-        "max_absolute_error_cycles": 1212.1512145677716
+        "count": 413,
+        "rmse_cycles": 233.30825537729396,
+        "mae_cycles": 125.7381458740377,
+        "mape_percent": 2.572099293150462,
+        "max_absolute_error_cycles": 1716.8694624654709
       },
       "int16_t": {
-        "count": 448,
-        "rmse_cycles": 225.653143199197,
-        "mae_cycles": 157.64546028496707,
-        "mape_percent": 4.329090288737204,
-        "max_absolute_error_cycles": 1095.402824837638
+        "count": 560,
+        "rmse_cycles": 369.9909286403163,
+        "mae_cycles": 193.4175982605057,
+        "mape_percent": 4.401035647529649,
+        "max_absolute_error_cycles": 2161.7362976942313
       },
       "int32_t": {
-        "count": 560,
-        "rmse_cycles": 269.6247205317556,
-        "mae_cycles": 202.61534002938944,
-        "mape_percent": 8.914783592129782,
-        "max_absolute_error_cycles": 1750.4527779584205
+        "count": 707,
+        "rmse_cycles": 859.314765016761,
+        "mae_cycles": 486.9896536568098,
+        "mape_percent": 11.521335806594598,
+        "max_absolute_error_cycles": 4202.28760863121
       },
       "int64_t": {
-        "count": 560,
-        "rmse_cycles": 269.6147018321853,
-        "mae_cycles": 201.90472742786068,
-        "mape_percent": 8.486355529336931,
-        "max_absolute_error_cycles": 1704.2852931050584
+        "count": 707,
+        "rmse_cycles": 862.221378473626,
+        "mae_cycles": 493.4360772783109,
+        "mape_percent": 11.454628875834223,
+        "max_absolute_error_cycles": 4262.037799304204
       }
     },
     "by_branch": {
       "le2": {
-        "count": 68,
-        "rmse_cycles": 48.45556818952861,
-        "mae_cycles": 40.552857744715055,
-        "mape_percent": 4.397875668715702,
-        "max_absolute_error_cycles": 109.34548376717532
+        "count": 206,
+        "rmse_cycles": 53.05479274321285,
+        "mae_cycles": 41.78918141403964,
+        "mape_percent": 4.55914251905861,
+        "max_absolute_error_cycles": 126.56370239185503
       },
       "gt2": {
-        "count": 1836,
-        "rmse_cycles": 251.72035206710495,
-        "mae_cycles": 179.2509316854672,
-        "mape_percent": 6.592144781191819,
-        "max_absolute_error_cycles": 1750.4527779584205
+        "count": 2181,
+        "rmse_cycles": 724.9491578454641,
+        "mae_cycles": 387.34347990449254,
+        "mape_percent": 8.634424870352541,
+        "max_absolute_error_cycles": 4262.037799304204
       }
     }
   }
