@@ -17,6 +17,8 @@ REPO_ROOT = SCRIPT_DIR.parents[3]
 DEFAULT_OUTPUT_DIR = SCRIPT_DIR.parent / "results_analysis" / "ad_hoc_round5_ng2"
 MODEL_PATH = REPO_ROOT / "DOC" / "round4_2d_ub_contiguous_ng2_model.json"
 MODEL_SOURCE = str(MODEL_PATH.relative_to(REPO_ROOT))
+BASE_MODEL_PATH = REPO_ROOT / "DOC" / "round1_1d_single_multi_core_model.json"
+BASE_MODEL_SOURCE = str(BASE_MODEL_PATH.relative_to(REPO_ROOT))
 
 DTYPE_ALIASES = {
     "int8_t": "int8_t",
@@ -46,7 +48,10 @@ def load_model() -> dict[str, object]:
 
 MODEL = load_model()
 ROUND4_NG2_PARAMETERS = MODEL["parameters"]["N_G2"]
-ROUND4_ONE_DIMENSIONAL_PARAMETERS = MODEL["parameters"]["one_dimensional"]
+ROUND4_CORRECTION_PARAMETERS = MODEL["parameters"]["one_dimensional"]
+with BASE_MODEL_PATH.open(encoding="utf-8") as file_obj:
+    BASE_MODEL = json.load(file_obj)
+ROUND4_ONE_DIMENSIONAL_PARAMETERS = BASE_MODEL["parameters"]
 
 
 def parse_vector(text: str) -> list[int]:
@@ -89,25 +94,25 @@ def join_vector(values: Sequence[int]) -> str:
 
 
 def one_d_base(dtype: str, bytes_value: float, block_dim: int) -> float:
-    params = ROUND4_ONE_DIMENSIONAL_PARAMETERS[dtype]["base"]
-    if block_dim <= 2:
+    params = ROUND4_ONE_DIMENSIONAL_PARAMETERS[dtype]
+    params = params.get("base", params)
+    suffix = "1" if block_dim <= 2 else "2"
+    if f"h_{suffix}" in params:
         return (
             float(bytes_value)
-            * (float(block_dim) / float(params["T_1"])
-               + float(params.get("h_1", 0.0)))
-            + float(params["H_1"])
+            * (float(block_dim) / float(params[f"T_{suffix}"])
+               + float(params[f"h_{suffix}"]))
+            + float(params[f"H_{suffix}"])
         )
     return (
-        float(bytes_value)
-        * (float(block_dim) / float(params["T_2"])
-           + float(params.get("h_2", 0.0)))
-        + float(params["H_2"])
+        float(bytes_value) / float(params[f"T_{suffix}"])
+        + float(params[f"H_{suffix}"])
     )
 
 
 def one_d_g1(dtype: str, bytes_value: float, input_stride: int,
              block_dim: int) -> float:
-    params = ROUND4_ONE_DIMENSIONAL_PARAMETERS[dtype]
+    params = ROUND4_CORRECTION_PARAMETERS[dtype]
     s = min(float(input_stride) * float(DTYPE_SIZES[dtype]), 128.0)
     ng = (
         float(params["N_G"]["a1"])
@@ -182,8 +187,8 @@ def predict(
         "formula_source": formula_source,
         "one_dimensional_formula_source": one_dimensional_formula_source,
         "model_scope": (
-            "[M,N]/[is2,is1]/[N,1]; N_base, N_G1, and N_G2 use the "
-            "Round4 transpose model parameters from DOC"),
+            "[M,N]/[is2,is1]/[N,1]; N_base uses the Round1 d/T+H "
+            "parameters, while N_G1 and N_G2 use the Round4 parameters from DOC"),
         "token": token,
         "config_id": token,
         "dtype": dtype,
@@ -275,7 +280,7 @@ def main() -> int:
             args.output_dims, args.input_stride, args.output_stride,
             args.block_dim, args.dtype, kernel_repeat=args.kernel_repeat,
             formula_source=MODEL_SOURCE,
-            one_dimensional_formula_source=MODEL_SOURCE)
+            one_dimensional_formula_source=BASE_MODEL_SOURCE)
     except (KeyError, TypeError, ValueError) as error:
         print(f"[ERROR] {error}")
         return 2

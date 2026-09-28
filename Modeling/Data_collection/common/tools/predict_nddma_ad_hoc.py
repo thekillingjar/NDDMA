@@ -14,6 +14,8 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[3]
 MODEL_PATH = REPO_ROOT / "DOC" / "round3_multidim_model.json"
 MODEL_SOURCE = str(MODEL_PATH.relative_to(REPO_ROOT))
+BASE_MODEL_PATH = REPO_ROOT / "DOC" / "round1_1d_single_multi_core_model.json"
+BASE_MODEL_SOURCE = str(BASE_MODEL_PATH.relative_to(REPO_ROOT))
 
 
 DTYPE_ALIASES = {
@@ -45,7 +47,10 @@ def load_model() -> dict[str, object]:
 
 
 MODEL = load_model()
-ONE_DIMENSIONAL_PARAMETERS = MODEL["parameters"]
+with BASE_MODEL_PATH.open(encoding="utf-8") as file_obj:
+    BASE_MODEL = json.load(file_obj)
+ONE_DIMENSIONAL_PARAMETERS = BASE_MODEL["parameters"]
+CORRECTION_PARAMETERS = MODEL["parameters"]
 
 
 def parse_vector(text: str) -> list[int]:
@@ -103,25 +108,25 @@ def one_dimensional_base_and_t1(
     byte_value = float(byte_value)
     stride = min(float(input_stride) * dtype_size, 128.0)
     output_gap_indicator = min(1.0, max(0.0, float(output_stride) - 1.0))
-    base_params = parameters["base"]
+    base_params = parameters.get("base", parameters)
+    correction_params = CORRECTION_PARAMETERS[dtype]
 
-    if block_dim <= 2:
+    suffix = "1" if block_dim <= 2 else "2"
+    if f"h_{suffix}" in base_params:
         base = (
             byte_value
-            * (float(block_dim) / float(base_params["T_1"])
-               + float(base_params.get("h_1", 0.0)))
-            + float(base_params["H_1"])
+            * (float(block_dim) / float(base_params[f"T_{suffix}"])
+               + float(base_params[f"h_{suffix}"]))
+            + float(base_params[f"H_{suffix}"])
         )
     else:
         base = (
-            byte_value
-            * (float(block_dim) / float(base_params["T_2"])
-               + float(base_params.get("h_2", 0.0)))
-            + float(base_params["H_2"])
+            byte_value / float(base_params[f"T_{suffix}"])
+            + float(base_params[f"H_{suffix}"])
         )
 
-    n_g_params = parameters["N_G"]
-    n_gu_params = parameters["N_GU"]
+    n_g_params = correction_params["N_G"]
+    n_gu_params = correction_params["N_GU"]
     n_g = (float(n_g_params["a1"]) + float(n_g_params["a2"]) * byte_value) * stride
     n_gu = (
         (float(n_gu_params["b1"]) + float(n_gu_params["b2"]) * stride)
@@ -129,7 +134,7 @@ def one_dimensional_base_and_t1(
     ) * output_gap_indicator
     correction = n_g + n_gu
     if block_dim > 2:
-        rho_params = parameters["rho"]
+        rho_params = correction_params["rho"]
         rho = (
             float(rho_params["c1"]) + float(rho_params["c2"]) * stride
             + output_gap_indicator
@@ -227,6 +232,7 @@ def predict(
             "|is_k-sum_{j<k}ls_j*is_j|+1,"
             "|os_k-sum_{j<k}ls_j*os_j|+1)"),
         "formula_source": formula_source,
+        "one_dimensional_formula_source": BASE_MODEL_SOURCE,
         "dtype": dtype,
         "dtype_size": dtype_size,
         "dim": dim,

@@ -17,8 +17,10 @@ from typing import Mapping, Sequence
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 COMMON_DIR = SCRIPT_DIR.parent
+REPO_ROOT = SCRIPT_DIR.parents[3]
 EXECUTABLE_SOURCE = COMMON_DIR / "executables" / "standalone_nddma"
 PROFILE_ANALYZER = EXECUTABLE_SOURCE / "analyze_profiling_with_params.py"
+DEFAULT_BASE_MODEL = REPO_ROOT / "DOC" / "round1_1d_single_multi_core_model.json"
 BUILD_DIR_NAME = "standalone_nddma"
 EXECUTABLE_NAME = "demo_nddma"
 DEFAULT_NPU_ARCH = "dav-3510"
@@ -104,6 +106,15 @@ def product(values: Sequence[int]) -> int:
     for value in values:
         result *= int(value)
     return result
+
+
+def load_base_model(path: Path) -> dict[str, object]:
+    with path.open(encoding="utf-8") as file_obj:
+        model = json.load(file_obj)
+    parameters = model.get("parameters", {})
+    if not isinstance(parameters, dict) or not parameters:
+        raise ValueError(f"base model has no parameters: {path}")
+    return model
 
 
 def span_elems(dims: Sequence[int], strides: Sequence[int]) -> int:
@@ -237,7 +248,7 @@ def build_row(args: argparse.Namespace) -> dict[str, str]:
         "stage_define": str(args.stage),
         "group_id": "ADHOC",
         "group_name": "adhoc_nddma",
-        "model_target": "ad-hoc NDDMA actual cycle measurement",
+        "model_target": "ad-hoc measurement compared with DOC round1 d/T+H base model",
         "metric_target": (
             "nddma_mte2_cycles_per_block/repeat"
             if args.cycle_output == "per-repeat"
@@ -295,7 +306,7 @@ def build_row(args: argparse.Namespace) -> dict[str, str]:
         "basis_candidate_count": "0",
         "sampling_seed": "",
         "fit_stage": "ad_hoc",
-        "parent_model": "",
+        "parent_model": str(args.base_model),
     })
     return row
 
@@ -325,6 +336,11 @@ def numeric(row: Mapping[str, str], field: str) -> float:
 
 def run_pipeline(args: argparse.Namespace) -> int:
     output_dir = args.output_dir.resolve()
+    try:
+        base_model = load_base_model(args.base_model.resolve())
+    except (OSError, ValueError, json.JSONDecodeError) as error:
+        print(f"[ERROR] unable to load base model: {error}")
+        return 2
     factor_csv = output_dir / "factor.csv"
     experiment_dir = output_dir / "experiment"
     profiling_dir = output_dir / "profiling_raw"
@@ -456,6 +472,7 @@ def run_pipeline(args: argparse.Namespace) -> int:
         "raw_nddma_mte2_cycles_per_block": raw_cycles,
         "kernel_repeat": kernel_repeat,
         "cycle_output": args.cycle_output,
+        "base_model": base_model.get("model", ""),
         "profiling_mean_sample_count": mean_row.get("profiling_mean_sample_count", ""),
         "analysis_csv": str(analysis_dir / "profiling_with_params_mean.csv"),
     }
@@ -505,6 +522,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--exe", type=Path)
     parser.add_argument("--executable-source", type=Path, default=EXECUTABLE_SOURCE)
     parser.add_argument("--profile-analyzer", type=Path, default=PROFILE_ANALYZER)
+    parser.add_argument(
+        "--base-model",
+        type=Path,
+        default=DEFAULT_BASE_MODEL,
+        help="DOC JSON providing the one-dimensional d/T+H base-model parameters.",
+    )
     parser.add_argument(
         "--msprof-bin",
         default=os.environ.get("MSPROF_BIN") or shutil.which("msprof") or "msprof",
