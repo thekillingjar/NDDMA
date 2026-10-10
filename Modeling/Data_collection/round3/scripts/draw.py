@@ -21,14 +21,15 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def draw_svg(rows: list[dict[str, str]], output: Path, title: str, residual: bool) -> None:
+def draw_svg(rows: list[dict[str, str]], output: Path, title: str, residual: bool,
+             prediction_field: str = "predicted_cycles") -> None:
     width, height = 1120, 620
     left, top, right, bottom = 90, 36, 250 if residual else 30, 72
     plot_w, plot_h = width - left - right, height - top - bottom
     xs = [float(row["data_volume_bytes"]) for row in rows]
     if residual:
         ys = [
-            (float(row["predicted_cycles"]) - float(row["actual_cycles"]))
+            (float(row[prediction_field]) - float(row["actual_cycles"]))
             / float(row["actual_cycles"])
             for row in rows
             if float(row["actual_cycles"]) != 0.0
@@ -36,7 +37,7 @@ def draw_svg(rows: list[dict[str, str]], output: Path, title: str, residual: boo
         ylabel = "(predicted - actual) / actual"
     else:
         ys = [float(row["actual_cycles"]) for row in rows] + [
-            float(row["predicted_cycles"]) for row in rows
+            float(row[prediction_field]) for row in rows
         ]
         ylabel = "cycles"
     if not ys:
@@ -92,14 +93,14 @@ def draw_svg(rows: list[dict[str, str]], output: Path, title: str, residual: boo
             actual = float(row["actual_cycles"])
             if actual == 0.0:
                 continue
-            relative_error = (float(row["predicted_cycles"]) - actual) / actual
+            relative_error = (float(row[prediction_field]) - actual) / actual
             parts.append(
                 f'<circle class="error" cx="{x:.2f}" cy="{py(relative_error):.2f}" '
                 f'r="3.5" fill="{color}"><title>{row["layout"]}; bytes={float(row["data_volume_bytes"]):.0f}; rel_error={relative_error:.5g}</title></circle>'
             )
         else:
             parts.append(f'<circle class="actual" cx="{x:.2f}" cy="{py(float(row["actual_cycles"])):.2f}" r="3"/>')
-            parts.append(f'<circle class="predicted" cx="{x:.2f}" cy="{py(float(row["predicted_cycles"])):.2f}" r="3"/>')
+            parts.append(f'<circle class="predicted" cx="{x:.2f}" cy="{py(float(row[prediction_field])):.2f}" r="3"/>')
     if residual:
         legend_x = left + plot_w + 30
         legend_y = top + 18
@@ -114,6 +115,70 @@ def draw_svg(rows: list[dict[str, str]], output: Path, title: str, residual: boo
                 f'<circle cx="{legend_x + 8}" cy="{y - 5}" r="4" fill="{color}"/>',
                 f'<text x="{legend_x + 22}" y="{y}" font-family="sans-serif" font-size="13">{layout}</text>',
             ])
+    parts.append("</svg>")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text("\n".join(parts) + "\n", encoding="utf-8")
+
+
+def draw_comparison_svg(rows: list[dict[str, str]], output: Path, title: str) -> None:
+    width, height = 1220, 620
+    left, top, right, bottom = 90, 36, 300, 72
+    plot_w, plot_h = width - left - right, height - top - bottom
+    points = []
+    for row in rows:
+        actual = float(row["actual_cycles"])
+        if actual == 0.0:
+            continue
+        points.extend([
+            (float(row["data_volume_bytes"]),
+             (float(row["predicted_cycles"]) - actual) / actual, "rho"),
+            (float(row["data_volume_bytes"]),
+             (float(row["baseline_predicted_cycles"]) - actual) / actual, "baseline"),
+        ])
+    if not points:
+        return
+    xs = [point[0] for point in points]
+    ys = [point[1] for point in points]
+    x_min, x_max = min(xs), max(xs)
+    y_min, y_max = min(ys), max(ys)
+    pad = max((y_max - y_min) * 0.08, 0.01)
+    y_min -= pad
+    y_max += pad
+
+    def px(value: float) -> float:
+        return left + (value - x_min) / max(1.0, x_max - x_min) * plot_w
+
+    def py(value: float) -> float:
+        return top + (y_max - value) / max(1.0, y_max - y_min) * plot_h
+
+    colors = {"rho": "#2563eb", "baseline": "#dc2626"}
+    labels = {"rho": "with core-related rho", "baseline": "without core-related rho"}
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}">',
+        '<style>text{font-family:Arial,sans-serif;font-size:13px}.axis{stroke:#374151}</style>',
+        f'<text x="{width/2}" y="23" text-anchor="middle">{title}</text>',
+        f'<line class="axis" x1="{left}" y1="{top}" x2="{left}" y2="{top+plot_h}"/>',
+        f'<line class="axis" x1="{left}" y1="{top+plot_h}" x2="{left+plot_w}" y2="{top+plot_h}"/>',
+        f'<text x="{left+plot_w/2}" y="{height-20}" text-anchor="middle">data volume bytes</text>',
+        f'<text x="18" y="{top+plot_h/2}" text-anchor="middle" transform="rotate(-90 18 {top+plot_h/2})">(predicted - actual) / actual</text>',
+        f'<text x="{left-8}" y="{py(y_min)+4}" text-anchor="end">{y_min:.4g}</text>',
+        f'<text x="{left-8}" y="{py(y_max)+4}" text-anchor="end">{y_max:.4g}</text>',
+    ]
+    if y_min < 0 < y_max:
+        parts.append(f'<line x1="{left}" y1="{py(0):.2f}" x2="{left+plot_w}" y2="{py(0):.2f}" stroke="#9ca3af" stroke-dasharray="6 5"/>')
+    for x_value, y_value, kind in points:
+        color = colors[kind]
+        parts.append(
+            f'<circle cx="{px(x_value):.2f}" cy="{py(y_value):.2f}" r="3.5" fill="{color}" fill-opacity=".72"><title>{labels[kind]}; bytes={x_value:.0f}; rel_error={y_value:.5g}</title></circle>'
+        )
+    legend_x = left + plot_w + 30
+    legend_y = top + 22
+    for index, kind in enumerate(("rho", "baseline")):
+        y = legend_y + index * 30
+        parts.extend([
+            f'<circle cx="{legend_x+8}" cy="{y-5}" r="4" fill="{colors[kind]}"/>',
+            f'<text x="{legend_x+22}" y="{y}">{labels[kind]}</text>',
+        ])
     parts.append("</svg>")
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text("\n".join(parts) + "\n", encoding="utf-8")
@@ -134,6 +199,14 @@ def main() -> int:
                 legacy_actual_vs_predicted.unlink()
             draw_svg(selected, output_dir / f"{stem}_residual.svg",
                      f"Round3 {dim}D {dtype}: residual", True)
+            draw_svg(selected, output_dir / f"{stem}_baseline_residual.svg",
+                     f"Round3 {dim}D {dtype}: residual without core-related rho", True,
+                     prediction_field="baseline_predicted_cycles")
+            draw_comparison_svg(
+                selected,
+                output_dir / f"{stem}_rho_comparison.svg",
+                f"Round3 {dim}D {dtype}: core-related rho comparison",
+            )
     print(f"[INFO] wrote plots to {output_dir}")
     return 0
 

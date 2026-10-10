@@ -137,6 +137,7 @@ def one_d_base(
 def one_d_correction(
         round2: Mapping[str, object], dtype: str, bytes_value: float,
         input_stride: int, output_stride: int, block_dim: int,
+        use_core_rho: bool = True,
         ) -> float:
     model = round2_parameters(round2)[dtype]
     s = min(float(input_stride) * DTYPE_SIZES[dtype], 128.0)
@@ -150,7 +151,7 @@ def one_d_correction(
         + (float(model["N_GU"]["b3"]) + float(model["N_GU"]["b4"]) * s)
         * bytes_value
     ) * gate
-    if block_dim <= 2:
+    if not use_core_rho or block_dim <= 2:
         return ng + ngu
     rho = model["rho"]
     multiplier = (
@@ -163,6 +164,7 @@ def one_d_correction(
 def inherited_terms(
         round2: Mapping[str, object],
         row: Mapping[str, str],
+        use_core_rho: bool = True,
         ) -> tuple[float, list[dict[str, float | int]]]:
     dim = int(row["dim"])
     dtype = row["dtype"]
@@ -197,7 +199,8 @@ def inherited_terms(
             output_delta = abs(int(output_stride[axis]) - expected_output) + 1
         term_bytes = term_elems * DTYPE_SIZES[dtype]
         correction = one_d_correction(
-            round2, dtype, term_bytes, input_delta, output_delta, block_dim)
+            round2, dtype, term_bytes, input_delta, output_delta, block_dim,
+            use_core_rho=use_core_rho)
         terms.append({
             "axis": axis,
             "loop_size": int(loop_size),
@@ -235,7 +238,9 @@ def fit_model(
     points: list[dict[str, object]] = []
     for row in rows:
         n_base, terms = inherited_terms(round2, row)
+        _, baseline_terms = inherited_terms(round2, row, use_core_rho=False)
         t1_sum = sum(float(term["t1_cycles"]) for term in terms)
+        baseline_t1_sum = sum(float(term["t1_cycles"]) for term in baseline_terms)
         actual = actual_value(row)
         points.append({
             "token": row.get("config_id") or row.get("token"),
@@ -250,13 +255,25 @@ def fit_model(
             "actual_cycles": actual,
             "n_base_cycles": n_base,
             "t1_cycles": t1_sum,
+            "baseline_t1_cycles": baseline_t1_sum,
             "n1_terms_json": json.dumps(terms, separators=(",", ":")),
+            "baseline_n1_terms_json": json.dumps(baseline_terms, separators=(",", ":")),
         })
 
     for point in points:
         predicted = float(point["n_base_cycles"]) + float(point["t1_cycles"])
+        baseline_predicted = (
+            float(point["n_base_cycles"]) + float(point["baseline_t1_cycles"])
+        )
         point["predicted_cycles"] = predicted
         point["error_cycles"] = predicted - float(point["actual_cycles"])
+        point["baseline_predicted_cycles"] = baseline_predicted
+        point["baseline_error_cycles"] = baseline_predicted - float(point["actual_cycles"])
+
+    baseline_points = [
+        dict(point, predicted_cycles=point["baseline_predicted_cycles"])
+        for point in points
+    ]
 
     model_metrics = {
         dtype: {
@@ -267,6 +284,16 @@ def fit_model(
             for dim in sorted({int(point["dim"]) for point in points if point["dtype"] == dtype})
         }
         for dtype in sorted({str(point["dtype"]) for point in points})
+    }
+    baseline_metrics = {
+        dtype: {
+            str(dim): metrics([
+                point for point in baseline_points
+                if point["dtype"] == dtype and int(point["dim"]) == dim
+            ])
+            for dim in sorted({int(point["dim"]) for point in baseline_points if point["dtype"] == dtype})
+        }
+        for dtype in sorted({str(point["dtype"]) for point in baseline_points})
     }
     return {
         "model": "NDDMA2_ROUND3_ARBITRARY_DIMENSION_MULTICORE_UNIFIED",
@@ -288,6 +315,12 @@ def fit_model(
             "round3_fitted_parameters": "none; all one-dimensional parameters are inherited from Round2",
             "dimensions": [2, 3, 4, 5],
         },
+        "baseline": {
+            "name": "no_core_rho",
+            "description": "Same inherited Round2 terms, but omit the rho multiplier related to core count.",
+            "rho": "rho=1",
+            "metrics": baseline_metrics,
+        },
         "round2_model_source": round2_model_source,
         "parameters": round2_parameters(round2),
         "fit_scope": {
@@ -296,6 +329,7 @@ def fit_model(
             "source_rounds": sorted({str(point["source_round"]) for point in points}),
         },
         "metrics": model_metrics,
+        "baseline_metrics": baseline_metrics,
         "predictions": points,
     }
 
@@ -305,8 +339,9 @@ def write_predictions(path: Path, points: Sequence[Mapping[str, object]]) -> Non
         "token", "source_round", "dtype", "dim", "layout", "output_dims",
         "input_stride", "output_stride", "data_volume_bytes",
         "actual_cycles", "n_base_cycles", "t1_cycles",
-        "predicted_cycles", "error_cycles",
-        "n1_terms_json",
+        "predicted_cycles", "error_cycles", "baseline_t1_cycles",
+        "baseline_predicted_cycles", "baseline_error_cycles",
+        "n1_terms_json", "baseline_n1_terms_json",
     )
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as file_obj:
