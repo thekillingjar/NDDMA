@@ -72,6 +72,12 @@ refitting.
 
 ## Refit Workflow
 
+Round1/2 now match the HW_GE_ATT contiguous/non-contiguous fitting workflows.
+Round2 fitting requires NumPy (`python3 -m pip install numpy`). Its aligned grid
+contains 7146 configurations; see `DOC/round2_1d_noncontiguous_model.md`.
+The checked-in `DOC/*.json` files remain historical measurement snapshots and
+need regeneration with the aligned measurements before predictions reflect these changes.
+
 Run commands from the repository root. Full collection requires a working Ascend
 profiling environment and `msprof`.
 

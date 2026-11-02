@@ -23,13 +23,18 @@ DEFAULT_FACTOR_CSV = DEFAULT_ANA_DIR / "round2_1d_noncontiguous_factor.csv"
 
 DTYPE_SIZES = {"int8_t": 1, "int16_t": 2, "int32_t": 4, "int64_t": 8}
 DTYPES = tuple(DTYPE_SIZES)
-OUTPUT_DIMS = (8, 16, 32, 64, 128, 512, 1024, 2048, 4196, 10001)
+OUTPUT_DIMS = (8, 16, 32, 64, 128, 512, 1024, 2048, 4196, 10001, 20001, 30001, 42302)
 BLOCK_DIMS = (1, 2, 4, 8, 15, 32, 56)
-INPUT_STRIDES = (2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048)
+INPUT_STRIDES = (2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096)
 OUTPUT_STRIDES = (2, 4, 6, 8, 10, 12, 14, 16, 32)
 BYTES_PER_CORE = (64, 128, 512, 1024, 4096, 16384)
 BASE_PAIRS = ((1, 1), (1, 2), (1, 16))
-MULTICORE_OS2_INPUT_STRIDES = (2, 4, 8, 16, 32, 64, 128, 256)
+C_INPUT_STRIDES = (2, 3, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096)
+MULTICORE_INPUT_STRIDES = (2, 8, 32, 128, 256)
+MULTICORE_OS2_INPUT_STRIDES = MULTICORE_INPUT_STRIDES
+BASE_REFERENCE_BLOCK_DIMS = (1, 2, 4, 8, 16, 32, 56, 6, 24, 40)
+VALIDATION_BLOCK_DIMS = (6, 24, 40)
+REFERENCE_BYTES_PER_CORE = (64, 512, 4096, 16384)
 OUTPUT_VALIDATION_PAIRS = ((2, 4), (32, 16), (128, 32))
 GUARD_ELEMS = 64
 MAX_GM_SPAN_BYTES = 4 * 1024 * 1024
@@ -96,7 +101,7 @@ def row(index: int, group: str, dtype: str, block_dim: int, bytes_per_core: int,
                        "J": "multicore_requested_validation"}[group],
         "model_target": "NDDMA round4 1D non-contiguous staged model",
         "metric_target": "nddma_mte2_cycles_per_block",
-        "fit_role": "fit" if group in {"A", "B", "C", "F", "G", "H"} else "validation",
+        "fit_role": "fit" if group in {"A", "C", "G", "H"} else "validation",
         "dtype": dtype,
         "dtype_size": str(size),
         "dim": "1",
@@ -147,19 +152,23 @@ def build_rows(repeat: int, execution_repeat_count: int) -> list[dict[str, str]]
                 add("A", dtype, 1, b, i, 1)
             for o in OUTPUT_STRIDES:
                 add("B", dtype, 1, b, 1, o)
-            for i in INPUT_STRIDES:
+            for i in C_INPUT_STRIDES:
                 for o in OUTPUT_STRIDES:
                     add("C", dtype, 1, b, i, o)
 
     for dtype in DTYPES:
         for k in BLOCK_DIMS:
             for b in BYTES_PER_CORE:
-                for i, o in BASE_PAIRS:
-                    add("F", dtype, k, b, i, o)
-                for i in INPUT_STRIDES[:5]:
+                for i in MULTICORE_INPUT_STRIDES:
                     add("G", dtype, k, b, i, 1)
                 for i in MULTICORE_OS2_INPUT_STRIDES:
                     add("H", dtype, k, b, i, 2)
+        for k in BASE_REFERENCE_BLOCK_DIMS:
+            for b in REFERENCE_BYTES_PER_CORE:
+                for i, o in BASE_PAIRS:
+                    add("F", dtype, k, b, i, o)
+        for k in VALIDATION_BLOCK_DIMS:
+            for b in REFERENCE_BYTES_PER_CORE:
                 for i, o in OUTPUT_VALIDATION_PAIRS:
                     add("I", dtype, k, b, i, o)
 

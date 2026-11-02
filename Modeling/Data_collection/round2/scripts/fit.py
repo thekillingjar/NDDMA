@@ -8,6 +8,9 @@ import json
 import math
 from collections import defaultdict
 from pathlib import Path
+from statistics import median
+
+import numpy as np
 from typing import Iterable
 
 
@@ -81,7 +84,7 @@ def aggregate(rows: Iterable[dict[str, str]]) -> list[dict[str, object]]:
         ) / 2.0
         result.append({
             "token": row.get("token", ""),
-            "group": row.get("group_id", ""),
+            "group": row.get("data_split") or row.get("group_id", ""),
             "dtype": row["dtype"],
             "block_dim": int(row["block_dim"]),
             "bytes_per_core": float(row["bytes_per_core"]),
@@ -97,36 +100,56 @@ def branch(block_dim: int) -> str:
     return "le2" if block_dim <= 2 else "gt2"
 
 
-def solve(matrix: list[list[float]], target: list[float]) -> list[float]:
-    if not matrix or len(matrix) < len(matrix[0]):
+def solve(matrix: list[list[float]], target: list[float], *, scaled: bool = True) -> list[float]:
+    """Match HW single-core scaled OLS and multicore unscaled OLS."""
+    design = np.asarray(matrix, dtype=float)
+    values = np.asarray(target, dtype=float)
+    if design.ndim != 2 or len(design) < design.shape[1]:
         raise ValueError("not enough samples for linear fit")
-    width = len(matrix[0])
-    scales = [max(abs(row[col]) for row in matrix) or 1.0 for col in range(width)]
-    scaled = [[value / scales[col] for col, value in enumerate(row)] for row in matrix]
-    normal = [[sum(row[i] * row[j] for row in scaled) for j in range(width)]
-              for i in range(width)]
-    rhs = [sum(row[i] * value for row, value in zip(scaled, target))
-           for i in range(width)]
-    for i in range(width):
-        normal[i][i] += 1e-12
-    for col in range(width):
-        pivot = max(range(col, width), key=lambda row: abs(normal[row][col]))
-        if abs(normal[pivot][col]) < 1e-14:
-            raise ValueError("singular linear fit")
-        normal[col], normal[pivot] = normal[pivot], normal[col]
-        rhs[col], rhs[pivot] = rhs[pivot], rhs[col]
-        pivot_value = normal[col][col]
-        normal[col] = [value / pivot_value for value in normal[col]]
-        rhs[col] /= pivot_value
-        for row in range(width):
-            if row == col:
-                continue
-            factor = normal[row][col]
-            if factor == 0:
-                continue
-            normal[row] = [a - factor * b for a, b in zip(normal[row], normal[col])]
-            rhs[row] -= factor * rhs[col]
-    return [value / scale for value, scale in zip(rhs, scales)]
+    scale = np.max(np.abs(design), axis=0) if scaled else np.ones(design.shape[1])
+    scale = np.where(scale > 1e-15, scale, 1.0)
+    coeff, _, rank, _ = np.linalg.lstsq(design / scale, values,
+                                      rcond=1e-12 if scaled else None)
+    if rank < design.shape[1]:
+        raise ValueError("rank-deficient linear fit")
+    return (coeff / scale).tolist()
+
+
+def fit_single_core(dtype_rows: list[dict[str, object]], dtype: str,
+                    base: dict[str, object]) -> tuple[list[float], list[float]]:
+    """HW Round4 canonical N_G/N_GU stages, with frozen continuous Base."""
+    rows = [r for r in dtype_rows if r["block_dim"] == 1
+            and r["logical_total_bytes"] < 50000]
+    size = DTYPE_SIZES[dtype]
+    by_bytes = defaultdict(list)
+    for r in rows:
+        if r["group"] == "A" and r["input_stride"] * size < 128:
+            by_bytes[r["bytes_per_core"]].append(r)
+    slope_points = []
+    for b, group in sorted(by_bytes.items()):
+        strides = np.asarray([r["input_stride"] * size for r in group])
+        residual = np.asarray([r["actual"] - predict_base(base, dtype, 1, b)
+                               for r in group])
+        slope_points.append((b, float((strides @ residual) / (strides @ strides))))
+    ng = solve([[1., b] for b, _ in slope_points], [v for _, v in slope_points])
+
+    coefficient_points = []
+    for stride in (2, 3, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096):
+        groups = defaultdict(list)
+        for r in rows:
+            if r["group"] == "C" and r["input_stride"] == stride and r["output_stride"] == 2:
+                b = r["bytes_per_core"]
+                residual = (r["actual"] - predict_base(base, dtype, 1, b)
+                            - (ng[0] + ng[1]*b) * min(stride*size, 128))
+                groups[b].append(residual)
+        points = [(b, median(values)) for b, values in sorted(groups.items())]
+        q0, q1 = solve([[1., b] for b, _ in points], [v for _, v in points])
+        if stride * size < 128:
+            coefficient_points.append((stride*size, q0, q1))
+    design = [[1., stride] for stride, _, _ in coefficient_points]
+    b1, b2 = solve(design, [q0 for _, q0, _ in coefficient_points])
+    b3, b4 = solve(design, [q1 for _, _, q1 in coefficient_points])
+    return ng, [b1, b2, b3, b4]
 
 
 def predict_base(params: dict[str, object], dtype: str, k: int, b: float) -> float:
@@ -202,35 +225,7 @@ def fit_model(
         dtype_rows = [row for row in rows if row["dtype"] == dtype]
         base = round1_parameters[dtype]
 
-        ng_rows = [
-            row for row in dtype_rows
-            if row["group"] == "A" and row["block_dim"] == 1
-            and row["output_stride"] == 1
-        ]
-        ng_coefficients = solve(
-            [[s_value(dtype, row["input_stride"]),
-              s_value(dtype, row["input_stride"]) * row["bytes_per_core"]]
-             for row in ng_rows],
-            [row["actual"] - predict_base(base, dtype, 1, row["bytes_per_core"])
-             for row in ng_rows],
-        )
-        ngu_rows = [
-            row for row in dtype_rows
-            if row["group"] in {"B", "C"} and row["block_dim"] == 1
-            and row["output_stride"] > 1
-        ]
-        ngu_coefficients = solve(
-            [[gate, gate * s, gate * row["bytes_per_core"],
-              gate * s * row["bytes_per_core"]]
-             for row in ngu_rows
-             for s, gate in [(s_value(dtype, row["input_stride"]),
-                              min(1.0, row["output_stride"] - 1.0))]],
-            [row["actual"]
-             - predict_base(base, dtype, 1, row["bytes_per_core"])
-             - (ng_coefficients[0] + ng_coefficients[1] * row["bytes_per_core"])
-             * s_value(dtype, row["input_stride"])
-             for row in ngu_rows],
-        )
+        ng_coefficients, ngu_coefficients = fit_single_core(dtype_rows, dtype, base)
         params[dtype] = {
             "base": base,
             "N_G": {"a1": ng_coefficients[0], "a2": ng_coefficients[1]},
@@ -243,6 +238,7 @@ def fit_model(
         multi_rows = [
             row for row in dtype_rows
             if row["group"] in {"G", "H"} and row["block_dim"] > 2
+            and row["input_stride"] * DTYPE_SIZES[dtype] <= 128
         ]
         matrix = []
         target = []
@@ -255,7 +251,7 @@ def fit_model(
                            gate * s * correction])
             target.append(row["actual"] - predict_base(base, dtype, row["block_dim"],
                                                        row["bytes_per_core"]))
-        rho_coefficients = solve(matrix, target)
+        rho_coefficients = solve(matrix, target, scaled=False)
         params[dtype]["rho"] = {
             "c1": rho_coefficients[0], "c2": rho_coefficients[1],
             "c3": rho_coefficients[2], "c4": rho_coefficients[3],
@@ -305,6 +301,12 @@ def fit_model(
             "base_parameters": "parameters.<dtype>.base is copied from round1.parameters.<dtype>",
         },
         "parameters": params,
+        "fit_scope": {
+            "reference": "HW_GE_ATT Round4 canonical 1D model",
+            "single_core": "B<50000; N_G: A, byte stride<128, per-B slope then B regression; N_GU: C/os=2, per-stride B regression then byte stride<128 coefficient regression",
+            "rho": "G/H, k>2, input_stride*dtype_size<=128; unscaled least squares",
+            "validation": "B, F, I, J and out-of-fit-range samples; no Base refit",
+        },
         "metrics": {
             "all": calc_metrics(output_rows),
             "by_dtype": {
