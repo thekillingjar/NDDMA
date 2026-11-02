@@ -31,13 +31,14 @@ C_X_BY_DTYPE = {
     "int16_t": (4096, 8192, 16384, 32768, 49152, 61440, 90112, 130048),
     "int8_t": (4096, 8192, 16384, 32768, 49152, 61440),
 }
-B_X_BY_DTYPE = {
+# HW_GE_ATT Round2 A+C fit grid; B/D are validation, not Base training.
+STAGE1_X_BY_DTYPE = {
     "int64_t": (4096, 6144, 8192, 12288, 16384, 24576, 32768, 40960, 49152, 57344, 61440, 73728, 90112, 106496, 122880, 147456, 163840, 180224, 212992, 229376, 256000),
     "int32_t": (4096, 6144, 8192, 12288, 16384, 24576, 32768, 40960, 49152, 57344, 61440, 73728, 90112, 106496, 122880, 147456, 163840, 180224, 212992, 229376, 256000),
     "int16_t": (4096, 6144, 8192, 12288, 16384, 24576, 32768, 40960, 49152, 57344, 61440, 73728, 90112, 106496, 122880, 130048),
     "int8_t": (4096, 6144, 8192, 12288, 16384, 24576, 32768, 40960, 49152, 57344, 61440),
 }
-B_BLOCK_DIMS = (1, 2, 4, 8, 16, 32, 56)
+A_BLOCK_DIMS = (1, 2, 4, 8, 16, 32, 56)
 BLOCK_DIMS = tuple(range(1, 57))
 
 
@@ -68,7 +69,7 @@ def generate_factor(path: Path, kernel_repeat: int, execution_repeat_count: int)
     index = 1
     groups = (
         ("A", "group_a_stage1_linear_fit", "stage1_linear_fit",
-         "stage1_representative_block_linear_fit", B_X_BY_DTYPE, B_BLOCK_DIMS),
+         "stage1_representative_block_linear_fit", STAGE1_X_BY_DTYPE, A_BLOCK_DIMS),
         ("C", "group_c_t_alpha_block_model", "t_alpha_block_model",
          "all_block_dim_t_alpha_model_fit", C_X_BY_DTYPE, BLOCK_DIMS),
     )

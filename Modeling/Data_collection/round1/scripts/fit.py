@@ -8,6 +8,7 @@ import json
 import math
 from collections import defaultdict
 from pathlib import Path
+from statistics import mean
 from typing import Iterable
 
 
@@ -75,13 +76,12 @@ def find_measurement_files(data_dir: Path) -> list[Path]:
 
 
 def aggregate_rows(rows: Iterable[dict[str, str]]) -> list[dict[str, object]]:
-    grouped: dict[str, list[tuple[dict[str, str], float]]] = defaultdict(list)
+    grouped: dict[tuple[str, int, float], list[tuple[dict[str, str], float]]] = defaultdict(list)
     valid_block_dims = {str(value) for value in BLOCK_DIMS}
     for row in rows:
-        if row.get("fit_role") not in ("fit", ""):
+        if row.get("fit_role") != "fit":
             continue
         if row.get("sensitivity_key") not in (
-            "",
             "group_a_stage1_linear_fit",
             "group_c_t_alpha_block_model",
         ):
@@ -92,80 +92,35 @@ def aggregate_rows(rows: Iterable[dict[str, str]]) -> list[dict[str, object]]:
             continue
         if row.get("input_stride") != "1" or row.get("output_stride") != "1":
             continue
-        if row.get("input_stride_pattern") not in ("", "contiguous"):
+        if row.get("input_stride_pattern", "") not in ("", "contiguous"):
             continue
-        if row.get("output_stride_pattern") not in ("", "contiguous"):
+        if row.get("output_stride_pattern", "") not in ("", "contiguous"):
             continue
-        token = row.get("config_id") or row.get("token") or ""
-        grouped[token].append((row, measurement_value(row)))
+        block_dim = int(row["block_dim"])
+        byte_value = float(
+            row.get("model_x_bytes_per_core")
+            or (float(row["logical_total_bytes"]) / block_dim
+                if row.get("logical_total_bytes") else
+                row.get("bytes_per_core") or row["total_bytes"])
+        )
+        key = (row["dtype"], block_dim, byte_value)
+        grouped[key].append((row, measurement_value(row)))
 
     result: list[dict[str, object]] = []
-    for values in grouped.values():
+    for (_, block_dim, byte_value), values in sorted(grouped.items()):
         row = values[0][0]
-        measurements = sorted(value for _, value in values)
-        middle = len(measurements) // 2
-        actual = measurements[middle] if len(measurements) % 2 else (
-            measurements[middle - 1] + measurements[middle]
-        ) / 2.0
+        actual = mean(value for _, value in values)
         result.append({
             "token": row.get("token", ""),
             "dtype": row["dtype"],
             "block_dim": int(row["block_dim"]),
-            "bytes_per_core": float(row.get("bytes_per_core") or row["total_bytes"]),
-            "logical_total_bytes": float(
-                row.get("logical_total_bytes") or row["total_bytes"]
-            ),
+            "bytes_per_core": byte_value,
+            "logical_total_bytes": byte_value * block_dim,
             "group_id": row.get("group_id", ""),
             "sensitivity_key": row.get("sensitivity_key", ""),
             "actual": actual,
         })
     return result
-
-
-def solve(matrix: list[list[float]], target: list[float]) -> list[float]:
-    if not matrix or len(matrix) < len(matrix[0]):
-        raise ValueError("not enough samples for linear fit")
-    width = len(matrix[0])
-    scales = [
-        max(abs(row[column]) for row in matrix) or 1.0
-        for column in range(width)
-    ]
-    scaled = [
-        [value / scales[column] for column, value in enumerate(row)]
-        for row in matrix
-    ]
-    normal = [
-        [sum(row[i] * row[j] for row in scaled) for j in range(width)]
-        for i in range(width)
-    ]
-    rhs = [
-        sum(row[i] * value for row, value in zip(scaled, target))
-        for i in range(width)
-    ]
-    for i in range(width):
-        normal[i][i] += 1e-12
-    for column in range(width):
-        pivot = max(
-            range(column, width),
-            key=lambda row: abs(normal[row][column]),
-        )
-        if abs(normal[pivot][column]) < 1e-14:
-            raise ValueError("singular linear fit")
-        normal[column], normal[pivot] = normal[pivot], normal[column]
-        rhs[column], rhs[pivot] = rhs[pivot], rhs[column]
-        pivot_value = normal[column][column]
-        normal[column] = [value / pivot_value for value in normal[column]]
-        rhs[column] /= pivot_value
-        for row in range(width):
-            if row == column:
-                continue
-            factor = normal[row][column]
-            normal[row] = [
-                a - factor * b
-                for a, b in zip(normal[row], normal[column])
-            ]
-            rhs[row] -= factor * rhs[column]
-    return [value / scale for value, scale in zip(rhs, scales)]
 
 
 def branch_for_block_dim(block_dim: int) -> str:
@@ -206,18 +161,27 @@ def fit_branch(
 ) -> dict[str, object]:
     if not points:
         raise ValueError(f"{branch_name} has no fitting samples")
-    cycles_per_byte, fixed_cycles = solve(
-        [[float(point["bytes_per_core"]), 1.0] for point in points],
-        [float(point["actual"]) for point in points],
-    )
-    if cycles_per_byte <= 0:
-        raise ValueError(
-            f"{branch_name} fitted cycles_per_byte must be positive, got {cycles_per_byte}"
-        )
-    return {
-        "H": fixed_cycles,
-        "T": 1.0 / cycles_per_byte,
-    }
+    by_core: dict[int, list[dict[str, object]]] = defaultdict(list)
+    for point in points:
+        by_core[int(point["block_dim"])].append(point)
+    local_fits = []
+    for core, core_points in sorted(by_core.items()):
+        by_bytes: dict[float, list[float]] = defaultdict(list)
+        for point in core_points:
+            by_bytes[float(point["bytes_per_core"])].append(float(point["actual"]))
+        xy = [(b, mean(values)) for b, values in sorted(by_bytes.items())]
+        if len(xy) < 2:
+            raise ValueError(f"{branch_name} core {core}: need two distinct byte values")
+        x_mean = mean(x for x, _ in xy)
+        y_mean = mean(y for _, y in xy)
+        slope = sum((x-x_mean)*(y-y_mean) for x, y in xy) / sum(
+            (x-x_mean)**2 for x, _ in xy)
+        if slope <= 0:
+            raise ValueError(f"{branch_name} core {core}: non-positive fitted slope")
+        local_fits.append({"block_dim": core, "T": 1.0/slope,
+                           "H": y_mean-slope*x_mean, "point_count": len(xy)})
+    return {"T": mean(p["T"] for p in local_fits),
+            "H": mean(p["H"] for p in local_fits), "per_core": local_fits}
 
 
 def write_predictions(
@@ -255,6 +219,7 @@ def write_predictions(
 
 def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
     parameters: dict[str, dict[str, float]] = {}
+    per_core_fits = {}
     for dtype in DTYPES:
         dtype_rows = [row for row in rows if row["dtype"] == dtype]
         if not dtype_rows:
@@ -270,6 +235,7 @@ def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
             branch_name: fit_branch(points, branch_name)
             for branch_name, points in branch_points.items()
         }
+        per_core_fits[dtype] = {name: branch["per_core"] for name, branch in branches.items()}
         parameters[dtype] = {
             "T_1": float(branches["le2"]["T"]),
             "H_1": float(branches["le2"]["H"]),
@@ -299,11 +265,12 @@ def fit_model(rows: list[dict[str, object]]) -> dict[str, object]:
                 "group C all-block-dim points"
             ),
             "fitting_method": (
-                "joint least-squares fit of cycles = bytes_per_core / T + H "
-                "for each dtype and branch"
+                "mean cycles at each dtype/core/byte value; per-core ordinary least "
+                "squares; arithmetic mean of per-core T and H within each branch"
             ),
         },
         "parameters": parameters,
+        "per_core_fits": per_core_fits,
         "metrics": {
             "all": summarize_metrics(metric_rows),
             "by_dtype": {

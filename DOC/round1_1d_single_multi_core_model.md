@@ -82,10 +82,18 @@ block_dim > 2:
 这里的 `cycles` 是单次 NDDMA 的 `mte2` 周期，`T` 单位为
 `bytes/cycle`，`H` 单位为 `cycles`。
 
-对每个 dtype、每个分支，将 A+C 的全部 fit 样本联合进行最小二乘拟合：
+对每个 dtype，使用与 HW_GE_ATT Round2 相同的分阶段拟合：
 
-```text
-cycles = bytes_per_core / T + H
-```
+1. 仅选择 A/C 的 `fit_role=fit` 一维连续样本。
+2. 对相同 dtype、block_dim、bytes_per_core 的 cycles 取算术平均；合并 A/C 重叠点及重复测量。
+3. 每个 block_dim 独立普通最小二乘拟合 `cycles = beta*B + H`，得到 `T=1/beta`。
+4. 对 `block_dim<=2`、`block_dim>2` 分别将各核数的 T 和 H 等权算术平均。
 
-不再使用旧模型中的 `h` 项，也不再先按每个 `block_dim` 拟合局部斜率。
+模型 JSON 的 `per_core_fits` 保存各核数的局部拟合，便于检查。
+A+C 原始配置共 2387 条；合并重复 B 后的拟合点数会减少。
+数据网格已与 HW Round2 对齐；重新采集的测量值不保证与历史运行相同。
+
+仓库 `DOC/*.json` 是此前实测拟合的快照，尚未按此流程重拟合。
+本地未包含原始测量 CSV；不能仅靠旧参数恢复新的拟合结果。
+获得测量 CSV 后执行 Round1 fit，并依次重拟合 Round2、Round3、Round4，
+再将验证后的模型同步到 DOC，才能让读取 DOC 的预测工具使用新参数。
