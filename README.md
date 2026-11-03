@@ -6,7 +6,7 @@ prediction tools.
 
 ## Functionality
 
-The model is built in four rounds:
+The model is built in five rounds:
 
 | Round | Purpose | Output model |
 | --- | --- | --- |
@@ -14,6 +14,7 @@ The model is built in four rounds:
 | Round2 | 1D non-contiguous GM/UB correction and multi-core `rho` | `DOC/round2_1d_noncontiguous_model.json` |
 | Round3 | 2D/3D/4D/5D unified multidimensional expansion | `DOC/round3_multidim_model.json` |
 | Round4 | 2D transpose / Round5 `N_G2` UB-contiguous specialization | `DOC/round4_2d_ub_contiguous_ng2_model.json` |
+| Round5 | 3D specialization: freeze Base, refit `N_G/N_GU/rho` | `Modeling/Ana/round5/round5_3d_specialized_model.json` |
 
 The high-level modeling notes are in:
 
@@ -35,6 +36,7 @@ Modeling/Data_collection/
   round2/scripts/              Round2 collect/fit/draw/e2e scripts
   round3/scripts/              Round3 collect/fit/draw/e2e scripts
   round4/scripts/              Round4 collect/fit/draw/e2e scripts
+  round5/scripts/              Round5 3D collect/fit/draw/e2e/predict scripts
 
 ge-develop/
   GE/CANN source tree used by the standalone harness build.
@@ -76,6 +78,10 @@ Round1/2 now match the HW_GE_ATT contiguous/non-contiguous fitting workflows.
 Round3 aligns the multidimensional evaluation grids and uses the unscaled formula
 without d_0 (48368 configurations). Round4 aligns the HW Round5 D/F/G N_G2
 training grid (13374 configurations) and ordinary least-squares fitting.
+Round5 uses the same 3D formula without d_0, keeps Round2 Base parameters fixed,
+and refits the ten N_G/N_GU/rho coefficients using 3D measurements.
+Its 178661 collection configurations cover 1/2/4/8/16/32/56 cores;
+see `DOC/round5_3d_specialized_model.md` for fitting stages and requirements.
 Round2 fitting requires NumPy (`python3 -m pip install numpy`). Its aligned grid
 contains 7146 configurations; see `DOC/round2_1d_noncontiguous_model.md`.
 The checked-in `DOC/*.json` files remain historical measurement snapshots and
@@ -112,6 +118,13 @@ python3 Modeling/Data_collection/round4/scripts/e2e.py all \
   --msprof-bin "$(which msprof)"
 ```
 
+Round5 (3D specialization):
+
+```bash
+python3 Modeling/Data_collection/round5/scripts/e2e.py all \
+  --msprof-bin "$(command -v msprof)"
+```
+
 Each round can also be run step by step:
 
 ```bash
@@ -126,6 +139,7 @@ Dependency chain:
 Round2 fit inherits Round1 model parameters.
 Round3 fit inherits Round2 model parameters.
 Round4 fit inherits Round2 model parameters and only fits N_G2.
+Round5 fit freezes Round2 Base and refits N_G/N_GU/rho using only 3D data.
 ```
 
 To refit from existing measurement CSVs without recollecting:
@@ -135,6 +149,7 @@ python3 Modeling/Data_collection/round1/scripts/e2e.py fit --measurement-csv /pa
 python3 Modeling/Data_collection/round2/scripts/e2e.py fit --measurement-csv /path/to/measurements.csv
 python3 Modeling/Data_collection/round3/scripts/e2e.py fit --measurement-csv /path/to/measurements.csv
 python3 Modeling/Data_collection/round4/scripts/e2e.py fit --measurement-csv /path/to/measurements.csv
+python3 Modeling/Data_collection/round5/scripts/e2e.py fit --measurement-csv /path/to/3d_measurements.csv
 ```
 
 Use `--dry-run` on any `e2e.py` command to print the invoked subcommands without

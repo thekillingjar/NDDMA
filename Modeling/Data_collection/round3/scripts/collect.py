@@ -48,9 +48,9 @@ EXTRA_COLUMNS = ("l4", "l3", "l2", "l1", "l0", "source_round")
 CSV_COLUMNS = BASE_COLUMNS + EXTRA_COLUMNS
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(defaults: dict | None = None, description: str | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Generate and collect NDDMA2 Round3 2D/3D/4D/5D data."
+        description=description or "Generate and collect NDDMA2 Round3 2D/3D/4D/5D data."
     )
     parser.add_argument("--factor-csv", default=str(DEFAULT_FACTOR_CSV))
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR))
@@ -64,6 +64,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--npu-arch", default="dav-3510")
     parser.add_argument("--cmake-extra-arg", action="append", default=[])
     parser.add_argument("--dry-run", action="store_true")
+    parser.set_defaults(**(defaults or {}))
     return parser.parse_args()
 
 
@@ -282,7 +283,11 @@ def write_text(path: Path, text: str) -> None:
 
 
 def main() -> int:
-    args = parse_args()
+    return run_collection(parse_args())
+
+
+def run_collection(args: argparse.Namespace, rows: list[dict[str, str]] | None = None) -> int:
+    """Run the shared harness with the default grid or explicitly supplied rows."""
     try:
         args.msprof_bin = resolve_msprof_bin(args.msprof_bin) if args.msprof_bin else ""
     except ValueError as error:
@@ -290,7 +295,7 @@ def main() -> int:
         return 1
     factor_csv = Path(args.factor_csv).resolve()
     output_dir = Path(args.output_dir).resolve()
-    rows = build_rows(args.execution_repeat_count)
+    rows = build_rows(args.execution_repeat_count) if rows is None else rows
     write_factor(factor_csv, rows)
     reset_output(output_dir)
     build_dir = output_dir / "build"
