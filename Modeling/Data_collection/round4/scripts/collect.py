@@ -30,6 +30,7 @@ M_VALUES = (2, 3, 4, 8, 16, 32, 64, 128, 156, 256)
 N_VALUES = (8, 16, 32, 64, 128, 512, 1024, 2048, 4196, 10001, 20001, 30001, 42302)
 INPUT_STRIDES = (2, 4, 8, 16, 32, 64, 128, 256, 1024, 2048, 3333, 4444)
 OUTER_INPUT_STRIDES = (2, 4, 6, 8, 16)
+HIGH_STRIDE_INCREMENTAL_VALUES = (130, 132, 136, 144, 160, 192, 512)
 MAX_GM_SPAN_BYTES = 4 * 1024 * 1024
 MAX_UB_SPAN_BYTES = 256 * 1024
 GUARD_ELEMS = 64
@@ -64,7 +65,7 @@ CSV_COLUMNS = (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Generate and collect NDDMA2 Round4 data aligned to Round5 v4 E2E group G."
+        description="Generate and collect NDDMA2 Round4 data aligned to HW Round5 D/F/G N_G2 training data."
     )
     parser.add_argument("--factor-csv", default=str(DEFAULT_FACTOR_CSV))
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR))
@@ -151,7 +152,7 @@ def build_row(index: int, dtype: str, block_dim: int, m: int, n: int,
         "output_stride_pattern": "api_contiguous",
         "layout_pattern": "gm_outer_stride_sensitivity",
         "notes": "Aligned to HW_GE_ATT Round5 v4 E2E group G gm_outer_stride_sensitivity.",
-        "fit_role": "diagnostic",
+        "fit_role": "fit",
         "bytes_region": "safety_filtered",
         "shape_policy": "is2_in_2_4_6_8_16_and_is2_times_M_le_is1",
         "model_family": "PAIRED_2D_LEADING_UNIT_AXIS_VS_1D",
@@ -199,6 +200,20 @@ def build_rows(execution_repeat_count: int) -> list[dict[str, str]]:
             rows.append(build_row(
                 len(rows) + 1, dtype, block_dim, m, n, is2, is1,
                 execution_repeat_count))
+    for group, strides in (("D", INPUT_STRIDES), ("F", HIGH_STRIDE_INCREMENTAL_VALUES)):
+        for dtype, m, n, is1 in product(DTYPES, M_VALUES, N_VALUES, strides):
+            if is1 < m or not safe(dtype, m, n, 1, is1):
+                continue
+            item = build_row(len(rows)+1, dtype, 1, m, n, 1, is1, execution_repeat_count)
+            token = f"r5{group.lower()}_{dtype}_m{m}_n{n}_i{is1}"
+            key = "group_d_2d_transpose_input_stride" if group == "D" else "group_f_high_stride_2d_transpose"
+            item.update(token=token, config_id=token, sample_id=token,
+                        group_id=group, data_split=group, sensitivity_id=f"R5{group}",
+                        sensitivity_key=key, sensitivity_name=key, group_name=key,
+                        stage_define="29", fit_stage="transpose_ng2_fit", fit_role="fit",
+                        notes="HW Round5 D/F N_G2 training point; frozen model supplies N_G1",
+                        shape_policy="is1_ge_M", pair_role="strided_transpose_repeat")
+            rows.append(item)
     return rows
 
 

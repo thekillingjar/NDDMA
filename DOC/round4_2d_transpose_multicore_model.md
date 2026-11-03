@@ -1,135 +1,51 @@
-# NDDMA2 Round4 Round5 N_G2 二维 UB 连续特化建模
+# Round4 二维 UB 连续 N_G2 特化：对齐 HW Round5
 
-## 定位
+## 训练集
 
-Round4 采用当前 HW_GE_ATT Round5 v4 端到端 generated 的
-`group_g_gm_outer_stride_sensitivity` 数据网格，用于拟合 `N_G2` 二维外层 stride 乘子。
-场景仍为 `[M,N]/[is2,is1]/[N,1]`。
+不再仅使用 G 组；对齐 HW Round5 端到端拟合实际使用的 D/F/G 单核二维数据：
 
-适用配置：
+| 组 | 内容 | 配置数 |
+| --- | --- | ---: |
+| D | is2=1，普通 input stride 的二维 transpose | 2586 |
+| F | is2=1，高 stride 增量配置 | 1930 |
+| G | is2=2/4/6/8/16 的外层 stride 配置 | 8858 |
+| 合计 | 单核训练配置 | 13374 |
+
+D/F 约束 is1>=M；G 约束 is2*M<=is1；统一 GM/UB 安全边界与 HW 相同。
+重复测量按 config_id/token 取中位数。其他组及多核样本不会进入参数估计；
+缺少任一 dtype 的 D/F/G 组时报告错误，避免静默沿用旧 G-only 训练集。
+
+HW 的 A/E 一维实测锚点用于其分析入口的配对诊断；最终 N_G2 回归分母使用的是
+冻结的一维模型预测。本版本直接继承 Round2，不重复采集这些不参与 N_G2 参数估计的锚点。
+HW 的 I/K/L/M 外推验证不纳入此训练集，也不参与拟合。
+
+## 公式和拟合
 
 ```text
-output_dims   = [M,N]
-input_stride  = [is2,is1]
-output_stride = [N,1]
-is2*M <= is1
-block_dim     = 1
-```
-
-## 公式
-
-```text
-B  = M*N*dtype_size
-B1 = N*dtype_size
-
-N_base = round2.base(dtype,B,k)
-N_G1   = round2.N_G(dtype,B1,is1,k)
-N_G2   = (g10+g11_M*M)*is2 + g00 + g01_M*M
-
+output_dims=[M,N]; input_stride=[is2,is1]; output_stride=[N,1]
+B=M*N*dtype_size         # 每核字节数
+B1=N*dtype_size
+N_base = B/T_1+H_1 (k<=2), B/T_2+H_2 (k>2)
+N_G1 = N_1_prime(B1,is1,1,k)  # k>2 时使用一维 rho
+observed_N_G2 = (actual_cycles-N_base)/N_G1
+N_G2 = g10*is2 + g11_M*M*is2 + g00 + g01_M*M
 N_2 = N_base + N_G1*N_G2
 ```
 
-其中 `N_base`、`N_G1` 从 Round2 一维非连续模型 JSON 继承；Round4
-只拟合二维外层乘子 `N_G2` 的四个参数。继承的 `N_base` 使用当前
-Round1/Round2 base 形式：
-
-```text
-N_base = B*(block_dim/T_1+h_1)+H_1, block_dim<=2
-N_base = B*(block_dim/T_2+h_2)+H_2, block_dim>2
-```
+冻结 Round2 的一维参数；按 dtype 以 `[is2,M*is2,1,M]` 为设计矩阵，
+对 observed_N_G2 执行 `numpy.linalg.lstsq(..., rcond=None)`。
+与 HW 当前代码一样，为一次联合普通最小二乘，不是两级拟合；不添加正则项、
+不做列缩放、不钳制预测，不使用 d_0。
+仅单核数据拟合 N_G2；多核预测沿用一维 rho，不额外估计二维多核系数。
 
 ## 运行
 
 ```bash
-cd NDDMA2
 python3 Modeling/Data_collection/round4/scripts/e2e.py all --msprof-bin "$(which msprof)"
-python3 Modeling/Data_collection/round4/scripts/e2e.py collect --msprof-bin "$(which msprof)"
-python3 Modeling/Data_collection/round4/scripts/e2e.py fit
-python3 Modeling/Data_collection/round4/scripts/e2e.py draw
+python3 Modeling/Data_collection/round4/scripts/e2e.py fit --measurement-csv /path/to/measurements.csv
 ```
 
-默认继承的 Round2 模型：
-
-```text
-Modeling/Ana/round2/round2_1d_noncontiguous_model.json
-```
-
-如需指定其他 Round2 模型：
-
-```bash
-python3 Modeling/Data_collection/round4/scripts/e2e.py fit \
-  --round2-model /path/to/round2_1d_noncontiguous_model.json
-```
-
-默认输出：
-
-```text
-Modeling/Ana/round4
-```
-
-## 输出解释
-
-```text
-round4_2d_ub_contiguous_ng2_model.json
-```
-
-包含：
-
-```text
-model
-formula
-parameters
-metrics
-```
-
-`parameters.N_G2.<dtype>` 中：
-
-```text
-g10
-g11_M
-g00
-g01_M
-```
-
-`round2_model_source` 记录实际继承的 Round2 JSON 路径。
-
-`parameters.one_dimensional` 保存该二维特化公式继承的一维基础项、
-GM 非连续修正项参数和 `rho` 参数；这些参数不在 Round4 中重新拟合。
-
-```text
-round4_2d_ub_contiguous_ng2_predictions.csv
-```
-
-逐点记录：
-
-```text
-n_base_cycles
-n_g1_cycles
-observed_n_g2
-predicted_n_g2
-actual_cycles
-predicted_cycles
-error_cycles
-```
-
-绘图输出：
-
-```text
-Modeling/Ana/round4/figures/
-round4_2d_ub_contiguous_ng2_<dtype>_actual_vs_predicted.svg
-round4_2d_ub_contiguous_ng2_<dtype>_residual.svg
-round4_2d_ub_contiguous_ng2_<dtype>_observed_ng2_vs_m.svg
-round4_2d_ub_contiguous_ng2_<dtype>_error_vs_bytes.svg
-```
-
-`observed_ng2_vs_m` 横轴为 `M`，纵轴为：
-
-```text
-(N2 - N_base) / N_G1
-```
-
-不同外层 `is2` 使用不同颜色；同一 `is2/M` 下不同 `N/is1`
-的原始点保留，连线使用这些点的中位数。
-
-`error_vs_bytes` 横轴为 `bytes_per_core`，纵轴为
-`(predicted_cycles - actual_cycles) / actual_cycles`。当前 aligned 数据固定 `block_dim=1`。
+默认继承 `Modeling/Ana/round2/round2_1d_noncontiguous_model.json`，输出到 `Modeling/Ana/round4`。
+使用 NumPy。模型 JSON 保存 N_G2 参数、冻结的一维参数及 fit_scope。
+DOC 中的 JSON 仍是旧实测快照，尚未重拟合；请在更新 Round1/2 后，用新的 D/F/G 实测数据
+重新拟合，并验证后同步 DOC 模型。此修改不会伪造或覆盖历史实测参数。

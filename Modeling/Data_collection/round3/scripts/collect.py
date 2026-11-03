@@ -91,22 +91,14 @@ def continuous_stride(loop_sizes: Sequence[int]) -> tuple[int, ...]:
     return tuple(product_int(loop_sizes[:axis]) for axis in range(len(loop_sizes) - 1, -1, -1))
 
 
-def layouts_2d(d0: int, d1: int) -> dict[str, tuple[tuple[int, ...], tuple[int, ...]]]:
-    return {
-        "continuous": ((d1, 1), (d1, 1)),
-        "transpose_outer": ((1, d0), (d1, 1)),
-        "transpose_outer_ub_gap": ((1, d0 + 16), (d1 + 16, 1)),
-    }
-
-
 def layouts_3d(m: int, n: int, k: int) -> dict[str, tuple[tuple[int, ...], tuple[int, ...]]]:
     ub = (n * k, k, 1)
     return {
-        "continuous": ((n * k, k, 1), ub),
+        "continuous": ((n * k, n, 1), (n * k, n, 1)),
         "transpose_dim2": ((k, m * k, 1), ub),
         "transpose_dim1_dim3": ((1, m, n * m), ub),
         "transpose_3d": ((1, m, k * m), ub),
-        "gm_noncontiguous": ((n * k * 8, k * 8, 8), ub),
+
     }
 
 
@@ -138,7 +130,8 @@ def make_row(index: int, dtype: str, dims: Sequence[int],
     loop_sizes = tuple(reversed(dims))
     total_elems = product_int(dims)
     total_bytes = total_elems * size
-    token = f"r3_d{dim}_{layout}_{dtype}_" + "x".join(str(value) for value in dims)
+    token = f"r3_{source_round}_d{dim}_{layout}_{dtype}_" + "x".join(str(value) for value in dims)
+    token += "_i" + "x".join(map(str, input_stride)) + "_o" + "x".join(map(str, output_stride))
     row = {column: "" for column in CSV_COLUMNS}
     row.update({
         "experiment_idx": str(index),
@@ -155,7 +148,7 @@ def make_row(index: int, dtype: str, dims: Sequence[int],
         "group_name": f"{dim}d_{layout}",
         "model_target": "NDDMA multidimensional extension",
         "metric_target": "nddma_mte2_cycles_per_block",
-        "fit_role": "fit",
+        "fit_role": "validation",
         "dtype": dtype,
         "dtype_size": str(size),
         "dim": str(dim),
@@ -195,13 +188,27 @@ def make_row(index: int, dtype: str, dims: Sequence[int],
 def build_rows(execution_repeat_count: int) -> list[dict[str, str]]:
     rows: list[dict[str, str]] = []
     for dtype in DTYPES:
-        for d0, d1 in product((4, 8, 16, 32, 64, 128, 153, 167, 224),
-                              (4, 8, 16, 32, 64, 128, 153, 167)):
-            dims = (d0, d1)
-            for layout, (gm, ub) in layouts_2d(d0, d1).items():
-                if safe(dtype, dims, gm, ub):
-                    rows.append(make_row(len(rows) + 1, dtype, dims, gm, ub,
-                                         layout, "round4_2d", execution_repeat_count))
+        # HW Round4 D/E: transpose descriptors with byte-based GM padding/UB gaps.
+        for outer, inner, padding, gap in product(
+                (4, 8, 16, 32, 64, 128, 153, 167, 224),
+                (4, 8, 16, 32, 64, 128, 153, 167),
+                (0, 32, 128, 512, 2048, 8192), (0, 16, 64, 256, 512)):
+            dims = (outer, inner)
+            gm = (1, outer + padding // DTYPE_SIZES[dtype])
+            ub = (inner + gap // DTYPE_SIZES[dtype], 1)
+            layout = "group_d_2d_gm_noncontig_ub_contig" if gap == 0 else "group_e_2d_gm_noncontig_ub_noncontig"
+            if safe(dtype, dims, gm, ub):
+                rows.append(make_row(len(rows)+1, dtype, dims, gm, ub,
+                                     layout, "round4_2d", execution_repeat_count))
+        # HW Round5 J, also used by the Round7 3D/4D/5D combined evaluation.
+        for outer, middle, inner, is2, is1 in product(
+                (2, 3, 4, 8, 16, 32), (2, 3, 4, 8, 16, 32, 64, 128, 156),
+                (8, 16, 32, 64, 128, 512, 1024, 2048),
+                (1, 2, 4, 8, 16, 32, 64, 128), (2, 4, 8, 16, 32, 64, 128, 160, 512, 3333)):
+            dims, gm, ub = (outer, middle, inner), (1, is2, is1), (middle*inner, inner, 1)
+            if outer <= is2 and (outer-1)+(middle-1)*is2 < is1 and safe(dtype, dims, gm, ub):
+                rows.append(make_row(len(rows)+1, dtype, dims, gm, ub,
+                                     "group_j_3d_parameter_inheritance", "round5_j", execution_repeat_count))
         for m, n, k in product((2, 4, 8, 16, 32), (4, 8, 16, 32, 64),
                                (4, 8, 16, 32, 64, 128)):
             dims = (m, n, k)
@@ -209,6 +216,13 @@ def build_rows(execution_repeat_count: int) -> list[dict[str, str]]:
                 if safe(dtype, dims, gm, ub):
                     rows.append(make_row(len(rows) + 1, dtype, dims, gm, ub,
                                          layout, "round6", execution_repeat_count))
+        for m, n, k, stride in product((2, 4, 8, 16, 32), (4, 8, 16, 32, 64),
+                                         (4, 8, 16, 32, 64, 128),
+                                         (1, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096)):
+            dims, gm, ub = (m, n, k), (n*k*stride, k*stride, stride), (n*k, k, 1)
+            if safe(dtype, dims, gm, ub):
+                rows.append(make_row(len(rows)+1, dtype, dims, gm, ub,
+                                     "gm_noncontiguous", "round6", execution_repeat_count))
         for l3, l2, l1, l0 in product((2, 4, 8, 16), (2, 4, 8, 16),
                                       (4, 8, 16, 32), (4, 8, 16, 32, 64, 128)):
             dims = (l3, l2, l1, l0)

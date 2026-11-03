@@ -73,6 +73,9 @@ refitting.
 ## Refit Workflow
 
 Round1/2 now match the HW_GE_ATT contiguous/non-contiguous fitting workflows.
+Round3 aligns the multidimensional evaluation grids and uses the unscaled formula
+without d_0 (48368 configurations). Round4 aligns the HW Round5 D/F/G N_G2
+training grid (13374 configurations) and ordinary least-squares fitting.
 Round2 fitting requires NumPy (`python3 -m pip install numpy`). Its aligned grid
 contains 7146 configurations; see `DOC/round2_1d_noncontiguous_model.md`.
 The checked-in `DOC/*.json` files remain historical measurement snapshots and

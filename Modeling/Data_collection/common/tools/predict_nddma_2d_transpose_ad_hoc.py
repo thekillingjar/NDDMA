@@ -97,13 +97,6 @@ def one_d_base(dtype: str, bytes_value: float, block_dim: int) -> float:
     params = ROUND4_ONE_DIMENSIONAL_PARAMETERS[dtype]
     params = params.get("base", params)
     suffix = "1" if block_dim <= 2 else "2"
-    if f"h_{suffix}" in params:
-        return (
-            float(bytes_value)
-            * (float(block_dim) / float(params[f"T_{suffix}"])
-               + float(params[f"h_{suffix}"]))
-            + float(params[f"H_{suffix}"])
-        )
     return (
         float(bytes_value) / float(params[f"T_{suffix}"])
         + float(params[f"H_{suffix}"])

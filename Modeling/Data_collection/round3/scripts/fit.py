@@ -115,19 +115,8 @@ def one_d_base(
         ) -> float:
     params = base_params(round2, dtype, block_dim)
     if "T_1" in params:
-        if block_dim <= 2:
-            return (
-                bytes_per_core
-                * (float(block_dim) / float(params["T_1"])
-                   + float(params.get("h_1", 0.0)))
-                + float(params["H_1"])
-            )
-        return (
-            bytes_per_core
-            * (float(block_dim) / float(params["T_2"])
-               + float(params.get("h_2", 0.0)))
-            + float(params["H_2"])
-        )
+        suffix = "1" if block_dim <= 2 else "2"
+        return bytes_per_core / float(params[f"T_{suffix}"]) + float(params[f"H_{suffix}"])
     return (
         float(params["alpha"])
         + bytes_per_core / float(params["T_bytes_per_cycle"])
@@ -177,7 +166,7 @@ def inherited_terms(
     output_stride = tuple(reversed(output_stride_api))
     total_elems = product_int(loop_sizes)
     total_bytes = total_elems * DTYPE_SIZES[dtype]
-    bytes_per_core = total_bytes / block_dim
+    bytes_per_core = total_bytes
     n_base = one_d_base(round2, dtype, bytes_per_core, block_dim)
     terms: list[dict[str, float | int]] = []
     inner_product = 1
@@ -251,7 +240,7 @@ def fit_model(
             "output_dims": row["output_dims"],
             "input_stride": row["input_stride"],
             "output_stride": row["output_stride"],
-            "data_volume_bytes": float(row.get("logical_total_bytes") or row["total_bytes"]),
+            "data_volume_bytes": product_int(parse_tuple(row["output_dims"], int(row["dim"]))) * DTYPE_SIZES[row["dtype"]],
             "actual_cycles": actual,
             "n_base_cycles": n_base,
             "t1_cycles": t1_sum,
@@ -300,9 +289,8 @@ def fit_model(
         "formula": {
             "source": "NDDMA arbitrary-dimensional multicore unified formula",
             "n_base": (
-                "B_core=B_total/block_dim; "
-                "N_base=B_core*(block_dim/T_1+h_1)+H_1 for k<=2; "
-                "B_core*(block_dim/T_2+h_2)+H_2 for k>2"
+                "B=product(output_dims)*dtype_size (per core); "
+                "N_base=B/T_1+H_1 for k<=2; B/T_2+H_2 for k>2"
             ),
             "axis_bytes": "B_j = B / prod_{t=0}^{j-1}(ls_t)",
             "effective_input_stride": "is_hat_j = abs(is_j - sum_{t=0}^{j-1}(ls_t*is_t)) + 1, j>=1; is_hat_0=is_0",
@@ -312,7 +300,7 @@ def fit_model(
             "N_GU": "N_GU=((b1+b2*s)+(b3+b4*s)*B_j)*min(1,os_hat_j-1)",
             "rho": "rho=(c1+c2*s)+min(1,os_hat_j-1)*(c3+c4*s)",
             "prediction": "N_D = N_base + sum_j(N_1'(B_j,is_hat_j,os_hat_j,k))",
-            "round3_fitted_parameters": "none; all one-dimensional parameters are inherited from Round2",
+            "round3_fitted_parameters": "none; inherit Round2; no fitted d_0 multiplier",
             "dimensions": [2, 3, 4, 5],
         },
         "baseline": {

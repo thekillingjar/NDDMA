@@ -1,3 +1,9 @@
+> 历史建模笔记：以下旧公式、数据计数不代表当前实现。
+> 当前 Round1–4 已对齐 HW_GE_ATT 的对应一维、多维及 N_G2 流程，且明确不使用 d_0。
+> 请以 `round1_1d_single_multi_core_model.md`、`round2_1d_noncontiguous_model.md`、
+> `round3_multidim_model.md`、`round4_2d_transpose_multicore_model.md` 和当前代码为准。
+> DOC 中已保存 JSON 仍为历史快照，需实测数据重拟合。
+
 ## 整体建模流程
 1. 首先对一维度多核连续NDDMA搬运进行建模(round1)
 2. 然后对于一维建模进行扩展，实现支持非连续建模公式(round2)

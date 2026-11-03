@@ -112,18 +112,7 @@ def one_dimensional_base_and_t1(
     correction_params = CORRECTION_PARAMETERS[dtype]
 
     suffix = "1" if block_dim <= 2 else "2"
-    if f"h_{suffix}" in base_params:
-        base = (
-            byte_value
-            * (float(block_dim) / float(base_params[f"T_{suffix}"])
-               + float(base_params[f"h_{suffix}"]))
-            + float(base_params[f"H_{suffix}"])
-        )
-    else:
-        base = (
-            byte_value / float(base_params[f"T_{suffix}"])
-            + float(base_params[f"H_{suffix}"])
-        )
+    base = byte_value / float(base_params[f"T_{suffix}"]) + float(base_params[f"H_{suffix}"])
 
     n_g_params = correction_params["N_G"]
     n_gu_params = correction_params["N_GU"]

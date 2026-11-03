@@ -11,6 +11,8 @@ from pathlib import Path
 from statistics import median
 from typing import Iterable, Mapping, Sequence
 
+import numpy as np
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 MODELING_DIR = SCRIPT_DIR.parents[2]
@@ -71,6 +73,10 @@ def parse_dims(value: str) -> tuple[int, ...]:
 def aggregate(rows: Iterable[dict[str, str]]) -> list[dict[str, str]]:
     grouped: dict[str, list[dict[str, str]]] = defaultdict(list)
     for row in rows:
+        if (row.get("data_split") or row.get("group_id")) not in {"D", "F", "G"}:
+            continue
+        if int(row.get("block_dim") or 1) != 1:
+            continue
         if row.get("dim") != "2":
             continue
         dims = parse_dims(row.get("output_dims", ""))
@@ -108,17 +114,8 @@ def one_d_base(round2: Mapping[str, object], dtype: str, bytes_value: float,
                block_dim: int) -> float:
     params = base_params(round2, dtype, block_dim)
     if "T_1" in params:
-        if block_dim <= 2:
-            return (
-                bytes_value
-                * (float(block_dim) / float(params["T_1"]) + float(params.get("h_1", 0.0)))
-                + float(params["H_1"])
-            )
-        return (
-            bytes_value
-            * (float(block_dim) / float(params["T_2"]) + float(params.get("h_2", 0.0)))
-            + float(params["H_2"])
-        )
+        suffix = "1" if block_dim <= 2 else "2"
+        return bytes_value / float(params[f"T_{suffix}"]) + float(params[f"H_{suffix}"])
     return float(params["alpha"]) + bytes_value / float(params["T_bytes_per_cycle"])
 
 
@@ -152,35 +149,14 @@ def predict_ng2(params: Mapping[str, object], m: int, is2: int) -> float:
 
 
 def solve(matrix: list[list[float]], target: list[float]) -> list[float]:
-    if not matrix or len(matrix) < len(matrix[0]):
-        raise ValueError("not enough samples for linear fit")
-    width = len(matrix[0])
-    scales = [max(abs(row[col]) for row in matrix) or 1.0 for col in range(width)]
-    scaled = [[value / scales[col] for col, value in enumerate(row)] for row in matrix]
-    normal = [[sum(row[i] * row[j] for row in scaled) for j in range(width)]
-              for i in range(width)]
-    rhs = [sum(row[i] * value for row, value in zip(scaled, target))
-           for i in range(width)]
-    for i in range(width):
-        normal[i][i] += 1e-12
-    for col in range(width):
-        pivot = max(range(col, width), key=lambda row: abs(normal[row][col]))
-        if abs(normal[pivot][col]) < 1e-14:
-            raise ValueError("singular linear fit")
-        normal[col], normal[pivot] = normal[pivot], normal[col]
-        rhs[col], rhs[pivot] = rhs[pivot], rhs[col]
-        pivot_value = normal[col][col]
-        normal[col] = [value / pivot_value for value in normal[col]]
-        rhs[col] /= pivot_value
-        for row in range(width):
-            if row == col:
-                continue
-            factor = normal[row][col]
-            if factor == 0:
-                continue
-            normal[row] = [a - factor * b for a, b in zip(normal[row], normal[col])]
-            rhs[row] -= factor * rhs[col]
-    return [value / scale for value, scale in zip(rhs, scales)]
+    """HW Round5 N_G2: unscaled, unregularized four-parameter OLS."""
+    design = np.asarray(matrix, dtype=float)
+    if design.ndim != 2 or len(design) < design.shape[1]:
+        raise ValueError("not enough samples for N_G2 fit")
+    coeff, _, rank, _ = np.linalg.lstsq(design, np.asarray(target, dtype=float), rcond=None)
+    if rank < design.shape[1]:
+        raise ValueError("rank-deficient N_G2 fit")
+    return coeff.tolist()
 
 
 def prepare(rows: Sequence[Mapping[str, str]],
@@ -259,6 +235,12 @@ def inherited_one_dimensional_parameters(round2: Mapping[str, object]) -> dict[s
 
 def fit_model(rows: list[dict[str, str]], round2: Mapping[str, object],
               round2_model_source: str) -> dict[str, object]:
+    rows = aggregate(rows)
+    for dtype in DTYPES:
+        groups = {row.get("data_split") or row.get("group_id")
+                  for row in rows if row["dtype"] == dtype}
+        if groups != {"D", "F", "G"}:
+            raise ValueError(f"{dtype}: aligned N_G2 fit requires D/F/G measurements; found {sorted(groups)}")
     points = prepare(rows, round2)
     parameters: dict[str, dict[str, float]] = {}
     for dtype in DTYPES:
@@ -297,6 +279,8 @@ def fit_model(rows: list[dict[str, str]], round2: Mapping[str, object],
             "prediction": "N_2=N_base+N_G1*N_G2",
             "round4_fitted_parameters": "N_G2 only",
         },
+        "fit_scope": {"groups": ["D", "F", "G"], "block_dim": 1,
+                      "method": "OLS on observed N_G2 with [is2, M*is2, 1, M]; no d_0"},
         "round2_model_source": round2_model_source,
         "parameters": {
             "N_G2": parameters,
